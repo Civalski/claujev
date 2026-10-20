@@ -1,18 +1,21 @@
 {
   "name": "claujev",
-  "version": "1.0.0",
-  "description": "O Jev (TypeSafe AI) como segundo par de olhos do Claude Code: hooks que classificam pedidos, revisam edições, seguram comandos perigosos e conferem o trabalho antes de encerrar.",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Jev (TypeSafe AI) as a second pair of eyes for Claude Code: request triage, automatic effort, command guard, rule review and a final check before finishing.",
   "type": "module",
   "license": "MIT-0",
   "author": "Alisson Civalski",
   "repository": { "type": "git", "url": "git+https://github.com/Civalski/claujev.git" },
-  "keywords": ["claude-code", "hooks", "jev", "typesafe-ai", "ai-agents", "guardrails"],
+  "keywords": ["claude-code", "claude-code-plugin", "hooks", "jev", "typesafe-ai", "ai-agents", "guardrails"],
   "engines": { "node": ">=20" },
   "scripts": {
+    "test": "node --test test/claujev.test.mjs",
+    "test:mod": "claude plugin test plugins/claujev-mod",
+    "validate": "claude plugin validate . && claude plugin validate plugins/claujev && claude plugin validate plugins/claujev-mod",
+    "selftest": "node plugins/claujev/hooks/claujev.mjs selftest",
+    "report": "node plugins/claujev/hooks/claujev.mjs report",
     "install-hooks": "node install.mjs",
-    "uninstall-hooks": "node install.mjs --uninstall",
-    "selftest": "node hooks/claujev.mjs selftest",
-    "report": "node hooks/claujev.mjs report",
-    "test": "node --test test/claujev.test.mjs"
+    "uninstall-hooks": "node install.mjs --uninstall"
   }
 }

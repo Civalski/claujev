@@ -1,29 +1,31 @@
 #!/usr/bin/env node
-// Instalador do ClauJev. Funciona em Linux, macOS e Windows (Node 20+).
+// Manual installer for ClauJev (the plugin is the recommended way). Linux, macOS and Windows, Node 20+.
 //
-//   node install.mjs              instala ou atualiza
-//   node install.mjs --link       instala com symlink (para quem vai editar o código)
-//   node install.mjs --uninstall  remove os hooks do settings.json (mantém .env, config e logs)
+//   node install.mjs              install or update
+//   node install.mjs --link       install with a symlink (if you are going to edit the code)
+//   node install.mjs --uninstall  remove the hooks from settings.json (keeps .env, config and logs)
+//   node install.mjs --force      install even if the ClauJev plugin is installed
 //
-// Pasta de instalação: $CLAUJEV_HOME ou ~/.claude/hooks/claujev
+// Folder: $CLAUJEV_HOME or ~/.claude/claujev
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, symlinkSync, rmSync, chmodSync, lstatSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const REPO = dirname(fileURLToPath(import.meta.url));
-const HOME_DIR = process.env.CLAUJEV_HOME || join(homedir(), '.claude', 'hooks', 'claujev');
+const HOME_DIR = process.env.CLAUJEV_HOME || join(homedir(), '.claude', 'claujev');
+const PLUGIN = join(REPO, 'plugins', 'claujev');
 const SETTINGS = join(homedir(), '.claude', 'settings.json');
 const SCRIPT = join(HOME_DIR, 'claujev.mjs');
 const args = new Set(process.argv.slice(2));
 
 const [major] = process.versions.node.split('.').map(Number);
 if (major < 20) {
-  console.error(`ClauJev precisa de Node.js 20 ou mais novo (encontrado ${process.versions.node}).`);
+  console.error(`ClauJev needs Node.js 20 or newer (found ${process.versions.node}).`);
   process.exit(1);
 }
 
-// Comando de cada hook. Barras normais funcionam em todos os sistemas.
+// Command of each hook. Forward slashes work on every system.
 const cmd = (hook) => `node "${SCRIPT.replace(/\\/g, '/')}" ${hook}`;
 const entry = (hook, timeout) => ({ type: 'command', command: cmd(hook), timeout });
 const HOOKS = {
@@ -45,7 +47,7 @@ function readSettings() {
   try {
     return JSON.parse(readFileSync(SETTINGS, 'utf8'));
   } catch (e) {
-    console.error(`Não consegui ler ${SETTINGS} (${e.message}). Corrija o JSON e rode de novo.`);
+    console.error(`Could not read ${SETTINGS} (${e.message}). Fix the JSON and run again.`);
     process.exit(1);
   }
 }
@@ -68,28 +70,41 @@ function removeOurHooks(settings) {
   }
 }
 
+// The plugin registers its own hooks: installing both would run Jev twice per event.
+function pluginInstalled() {
+  try {
+    const data = JSON.parse(readFileSync(join(homedir(), '.claude', 'plugins', 'installed_plugins.json'), 'utf8'));
+    return Object.keys(data.plugins || {}).some((k) => k.startsWith('claujev@'));
+  } catch { return false; }
+}
+
 function install() {
-  console.log('Instalando ClauJev\n');
+  if (pluginInstalled() && !args.has('--force')) {
+    console.error('The ClauJev plugin is already installed and registers its own hooks.');
+    console.error('Installing here too would run Jev twice per event. Use --force if you really want it.');
+    process.exit(1);
+  }
+  console.log('Installing ClauJev\n');
   mkdirSync(HOME_DIR, { recursive: true });
 
-  // Script do hook: cópia (padrão) ou symlink (--link).
-  const src = join(REPO, 'hooks', 'claujev.mjs');
-  try { if (lstatSync(SCRIPT)) rmSync(SCRIPT); } catch { /* não existia */ }
+  // Hook script: a copy (default) or a symlink (--link).
+  const src = join(PLUGIN, 'hooks', 'claujev.mjs');
+  try { if (lstatSync(SCRIPT)) rmSync(SCRIPT); } catch { /* did not exist */ }
   if (args.has('--link')) symlinkSync(src, SCRIPT);
   else copyFileSync(src, SCRIPT);
   console.log(`  script    ${SCRIPT}${args.has('--link') ? ' (symlink)' : ''}`);
 
-  // Config e .env só são criados se não existirem: atualizar nunca apaga o que você ajustou.
+  // Config and .env are only created when missing: updating never overwrites your changes.
   const cfg = join(HOME_DIR, 'config.json');
-  if (!existsSync(cfg)) { copyFileSync(join(REPO, 'config', 'config.example.json'), cfg); console.log(`  config    ${cfg}`); }
-  else console.log(`  config    ${cfg} (mantido)`);
+  if (!existsSync(cfg)) { copyFileSync(join(PLUGIN, 'config', 'config.example.json'), cfg); console.log(`  config    ${cfg}`); }
+  else console.log(`  config    ${cfg} (kept)`);
 
   const env = join(HOME_DIR, '.env');
   if (!existsSync(env)) {
-    copyFileSync(join(REPO, 'config', '.env.example'), env);
+    copyFileSync(join(PLUGIN, 'config', '.env.example'), env);
     try { chmodSync(env, 0o600); } catch { /* Windows */ }
-    console.log(`  chave     ${env}  <- preencha TYPESAFE_API_KEY`);
-  } else console.log(`  chave     ${env} (mantido)`);
+    console.log(`  key       ${env}  <- fill in TYPESAFE_API_KEY`);
+  } else console.log(`  key       ${env} (kept)`);
 
   const settings = readSettings();
   settings.hooks ||= {};
@@ -99,25 +114,26 @@ function install() {
 
   const legacy = Object.values(settings.hooks).flat().some(isLegacy);
   if (legacy) {
-    console.log('\nAtenção: encontrei hooks de uma instalação antiga (jev-hook.mjs) no settings.json.');
-    console.log('Remova essas entradas para o Jev não rodar duas vezes em cada evento.');
+    console.log('\nWarning: settings.json has hooks from an old install (jev-hook.mjs).');
+    console.log('Remove those entries so Jev does not run twice per event.');
   }
 
   console.log(`
-Pronto. Próximos passos:
-  1. Coloque sua chave da TypeSafe em ${env}
-  2. Teste:      node "${SCRIPT}" selftest
-  3. Abra uma conversa nova no Claude Code para os hooks valerem.
+Done. Next steps:
+  1. Put your TypeSafe AI key in ${env}
+  2. Test:       node "${SCRIPT}" selftest
+  3. Open a new Claude Code session so the hooks take effect.
 
-Todos os hooks começam em modo "observe" (só registram no log).
-Depois de alguns dias, veja "node \\"${SCRIPT}\\" report" e mude para "enforce" em ${cfg}.`);
+Every hook starts in "observe" mode (it only logs). Messages are in English;
+set "lang": "pt" in ${cfg} for Portuguese.
+After a few days, check "node \\"${SCRIPT}\\" report" and switch to "enforce" in ${cfg}.`);
 }
 
 function uninstall() {
   const settings = readSettings();
   removeOurHooks(settings);
   writeSettings(settings);
-  console.log(`\nHooks removidos. Seus arquivos continuam em ${HOME_DIR} (apague a pasta se quiser).`);
+  console.log(`\nHooks removed. Your files are still in ${HOME_DIR} (delete the folder if you want).`);
 }
 
 if (args.has('--uninstall')) uninstall();

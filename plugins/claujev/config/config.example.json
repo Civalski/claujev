@@ -1,5 +1,6 @@
 {
   "enabled": true,
+  "lang": "en",
   "model": "jev-latest",
   "hooks": {
     "prompt": "observe",

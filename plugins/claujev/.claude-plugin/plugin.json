@@ -1,0 +1,33 @@
+{
+  "name": "claujev",
+  "displayName": "ClauJev",
+  "version": "2.0.0",
+  "description": "Jev (TypeSafe AI) as a second pair of eyes for Claude Code: request triage, command guard, rule review, final check, subagent routing and effort suggestion.",
+  "author": { "name": "Alisson Civalski", "url": "https://github.com/Civalski" },
+  "homepage": "https://github.com/Civalski/claujev",
+  "repository": "https://github.com/Civalski/claujev",
+  "license": "MIT-0",
+  "keywords": ["jev", "typesafe-ai", "hooks", "guardrails", "code-review", "effort"],
+  "userConfig": {
+    "api_key": {
+      "type": "string",
+      "title": "TypeSafe AI API key",
+      "description": "Your Jev key from typesafe.ai. Stored in the system's secure storage.",
+      "sensitive": true
+    },
+    "lang": {
+      "type": "string",
+      "title": "Language",
+      "description": "Language of the messages Claude receives and of the questions sent to Jev.",
+      "options": ["en", "pt"],
+      "default": "en"
+    },
+    "mode": {
+      "type": "string",
+      "title": "Mode",
+      "description": "observe only logs (start here and check the report); enforce lets Jev act on Claude; off disables every hook. A project's .claude/claujev.json can override it per hook.",
+      "options": ["observe", "enforce", "off"],
+      "default": "observe"
+    }
+  }
+}

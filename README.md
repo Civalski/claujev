@@ -1,270 +1,271 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="ClauJev — Claude Code faz o trabalho, Jev confere" width="100%">
+  <img src="docs/banner.svg" alt="ClauJev — Claude Code does the work, Jev checks it" width="100%">
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="Licença MIT-0" src="https://img.shields.io/badge/licen%C3%A7a-MIT--0-blue"></a>
+  <a href="LICENSE"><img alt="License MIT-0" src="https://img.shields.io/badge/license-MIT--0-blue"></a>
+  <img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-d97757">
   <img alt="Node 20+" src="https://img.shields.io/badge/node-%E2%89%A520-339933">
-  <img alt="Zero dependências" src="https://img.shields.io/badge/depend%C3%AAncias-0-brightgreen">
+  <img alt="Zero dependencies" src="https://img.shields.io/badge/dependencies-0-brightgreen">
 </p>
 
 <p align="center">
-  <b>Português</b> · <a href="README.en.md">English</a>
+  <b>English</b> · <a href="README.pt-BR.md">Português</a>
 </p>
 
 ---
 
-**ClauJev** liga o [Jev](https://typesafe.ai), o modelo de julgamento rápido da TypeSafe AI, aos
-[hooks](https://docs.claude.com/en/docs/claude-code/hooks) do Claude Code. Enquanto o Claude
-trabalha, o Jev responde perguntas curtas e objetivas sobre o que está acontecendo. Exemplos:
-*"este comando é destrutivo?"*, *"esta edição viola alguma regra do projeto?"* e
-*"o pedido foi atendido por completo?"*. O ClauJev transforma essas respostas em ação.
+**ClauJev** plugs [Jev](https://typesafe.ai), TypeSafe AI's fast judgment model, into Claude Code.
+While Claude works, Jev answers short, typed questions about what is going on, such as *"is this
+command destructive?"*, *"does this edit break a project rule?"* and *"was the request fully
+done?"*. ClauJev turns those answers into action.
 
-- 🧭 **Orienta** o Claude no começo de cada pedido: se é pergunta, mudança pequena ou grande, ou se o pedido está vago.
-- 🛑 **Pede sua confirmação** antes de comandos destrutivos ou que mexem com credenciais.
-- 🔍 **Revisa cada edição** contra as regras que você escreve em português comum.
-- ✅ **Confere o trabalho antes de encerrar**: completude, sobras inacabadas, testes que falharam.
-- 🪄 **Manda subagentes simples para um modelo menor**, mais rápido e mais barato.
-- 🕵️ **Pega subagentes que dizem ter feito o que não fizeram.**
+- 🧭 **Triage**: tells Claude whether a request is a question, a small change, a big one, or too vague.
+- 🎚️ **Automatic effort**: picks how hard Claude should think for each request, `low` for a quick question, `xhigh` for a tangled bug.
+- 🛑 **Command guard**: asks for your confirmation before destructive or credential-touching commands.
+- 🔍 **Rule review**: checks every edit against rules you write in plain language.
+- ✅ **Final check**: stops "done!" when the request looks incomplete, unfinished, or your tests fail.
+- 🪄 **Subagent routing**: sends simple subagent tasks to a smaller, faster model.
+- 🕵️ **False-claim detector**: catches subagents that report work they never did.
 
-Tudo isso é **um único arquivo** de Node.js, sem dependências. Cada evento leva cerca de **400 ms**
-e custa frações de centavo.
+The core is **one Node.js file with zero dependencies**. Each check takes about **400 ms** and costs a
+fraction of a cent.
 
 > [!NOTE]
-> Projeto da comunidade, sem vínculo oficial com a TypeSafe AI nem com a Anthropic.
-> Você precisa de uma chave própria da [TypeSafe AI](https://typesafe.ai).
+> Community project, not affiliated with TypeSafe AI or Anthropic. You need your own
+> [TypeSafe AI](https://typesafe.ai) API key.
 
 ---
 
-## Sumário
+## Contents
 
-- [Por que existe](#por-que-existe)
-- [Como funciona](#como-funciona)
-- [Os seis recursos](#os-seis-recursos)
-- [Observar antes de agir: as faixas de decisão](#observar-antes-de-agir-as-faixas-de-decisão)
-- [Instalação](#instalação)
-- [Configuração](#configuração)
-- [Calibrando com o relatório](#calibrando-com-o-relatório)
-- [Uso real](#uso-real)
-- [Privacidade e segurança](#privacidade-e-segurança)
-- [Perguntas frequentes](#perguntas-frequentes)
-
----
-
-## Por que existe
-
-Agentes de programação são ótimos, mas erram de jeitos previsíveis:
-
-| O agente…                                              | O ClauJev…                                                    |
-| ------------------------------------------------------ | ------------------------------------------------------------- |
-| explora o repositório inteiro para mudar uma linha     | avisa que a mudança é pequena e pede para ir direto ao ponto  |
-| começa a editar um pedido vago                         | sugere perguntar antes                                        |
-| roda `git push --force` ou `rm -rf` sem pensar duas vezes | segura o comando e pede a sua confirmação                  |
-| deixa `TODO`, `catch {}` vazio ou chave no código      | aponta a regra violada logo depois da edição                  |
-| diz "pronto!" com metade do pedido feito               | impede o encerramento e lista o que falta                     |
-| usa o modelo mais caro para buscar um arquivo          | troca o subagente para um modelo menor                        |
-| relata "testei e passou" sem ter rodado teste          | compara o relatório com as ações reais                        |
-
-Um LLM grande poderia fazer essas checagens, mas seria lento e caro para rodar a cada comando.
-O Jev foi feito para isso: recebe um texto e devolve **probabilidades tipadas** (sim/não, nota
-numa escala, escolha entre opções) em poucas centenas de milissegundos.
+- [Install](#install)
+- [How it works](#how-it-works)
+- [The features](#the-features)
+- [Automatic effort](#automatic-effort)
+- [Observe before acting: decision bands](#observe-before-acting-decision-bands)
+- [Configure](#configure)
+- [Calibrate with the report](#calibrate-with-the-report)
+- [Real-world use](#real-world-use)
+- [Privacy and safety](#privacy-and-safety)
+- [FAQ](#faq)
 
 ---
 
-## Como funciona
+## Install
 
-O Claude Code dispara eventos (hooks) em pontos fixos da conversa. O ClauJev escuta seis deles.
-Em cada um, monta um pequeno *estado* com o que importa naquele momento, faz ao Jev as
-perguntas certas e devolve ao Claude uma ação ou nada.
+In Claude Code:
 
-```mermaid
-flowchart TB
-    U(["👤 Você"]) -->|pedido| CC["🤖 Claude Code"]
-    CC -->|"evento (hook)<br/>JSON via stdin"| CJ["⚙️ claujev.mjs<br/>um arquivo · zero dependências"]
-    CJ <-->|"perguntas ⇄ probabilidades<br/>~400 ms · segredos removidos"| JEV[("🧠 Jev · TypeSafe AI")]
-    CJ --> R{"o que devolver<br/>ao Claude Code?"}
-    R -->|"prompt"| A1["💬 dica de contexto"]
-    R -->|"bash"| A2["✋ pedir sua confirmação"]
-    R -->|"edit · stop · subagent"| A3["🔁 revisar antes de seguir"]
-    R -->|"agent"| A4["🪄 trocar o modelo"]
-    R -->|"tudo baixo"| A5["✅ nada: segue normal"]
-    CJ -.-> LOG[("📒 logs locais<br/>sem o conteúdo")]
-    LOG -.-> REP["📊 claujev report<br/>calibração"]
+```
+/plugin marketplace add Civalski/claujev
+/plugin install claujev@claujev
 ```
 
-Três princípios guiam o código:
+Claude Code asks for your **TypeSafe AI key** (kept in the system's secure storage), the
+**language** (`en` or `pt`) and the **mode** (`observe` to start). Open a new session and you are done.
 
-1. **Nunca quebrar a sessão.** Qualquer erro (sem chave, API fora, timeout de 3 s) vai para o log e o Claude segue normalmente.
-2. **Observar antes de agir.** Todo hook começa em modo `observe`: só registra. Você liga `enforce` quando confia nos números.
-3. **Sinal, não sentença.** O ClauJev nunca apaga nem desfaz nada. No máximo pede sua confirmação ou pede ao Claude para revisar. Falso positivo custa uma frase do Claude dizendo "conferi, está certo".
+**Optional, the mod** (status line, toasts, automatic effort; needs a Claude Code version with mods):
 
----
-
-## Os seis recursos
-
-| Evento | Recurso | O que o Jev responde | O que acontece em `enforce` |
-| --- | --- | --- | --- |
-| `UserPromptSubmit` | **Triagem do pedido** | tipo (pergunta, bug, feature, refatoração, config), tamanho (0–4), ambiguidade, área do projeto | dica injetada no contexto do Claude: *"só pergunta, não edite"*, *"mudança pequena, vá direto"*, *"pedido vago, pergunte antes"* |
-| `PreToolUse` · Bash | **Guarda de comandos** | o comando é destrutivo/irreversível? mexe com credenciais? | o Claude Code **pede a sua confirmação** (nunca bloqueia sozinho) |
-| `PreToolUse` · Agent | **Roteamento de subagente** | a tarefa é simples o bastante para um modelo pequeno? | o subagente roda com o modelo de `routeModel` (padrão `haiku`) |
-| `PostToolUse` · Edit | **Revisão por regras** | esta alteração viola a regra X? (uma pergunta por regra, até 20) | o Claude recebe a lista de regras violadas e revisa o trecho |
-| `SubagentStop` | **Detector de relatório falso** | o relatório afirma trabalho que não aparece nas ações executadas? | o subagente é mandado corrigir o relatório ou fazer o que falta |
-| `Stop` | **Conferência final** | quanto do pedido foi atendido (0–4)? há trabalho inacabado? mudou coisa fora do escopo? + perguntas suas | o Claude não encerra: recebe a lista de problemas e confere |
-
-Detalhes que fazem diferença:
-
-- **Atalho de leitura.** `git status`, `ls`, `cat arquivo` e afins passam direto, sem chamar o Jev. Qualquer `;`, `|`, `&&`, `$(…)` ou arquivo sensível (`.env`, `.ssh`, `token`) cancela o atalho.
-- **Respostas curtas continuam o pedido.** "sim", "pode seguir" são somados ao pedido anterior antes da triagem.
-- **O Stop olha o diff real.** O ClauJev guarda o commit do início do turno e compara só os arquivos que o Claude editou, mesmo que ele tenha commitado no meio do caminho.
-- **Verificação opcional.** Com `verify: "npm test --silent"`, o Stop roda o comando e um código de saída diferente de zero já impede o encerramento.
-
-O texto exato de cada pergunta está em [`docs/perguntas.md`](docs/perguntas.md).
-
----
-
-## Observar antes de agir: as faixas de decisão
-
-Cada resposta do Jev vira um número de 0 a 1 e cai numa de três faixas. Só a faixa **alta**
-age, e só se o hook estiver em `enforce`. A faixa **incerta** existe para você calibrar: ela
-aparece no relatório, mas nunca interrompe o Claude.
-
-```mermaid
-flowchart TD
-    A["resposta do Jev<br/>noul · score · choice"] --> N["valor 0..1"]
-    N --> B{"valor ≥ high?"}
-    B -- sim --> ALTO["🔴 alto"]
-    B -- não --> C{"valor ≥ low?"}
-    C -- sim --> INC["🟡 incerto"]
-    C -- não --> BAIXO["🟢 baixo"]
-
-    ALTO --> M{"modo do hook"}
-    M -- enforce --> ACT["age no Claude<br/>dica · confirmação · bloqueio · troca de modelo"]
-    M -- observe --> LOGA["só registra"]
-    INC --> LOGB["registra como incerto<br/>(base para calibrar)"]
-    BAIXO --> NADA["registra e segue"]
+```
+/plugin install claujev-mod@claujev
 ```
 
-Os limites padrão (`low` / `high`):
+**Check it works:** ask Claude *"check that ClauJev works"*. The bundled `claujev-setup` skill runs
+the self-test, and it can also write your project rules and read the report for you.
 
-| Pergunta | low | high |
-| --- | --- | --- |
-| pedido ambíguo | 0.50 | 0.70 |
-| edição viola regra | 0.50 | 0.85 |
-| pedido incompleto (1 − completude) | 0.25 | 0.40 |
-| trabalho inacabado | 0.50 | 0.85 |
-| comando destrutivo | 0.50 | 0.85 |
-| comando com credenciais | 0.50 | 0.70 |
-| subagente simples | 0.50 | 0.80 |
-| relatório falso do subagente | 0.50 | 0.80 |
-
----
-
-## Instalação
-
-Pré-requisitos: **Node.js 20+**, **git** e uma **chave da [TypeSafe AI](https://typesafe.ai)**.
+<details>
+<summary>Manual install, without the plugin system</summary>
 
 ```bash
 git clone https://github.com/Civalski/claujev.git
 cd claujev
 node install.mjs
+echo "TYPESAFE_API_KEY=your_key" > ~/.claude/claujev/.env
+node ~/.claude/claujev/claujev.mjs selftest
 ```
 
-O instalador:
-
-1. copia `hooks/claujev.mjs` para `~/.claude/hooks/claujev/` (use `--link` para symlink, se for editar o código);
-2. cria `config.json` e `.env` **só se ainda não existirem** (atualizar nunca apaga seus ajustes);
-3. registra os seis hooks em `~/.claude/settings.json`, **mantendo seus outros hooks** e salvando um backup em `settings.json.claujev-backup`.
-
-Depois:
-
-```bash
-# 1. cole a chave
-echo "TYPESAFE_API_KEY=sua_chave" > ~/.claude/hooks/claujev/.env
-
-# 2. teste a conexão
-node ~/.claude/hooks/claujev/claujev.mjs selftest
-
-# 3. abra uma conversa nova no Claude Code
-```
-
-Funciona em Linux, macOS e Windows. Para atualizar: `git pull && node install.mjs`.
-Para remover: `node install.mjs --uninstall` (seus arquivos em `~/.claude/hooks/claujev` ficam;
-apague a pasta se quiser).
+The installer copies the script to `~/.claude/claujev/`, keeps your other hooks, backs up
+`settings.json` and never overwrites your `config.json` or `.env`. It refuses to run when the plugin
+is installed, so Jev never runs twice. Remove with `node install.mjs --uninstall`.
+</details>
 
 ---
 
-## Configuração
+## How it works
 
-A configuração vem em três camadas, e a de cima vence:
+Claude Code fires events (hooks) at fixed points of a conversation. ClauJev listens to six of them.
+For each, it builds a small *state* with what matters at that moment, asks Jev the right questions,
+and hands Claude an action, or nothing.
+
+```mermaid
+flowchart TB
+    U(["👤 You"]) -->|request| CC["🤖 Claude Code"]
+    CC -->|"hook event<br/>JSON via stdin"| CJ["⚙️ claujev.mjs<br/>one file · zero deps"]
+    CJ <-->|"questions ⇄ probabilities<br/>~400 ms · secrets redacted"| JEV[("🧠 Jev · TypeSafe AI")]
+    CJ --> R{"what goes back<br/>to Claude Code?"}
+    R -->|"prompt"| A1["💬 context hint<br/>+ effort suggestion"]
+    R -->|"bash"| A2["✋ ask for your confirmation"]
+    R -->|"edit · stop · subagent"| A3["🔁 review before continuing"]
+    R -->|"agent"| A4["🪄 switch model"]
+    R -->|"all low"| A5["✅ nothing: carry on"]
+    CJ -.-> LOG[("📒 local logs<br/>no content")]
+    LOG -.-> MOD["📊 mod: status line,<br/>toasts, /claujev"]
+```
+
+Three principles:
+
+1. **Never break the session.** Any error (no key, API down, 3 s timeout) is logged and Claude carries on.
+2. **Observe before acting.** Everything starts in `observe` mode: it only logs. Switch to `enforce` once the numbers look right.
+3. **A signal, not a verdict.** ClauJev never deletes or reverts anything. At most it asks you, or asks Claude to double-check. A false alarm costs one sentence from Claude saying "checked, it's fine".
+
+---
+
+## The features
+
+| Event | Feature | What Jev answers | What happens in `enforce` |
+| --- | --- | --- | --- |
+| `UserPromptSubmit` | **Triage** | kind (question, bug, feature, refactor, config), size (0–4), ambiguity, project area | a hint in Claude's context: *"just a question, don't edit"*, *"small change, go straight to it"*, *"vague, ask first"*; plus an effort suggestion |
+| `PreToolUse` · Bash | **Command guard** | is the command destructive or irreversible? does it touch credentials? | Claude Code **asks for your confirmation** (it never blocks on its own) |
+| `PreToolUse` · Agent | **Subagent routing** | is the task simple enough for a small model? | the subagent runs on `routeModel` (default `haiku`) |
+| `PostToolUse` · Edit | **Rule review** | does this edit break rule X? (one question per rule, up to 20) | Claude gets the list of broken rules and reviews the snippet |
+| `SubagentStop` | **False-claim detector** | does the report claim work that is not in the actions it ran? | the subagent must fix its report or do what is missing |
+| `Stop` | **Final check** | how much of the request is done (0–4)? anything unfinished? out of scope? + your own questions | Claude does not finish: it gets the list of problems and checks again |
+
+Details that matter:
+
+- **Read-only shortcut.** `git status`, `ls`, `cat file` and the like pass without calling Jev. Any `;`, `|`, `&&`, `$(…)` or sensitive file (`.env`, `.ssh`, `token`) cancels the shortcut.
+- **Short replies continue the request.** "yes", "go on" are joined to the previous request before triage.
+- **The final check sees the real work.** It diffs the files Claude edited against the commit at the start of the turn, *and* reads the commands Claude ran (commits, pushes, releases, deploys), so a turn done entirely through the terminal is judged fairly.
+- **Optional verification.** With `verify: "npm test --silent"`, the final check runs the command and a non-zero exit is enough to keep Claude working.
+
+The exact wording of every question is in [`docs/questions.md`](docs/questions.md).
+
+---
+
+## Automatic effort
+
+Claude Code lets you choose how hard the model thinks (`low` … `max`), but one setting for a whole
+session is either wasteful on simple questions or too shallow on hard bugs. ClauJev's triage turns
+each request into a suggestion:
 
 ```mermaid
 flowchart LR
-    D["Padrões<br/>no código"] --> G["~/.claude/hooks/claujev/<br/>config.json<br/>(sua máquina)"] --> P["seu-projeto/.claude/<br/>claujev.json<br/>(versionado com o projeto)"] --> F(["configuração final"])
+    P["request"] --> J{"Jev triage"}
+    J -->|"question"| L["low"]
+    J -->|"trivial change"| L
+    J -->|"small change"| M["medium"]
+    J -->|"medium change"| H["high"]
+    J -->|"large change<br/>or ambiguous bug"| X["xhigh"]
 ```
 
-Objetos são mesclados chave a chave. `rules` e `ignoreFiles` são **somados** entre as camadas.
-Use `"replace_rules": true` para trocar as regras em vez de somar.
+- **Without the mod**, the suggestion is only logged (see it in the report).
+- **With `claujev-mod`**, the `effort` setting decides: `observe` (default) shows *"effort high (suggested)"* in the status line; `on` applies it to each model request, within `min_effort` … `max_effort`.
+- `max` is never chosen automatically. A request that asks for effort itself (*"ultrathink"*, *"think hard"*) is never overridden. Subagents keep their own effort.
 
-### Modo de cada hook
+---
+
+## Observe before acting: decision bands
+
+Every Jev answer becomes a value from 0 to 1 and falls into one of three bands. Only the **high** band
+acts, and only when the hook is in `enforce`. The **uncertain** band exists for calibration: it shows
+in the report and never interrupts Claude.
+
+```mermaid
+flowchart TD
+    A["Jev answer<br/>noul · score · choice"] --> N["value 0..1"]
+    N --> B{"value ≥ high?"}
+    B -- yes --> HI["🔴 high"]
+    B -- no --> C{"value ≥ low?"}
+    C -- yes --> UN["🟡 uncertain"]
+    C -- no --> LO["🟢 low"]
+
+    HI --> M{"hook mode"}
+    M -- enforce --> ACT["acts on Claude<br/>hint · confirmation · block · model switch"]
+    M -- observe --> LOGA["logs only"]
+    UN --> LOGB["logged as uncertain<br/>(for calibration)"]
+    LO --> NONE["logged, carry on"]
+```
+
+Default bands (`low` / `high`):
+
+| Question | low | high |
+| --- | --- | --- |
+| request is ambiguous | 0.50 | 0.70 |
+| edit breaks a rule | 0.50 | 0.85 |
+| request incomplete (1 − completeness) | 0.25 | 0.40 |
+| unfinished work | 0.50 | 0.85 |
+| destructive command | 0.50 | 0.85 |
+| command touches credentials | 0.50 | 0.70 |
+| simple subagent task | 0.50 | 0.80 |
+| subagent false claim | 0.50 | 0.80 |
+
+---
+
+## Configure
+
+The quickest way: ask Claude *"set up ClauJev for this project"*. The `claujev-setup` skill reads your
+`CLAUDE.md` and project files and proposes a `.claude/claujev.json` for you to approve.
+
+Configuration comes in layers; the last one wins:
+
+```mermaid
+flowchart LR
+    D["built-in<br/>defaults"] --> O["plugin settings<br/>(language, mode)"] --> G["~/.claude/claujev/<br/>config.json"] --> P["your-project/.claude/<br/>claujev.json"] --> F(["final config"])
+```
+
+Objects merge key by key. `rules` and `ignoreFiles` **add up** across layers; use
+`"replace_rules": true` to replace instead.
+
+### Mode per hook
 
 ```json
 {
-  "hooks": {
-    "prompt": "enforce",
-    "bash": "enforce",
-    "edit": "observe",
-    "stop": "enforce",
-    "agent": "observe",
-    "subagent": "off"
-  }
+  "hooks": { "prompt": "enforce", "bash": "enforce", "edit": "observe", "stop": "enforce", "agent": "observe", "subagent": "off" }
 }
 ```
 
-`observe` só registra · `enforce` age no Claude · `off` nem chama o Jev.
+`observe` only logs · `enforce` acts on Claude · `off` does not call Jev at all.
 
-### Regras do projeto
+### Project rules
 
-Escreva em linguagem natural. Cada regra vira uma pergunta sim/não sobre cada edição.
+Plain language. Each rule becomes a yes/no question about every edit.
 
 ```json
 {
   "rules": [
-    "Não fazer consultas ao banco dentro de laços; busque tudo de uma vez.",
-    "Não alterar arquivos de migração já aplicados; crie uma migração nova."
+    "Do not query the database inside a loop; fetch everything at once.",
+    "Do not edit migrations that were already applied; create a new one."
   ]
 }
 ```
 
-Já vêm três regras padrão: sem código incompleto, sem segredos no código e sem erros engolidos.
+Three rules are built in: no unfinished code, no secrets in code, no swallowed errors.
 
-### Áreas, contexto e verificação
+### Areas, context and verification
 
 ```json
 {
   "areas": {
-    "frontend": {
-      "description": "Telas, componentes, CSS ou interface",
-      "hint": "Tarefa de interface: confira o resultado visual no navegador antes de encerrar."
-    }
+    "frontend": { "description": "UI, components, CSS", "hint": "Check the result in the browser before finishing." }
   },
-  "context": ["CLAUDE.md", "docs/ARQUITETURA.md"],
+  "context": ["CLAUDE.md", "docs/ARCHITECTURE.md"],
   "verify": "npm test --silent"
 }
 ```
 
-- **areas**: o Jev classifica cada pedido numa área e o Claude recebe a `hint` dela.
-- **context**: o começo desses arquivos entra no estado das edições e do Stop, para o Jev julgar com o contexto do projeto.
-- **verify**: comando rodado no Stop (timeout de 45 s). Se falhar, o Claude não encerra.
+- **areas**: Jev classifies each request into an area and Claude gets its `hint`.
+- **context**: the start of these files goes with edits and the final check, so Jev judges with your project's context.
+- **verify**: command run at the final check (45 s timeout). If it fails, Claude does not finish.
 
-### Perguntas suas
+### Your own questions
 
-Você pode fazer ao Jev qualquer pergunta extra no `stop` ou no `edit`, com três tipos de resposta:
+Ask Jev anything extra at `stop` or `edit`, with three answer types:
 
-| Tipo | Responde | Vira 0..1 como |
+| Type | Answers | Becomes 0..1 as |
 | --- | --- | --- |
-| `noul` | sim/não com probabilidade | a própria probabilidade de "sim" |
-| `score` | nota numa escala que você define em `criteria` | posição na escala |
-| `choice` | uma entre várias opções | soma das probabilidades das opções em `act.choices` |
+| `noul` | yes/no with a probability | the probability of "yes" |
+| `score` | a grade on a scale you define in `criteria` | the position on the scale |
+| `choice` | one of several options | the sum of the probabilities of the options in `act.choices` |
 
 ```json
 {
@@ -272,148 +273,163 @@ Você pode fazer ao Jev qualquer pergunta extra no `stop` ou no `edit`, com trê
     "stop": {
       "change_risk": {
         "type": "score",
-        "instructions": "Qual o risco desta mudança quebrar algo em produção?",
-        "criteria": ["Trivial", "Baixo", "Médio", "Alto", "Crítico"],
-        "act": { "threshold": { "low": 0.5, "high": 0.75 }, "message": "risco alto: peça revisão humana" }
+        "instructions": "How likely is this change to break production?",
+        "criteria": ["Trivial", "Low", "Medium", "High", "Critical"],
+        "act": { "threshold": { "low": 0.5, "high": 0.75 }, "message": "high risk: ask for human review" }
       }
     }
   }
 }
 ```
 
-Sem `act`, a pergunta só é registrada no log, o que serve para medir antes de decidir.
-Um exemplo completo está em [`examples/claujev.json`](examples/claujev.json).
+Without `act` a question is only logged, which is handy to measure before deciding. A full example
+is in [`examples/claujev.json`](examples/claujev.json).
 
-### Todas as opções
+### Every option
 
-| Chave | Padrão | Para quê |
+| Key | Default | What for |
 | --- | --- | --- |
-| `enabled` | `true` | liga/desliga tudo |
-| `model` | `"jev-latest"` | modelo do Jev |
-| `timeoutMs` | `3000` | tempo máximo de cada chamada |
-| `hooks` | tudo `observe` | modo de cada hook |
-| `thresholds` | ver tabela acima | faixas `low`/`high` de cada pergunta |
-| `routeModel` | `"haiku"` | modelo usado em subagentes simples |
-| `rules` | 3 regras | regras checadas a cada edição |
-| `areas` | `{}` | áreas do projeto com dicas |
-| `context` / `contextChars` | `[]` / `4000` | arquivos de contexto e quanto ler de cada |
-| `verify` / `verifyTimeoutMs` | `null` / `45000` | comando de verificação no Stop |
-| `questions` | `{}` | perguntas extras para `stop` e `edit` |
-| `ignoreFiles` | lockfiles, imagens, `.min.js` | edições ignoradas |
-| `checkDocs` | `false` | se `.md`, `.txt` e `.json` também passam pela revisão de regras |
-| `maxDiffChars` | `30000` | tamanho máximo do diff enviado no Stop |
+| `enabled` | `true` | turns everything on/off |
+| `lang` | `"en"` | `en` or `pt`: messages to Claude, questions to Jev |
+| `model` | `"jev-latest"` | Jev model |
+| `timeoutMs` | `3000` | max time per call |
+| `hooks` | all `observe` | mode per hook |
+| `thresholds` | see the table above | `low`/`high` bands per question |
+| `routeModel` | `"haiku"` | model for simple subagents |
+| `rules` | 3 rules | rules checked on every edit |
+| `areas` | `{}` | project areas with hints |
+| `context` / `contextChars` | `[]` / `4000` | context files and how much to read of each |
+| `verify` / `verifyTimeoutMs` | `null` / `45000` | verification command at the final check |
+| `questions` | `{}` | extra questions for `stop` and `edit` |
+| `ignoreFiles` | lockfiles, images, `.min.js` | edits that are skipped |
+| `checkDocs` | `false` | whether `.md`, `.txt` and `.json` edits go through rule review too |
+| `maxDiffChars` | `30000` | max diff size sent at the final check |
 
-Variáveis de ambiente: `TYPESAFE_API_KEY` (alternativa ao `.env`), `CLAUJEV_HOME` (outra pasta
-de instalação) e `CLAUJEV_DISABLED=1` (desliga para uma sessão).
+Mod settings (in `/plugin` → ClauJev mod): `effort` (`observe`/`on`/`off`), `min_effort`, `max_effort`,
+`status` (status line on/off), `lang`.
+
+Environment variables: `TYPESAFE_API_KEY` (alternative to the plugin setting), `CLAUJEV_HOME` (another
+data folder, default `~/.claude/claujev`) and `CLAUJEV_DISABLED=1` (turns it off for one session).
 
 ---
 
-## Calibrando com o relatório
+## Calibrate with the report
+
+Ask Claude *"show me the ClauJev report"*, type `/claujev` (with the mod) or run:
 
 ```bash
-node ~/.claude/hooks/claujev/claujev.mjs report
+node ~/.claude/plugins/cache/claujev/claujev/*/hooks/claujev.mjs report   # plugin
+node ~/.claude/claujev/claujev.mjs report                                 # manual install
 ```
 
-O relatório mostra:
+It shows, per hook: calls, errors, how often it flagged, was uncertain or acted, average latency and
+cost; per question: the value distribution (median, p90, max, count per quarter of 0..1); the effort
+suggestions; and the latest flagged events.
 
-- **por hook:** chamadas, erros, quantas vezes sinalizou, ficou incerto ou agiu, latência média e custo;
-- **por pergunta:** mediana, p90, máximo e quantas respostas caíram em cada quarto de 0..1;
-- **últimos eventos sinalizados**, para você conferir se foram acertos.
-
-O fluxo sugerido é deixar tudo em `observe` por alguns dias, olhar a distribuição e só então
-ligar `enforce` nos hooks em que o sinal faz sentido. Se uma pergunta vive na faixa incerta,
-ajuste o `high` dela ou reescreva a regra.
+Suggested flow: keep everything in `observe` for a few days, look at the distribution, then switch on
+`enforce` where the signal makes sense. If a question lives in the uncertain band, adjust its `high`
+or rewrite the rule.
 
 ---
 
-## Uso real
+## Real-world use
 
-Seis dias de uso diário do autor, num monorepo com API, CRM e integração com ERP:
+Six days of daily use by the author, in a monorepo with an API, a CRM and an ERP integration:
 
-| Hook | Chamadas | Agiu | Latência média | Custo |
+| Hook | Calls | Acted | Avg latency | Cost |
 | --- | ---: | ---: | ---: | ---: |
-| bash | 1.661 | 112 | 408 ms | US$ 0,043 |
-| prompt | 264 | 167 | 462 ms | US$ 0,010 |
-| edit | 131 | 0 | 404 ms | US$ 0,013 |
-| stop | 30 | 11 | 473 ms | US$ 0,005 |
-| agent / subagent | 4 | 1 | ~360 ms | < US$ 0,001 |
-| **total** | **~2.090** | | **~410 ms** | **~US$ 0,07** |
+| bash | 1,661 | 112 | 408 ms | US$ 0.043 |
+| prompt | 264 | 167 | 462 ms | US$ 0.010 |
+| edit | 131 | 0 | 404 ms | US$ 0.013 |
+| stop | 30 | 11 | 473 ms | US$ 0.005 |
+| agent / subagent | 4 | 1 | ~360 ms | < US$ 0.001 |
+| **total** | **~2,090** | | **~410 ms** | **~US$ 0.07** |
 
-Cerca de 1,7 milhão de tokens de entrada por **sete centavos de dólar** (a saída do Jev não é
-cobrada). O Stop pediu uma segunda conferência em 11 de 30 turnos com edição. Nenhuma edição foi bloqueada por regra, e a distribuição mostra que as regras
-padrão ficam quase sempre abaixo de 0,1.
-
----
-
-## Privacidade e segurança
-
-**O que vai para a API do Jev** (`api.typesafe.ai`): o texto do seu pedido, os comandos que o
-Claude quer rodar, os trechos editados, o diff do turno, o começo dos arquivos de `context` e a
-saída do `verify`. Antes de sair da máquina, tudo passa por um filtro que remove chaves
-privadas, tokens (`sk-…`, `ghp_…`, `Bearer …`) e pares `senha=`/`token=`/`api_key=`. Leia os
-[termos da TypeSafe AI](https://typesafe.ai) antes de usar em código sob sigilo.
-
-**O que fica na sua máquina:** os logs em `~/.claude/hooks/claujev/logs/` guardam respostas,
-latência e um *hash* do conteúdo, **não o conteúdo em si**. O estado do turno fica em `state/`.
-
-**O que o ClauJev nunca faz:** apagar, desfazer ou alterar seus arquivos; aprovar comando por
-você (no máximo, transforma "aprovado" em "pergunte ao usuário"); travar a sessão (timeouts
-curtos e qualquer erro é engolido e registrado).
+About 1.7 million input tokens for **seven US cents** (Jev's output is free). The final check asked for a
+second look in 11 of 30 turns with edits. No edit was blocked by a rule, and the distribution shows the
+built-in rules almost always stay below 0.1.
 
 ---
 
-## Perguntas frequentes
+## Privacy and safety
+
+**Sent to Jev's API** (`api.typesafe.ai`): the text of your request, the commands Claude wants to run,
+the edited snippets, the turn's diff and commands, the start of `context` files and the `verify` output.
+Before leaving your machine, everything goes through a filter that removes private keys, tokens
+(`sk-…`, `ghp_…`, `Bearer …`) and `password=`/`token=`/`api_key=` pairs. Read
+[TypeSafe AI's terms](https://typesafe.ai) before using it on confidential code.
+
+**Kept on your machine:** logs in `~/.claude/claujev/logs/` store answers, latency and a content
+*hash*, **not the content itself**. The turn state lives in `state/`. The API key lives in the
+system's secure storage (plugin) or in `~/.claude/claujev/.env` with `600` permissions (manual install).
+
+**What ClauJev never does:** delete, revert or change your files; approve a command for you (at most it
+turns "allowed" into "ask the user"); hang the session (short timeouts, every error is caught and logged).
+
+---
+
+## FAQ
 
 <details>
-<summary><b>Isso deixa o Claude Code mais lento?</b></summary>
+<summary><b>Does it slow Claude Code down?</b></summary>
 
-Cada evento verificado soma cerca de 400 ms. Comandos de leitura pura não chamam o Jev. Na prática,
-a espera é bem menor que o tempo de resposta do próprio Claude.
+Each check adds about 400 ms. Read-only commands don't call Jev. In practice the wait is far shorter
+than Claude's own response time.
 </details>
 
 <details>
-<summary><b>E se o Jev errar?</b></summary>
+<summary><b>What if Jev is wrong?</b></summary>
 
-As ações são reversíveis por desenho. Uma dica errada vira uma linha a mais no contexto; um bloqueio
-errado no Stop custa uma frase do Claude dizendo que conferiu. Os limites `high` são altos de
-propósito, e a faixa incerta nunca age.
+Actions are reversible by design. A wrong hint is one more line of context; a wrong block at the final
+check costs one sentence from Claude saying it checked. The `high` thresholds are high on purpose, and
+the uncertain band never acts.
 </details>
 
 <details>
-<summary><b>O Jev vê a conversa toda?</b></summary>
+<summary><b>Does automatic effort make Claude worse on hard tasks?</b></summary>
 
-Não. Ele vê só o estado montado para cada pergunta: o pedido, o comando ou o diff. Por isso a
-pergunta de ambiguidade avisa explicitamente que referências como "isso" ou "esse arquivo" são
-normais numa conversa em andamento.
+It is off until you set the mod to `on`, it never goes above `max_effort` or below `min_effort`, and
+it never touches a request where you asked for effort yourself. Start with `observe` and compare its
+suggestions with what you would have picked.
 </details>
 
 <details>
-<summary><b>Qual a diferença para o plugin oficial <code>typesafe@typesafe-ai</code>?</b></summary>
+<summary><b>Does Jev see the whole conversation?</b></summary>
 
-O plugin oficial é uma *skill*: ensina o Claude a escrever código que **usa** a API do Jev nos seus
-projetos. O ClauJev usa o Jev para **supervisionar o próprio Claude** enquanto ele trabalha. Os dois
-convivem sem conflito.
+No. It only sees the state built for each question: the request, the command or the diff. That's why
+the ambiguity question explicitly says references like "this" or "that file" are normal in an ongoing
+conversation.
 </details>
 
 <details>
-<summary><b>Como desligo rapidamente?</b></summary>
+<summary><b>How is it different from the official <code>typesafe@typesafe-ai</code> plugin?</b></summary>
 
-`CLAUJEV_DISABLED=1 claude` para uma sessão, `"enabled": false` no `config.json` para sempre, ou
-`node install.mjs --uninstall` para remover os hooks.
+The official plugin is a *skill*: it teaches Claude to write code that **uses** the Jev API in your
+projects. ClauJev uses Jev to **supervise Claude itself** while it works. They live side by side.
+</details>
+
+<details>
+<summary><b>How do I turn it off quickly?</b></summary>
+
+`CLAUJEV_DISABLED=1 claude` for one session, set the mode to `off` in `/plugin`, or disable the
+plugin there.
 </details>
 
 ---
 
-## Contribuindo
+## Contributing
 
-Issues e PRs são bem-vindos. O projeto é deliberadamente pequeno: um arquivo, sem dependências.
+Issues and PRs are welcome. The project is small on purpose: one script for the core, one module
+for the mod, no dependencies.
 
 ```bash
-npm test            # testes (node:test, sem rede)
-npm run selftest    # chamada real ao Jev (precisa de chave)
+npm test                                # core tests (node:test, no network)
+claude plugin test plugins/claujev-mod  # mod tests
+claude plugin validate plugins/claujev  # manifest checks
+npm run selftest                        # real call to Jev (needs a key)
 ```
 
-## Licença
+## License
 
-[MIT No Attribution (MIT-0)](LICENSE): use, modifique e redistribua como quiser, inclusive em
-projetos comerciais, **sem precisar citar o autor nem manter aviso de copyright**.
+[MIT No Attribution (MIT-0)](LICENSE): use, modify and redistribute freely, including commercially,
+**with no attribution or copyright notice required**.

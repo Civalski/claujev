@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claujev",
+  "description": "ClauJev: Jev (TypeSafe AI) as a second pair of eyes for Claude Code",
+  "owner": { "name": "Alisson Civalski", "url": "https://github.com/Civalski" },
+  "plugins": [
+    {
+      "name": "claujev",
+      "description": "Core hooks: request triage, command guard, rule review, final check, subagent routing and effort suggestion.",
+      "source": "./plugins/claujev",
+      "category": "productivity"
+    },
+    {
+      "name": "claujev-mod",
+      "description": "Optional mod: applies Jev's effort suggestion per request, shows Jev's activity in the status line and toasts when Jev acts.",
+      "source": "./plugins/claujev-mod",
+      "category": "productivity"
+    }
+  ]
+}

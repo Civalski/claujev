@@ -12,6 +12,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      - run: node --check hooks/claujev.mjs
+      - run: node --check plugins/claujev/hooks/claujev.mjs
       - run: node --check install.mjs
       - run: node --test test/claujev.test.mjs

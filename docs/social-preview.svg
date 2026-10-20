@@ -20,12 +20,12 @@
   </g>
 
   <text x="640" y="150" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="96" font-weight="800" fill="#f3f4f8">Clau<tspan fill="#5fb4e8">Jev</tspan></text>
-  <text x="640" y="205" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" fill="#b8bfd3">um segundo par de olhos para o seu agente</text>
+  <text x="640" y="205" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" fill="#b8bfd3">a second pair of eyes for your coding agent</text>
 
   <g transform="translate(250 270)">
     <rect width="300" height="150" rx="20" fill="url(#claude)"/>
     <text x="150" y="68" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="30" font-weight="700" fill="#fff">Claude Code</text>
-    <text x="150" y="108" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" fill="#fff" opacity=".92">faz o trabalho</text>
+    <text x="150" y="108" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" fill="#fff" opacity=".92">does the work</text>
   </g>
   <g stroke="#9aa3bd" stroke-width="3.5" fill="none" stroke-linecap="round">
     <path d="M572 325H708"/><path d="M694 313l14 12-14 12"/>
@@ -36,12 +36,12 @@
   <g transform="translate(730 270)">
     <rect width="300" height="150" rx="20" fill="url(#jev)"/>
     <text x="150" y="68" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="30" font-weight="700" fill="#fff">Jev</text>
-    <text x="150" y="108" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" fill="#fff" opacity=".92">confere</text>
+    <text x="150" y="108" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" fill="#fff" opacity=".92">checks it</text>
   </g>
 
   <g font-family="DejaVu Sans, Arial, sans-serif" font-size="21" fill="#d6dbea" text-anchor="middle">
-    <text x="640" y="500">triagem do pedido · guarda de comandos · revisão por regras</text>
-    <text x="640" y="534">conferência final · roteamento de subagentes · relatório falso</text>
+    <text x="640" y="500">triage · automatic effort · command guard · rule review</text>
+    <text x="640" y="534">final check · subagent routing · false-claim detector</text>
   </g>
-  <text x="640" y="598" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="20" fill="#7d86a3">github.com/Civalski/claujev  ·  1 arquivo  ·  0 dependências  ·  MIT-0</text>
+  <text x="640" y="598" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="20" fill="#7d86a3">Claude Code plugin  ·  github.com/Civalski/claujev  ·  MIT-0</text>
 </svg>

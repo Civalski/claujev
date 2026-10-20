@@ -4,3 +4,4 @@ node_modules/
 logs/
 state/
 .DS_Store
+.claude-plugin/types/
