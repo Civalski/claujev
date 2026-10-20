@@ -100,6 +100,30 @@ test('loadConfig: plugin options set lang and mode, project config still wins', 
   }
 });
 
+test('feature menu: each feature follows the mode, can be set alone, and "off" always wins', () => {
+  const env = { CLAUDE_PLUGIN_OPTION_MODE: 'enforce', CLAUDE_PLUGIN_OPTION_TRIAGE: 'mode', CLAUDE_PLUGIN_OPTION_RULE_REVIEW: 'observe', CLAUDE_PLUGIN_OPTION_COMMAND_GUARD: 'off' };
+  Object.assign(process.env, env);
+  try {
+    // The project tries to turn the command guard on: the user's "off" still wins.
+    const cfg = m.loadConfig(project('p5', { hooks: { bash: 'enforce', stop: 'observe' } }));
+    assert.equal(cfg.hooks.prompt, 'enforce', '"mode" follows the Mode setting');
+    assert.equal(cfg.hooks.edit, 'observe', 'a feature can have its own mode');
+    assert.equal(cfg.hooks.bash, 'off', 'off in the menu beats the project config');
+    assert.equal(cfg.hooks.stop, 'observe', 'the project config still tunes features left on');
+  } finally {
+    for (const k of Object.keys(env)) delete process.env[k];
+  }
+});
+
+test('plugin manifest: every feature option maps to a hook', () => {
+  const opts = JSON.parse(readFileSync(join(REPO, 'plugins', 'claujev', '.claude-plugin', 'plugin.json'), 'utf8')).userConfig;
+  for (const k of ['triage', 'command_guard', 'rule_review', 'final_check', 'subagent_routing', 'subagent_check']) {
+    assert.deepEqual(opts[k].options, ['mode', 'observe', 'enforce', 'off'], k);
+    assert.equal(opts[k].default, 'mode', k);
+  }
+  assert.equal(opts.api_key.sensitive, true);
+});
+
 test('TEXT: en and pt have the same keys', () => {
   const keys = (o, p = '') => Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? keys(v, `${p}${k}.`) : [`${p}${k}`])).sort();
   assert.deepEqual(keys(m.TEXT.pt), keys(m.TEXT.en));

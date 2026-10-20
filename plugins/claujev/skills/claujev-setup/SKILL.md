@@ -25,6 +25,14 @@ Run `node "${CLAUDE_PLUGIN_ROOT}/hooks/claujev.mjs" selftest` and show the resul
   `TYPESAFE_API_KEY=...` in `~/.claude/claujev/.env`). Do not ask them to paste the key in the chat.
 - HTTP 401/403: the key is wrong or expired. HTTP 429: rate limit, try again later.
 
+## Turning features on and off
+
+Each feature is a plugin setting the user changes in `/config` or `/plugin configure claujev@claujev`:
+Request triage, Command guard, Rule review, Final check, Subagent routing, Subagent report check. Each
+takes `mode` (follows Mode), `observe`, `enforce` or `off`; `off` there beats any config file. When the
+user wants a feature off everywhere, point them to that menu. For one project only, use `hooks` in
+`.claude/claujev.json` (keys `prompt`, `bash`, `edit`, `stop`, `agent`, `subagent`).
+
 ## 2. Write the project config
 
 Read the project's `CLAUDE.md`/`AGENTS.md`, README and main config files (package.json,

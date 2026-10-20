@@ -57,9 +57,10 @@ e custa frações de centavo.
 No Claude Code:
 
 ```
-/plugin marketplace add Civalski/claujev
-/plugin install claujev@claujev
+/plugin install claujev --marketplace Civalski/claujev
 ```
+
+(Em versões do Claude Code anteriores à 2.1.275: `/plugin marketplace add Civalski/claujev` e depois `/plugin install claujev@claujev`.)
 
 O Claude Code pede a **chave da TypeSafe AI** (guardada no cofre seguro do sistema), o **idioma**
 (escolha `pt`) e o **modo** (`observe` para começar). Se ele não perguntar (por exemplo, ao instalar pelo
@@ -68,7 +69,7 @@ terminal com `claude plugin install`), rode `/plugin configure claujev@claujev`.
 **Opcional, o mod** (barra de status, avisos e esforço automático; precisa de uma versão do Claude Code com mods):
 
 ```
-/plugin install claujev-mod@claujev
+/plugin install claujev-mod --marketplace Civalski/claujev
 ```
 
 **Confira se funciona:** peça ao Claude *"confere se o ClauJev está funcionando"*. A skill
@@ -220,7 +221,24 @@ flowchart LR
 Objetos são mesclados chave a chave. `rules` e `ignoreFiles` são **somados** entre as camadas; use
 `"replace_rules": true` para trocar as regras em vez de somar.
 
-### Modo de cada hook
+### Ligar e desligar recursos
+
+Cada recurso tem a própria linha no `/config` (e em `/plugin configure claujev@claujev`):
+
+| Opção | Recurso |
+| --- | --- |
+| Request triage | dicas + sugestão de esforço |
+| Command guard | confirmação antes de comandos arriscados |
+| Rule review | cada edição contra as suas regras |
+| Final check | conferência antes de o Claude encerrar |
+| Subagent routing | subagentes simples num modelo menor |
+| Subagent report check | detector de relatório falso |
+
+Cada uma aceita `mode` (segue a opção **Mode**, o padrão), `observe`, `enforce` ou `off`. Um recurso
+desligado ali fica desligado mesmo que o `.claude/claujev.json` de um projeto tente ligá-lo; os recursos
+ligados continuam ajustáveis por projeto.
+
+### Modo de cada hook (arquivos de configuração)
 
 ```json
 {

@@ -1,13 +1,23 @@
 {
   "name": "claujev",
   "displayName": "ClauJev",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Jev (TypeSafe AI) as a second pair of eyes for Claude Code: request triage, command guard, rule review, final check, subagent routing and effort suggestion.",
-  "author": { "name": "Alisson Civalski", "url": "https://github.com/Civalski" },
+  "author": {
+    "name": "Alisson Civalski",
+    "url": "https://github.com/Civalski"
+  },
   "homepage": "https://github.com/Civalski/claujev",
   "repository": "https://github.com/Civalski/claujev",
   "license": "MIT-0",
-  "keywords": ["jev", "typesafe-ai", "hooks", "guardrails", "code-review", "effort"],
+  "keywords": [
+    "jev",
+    "typesafe-ai",
+    "hooks",
+    "guardrails",
+    "code-review",
+    "effort"
+  ],
   "userConfig": {
     "api_key": {
       "type": "string",
@@ -19,15 +29,94 @@
       "type": "string",
       "title": "Language",
       "description": "Language of the messages Claude receives and of the questions sent to Jev.",
-      "options": ["en", "pt"],
+      "options": [
+        "en",
+        "pt"
+      ],
       "default": "en"
     },
     "mode": {
       "type": "string",
       "title": "Mode",
       "description": "observe only logs (start here and check the report); enforce lets Jev act on Claude; off disables every hook. A project's .claude/claujev.json can override it per hook.",
-      "options": ["observe", "enforce", "off"],
+      "options": [
+        "observe",
+        "enforce",
+        "off"
+      ],
       "default": "observe"
+    },
+    "triage": {
+      "type": "string",
+      "title": "Request triage",
+      "description": "Classifies each request (question, small or large change, ambiguity, project area), gives Claude a hint and suggests an effort level. \"mode\" follows the Mode setting above; off turns this feature off even if a project config enables it.",
+      "options": [
+        "mode",
+        "observe",
+        "enforce",
+        "off"
+      ],
+      "default": "mode"
+    },
+    "command_guard": {
+      "type": "string",
+      "title": "Command guard",
+      "description": "Asks for your confirmation before destructive or credential-touching shell commands. \"mode\" follows the Mode setting above; off turns this feature off even if a project config enables it.",
+      "options": [
+        "mode",
+        "observe",
+        "enforce",
+        "off"
+      ],
+      "default": "mode"
+    },
+    "rule_review": {
+      "type": "string",
+      "title": "Rule review",
+      "description": "Checks every code edit against the built-in and project rules. \"mode\" follows the Mode setting above; off turns this feature off even if a project config enables it.",
+      "options": [
+        "mode",
+        "observe",
+        "enforce",
+        "off"
+      ],
+      "default": "mode"
+    },
+    "final_check": {
+      "type": "string",
+      "title": "Final check",
+      "description": "Before Claude finishes, checks that the request is complete, nothing is unfinished and verify passes. \"mode\" follows the Mode setting above; off turns this feature off even if a project config enables it.",
+      "options": [
+        "mode",
+        "observe",
+        "enforce",
+        "off"
+      ],
+      "default": "mode"
+    },
+    "subagent_routing": {
+      "type": "string",
+      "title": "Subagent routing",
+      "description": "Sends simple subagent tasks to a smaller, faster model. \"mode\" follows the Mode setting above; off turns this feature off even if a project config enables it.",
+      "options": [
+        "mode",
+        "observe",
+        "enforce",
+        "off"
+      ],
+      "default": "mode"
+    },
+    "subagent_check": {
+      "type": "string",
+      "title": "Subagent report check",
+      "description": "Catches subagent reports that claim work the subagent never did. \"mode\" follows the Mode setting above; off turns this feature off even if a project config enables it.",
+      "options": [
+        "mode",
+        "observe",
+        "enforce",
+        "off"
+      ],
+      "default": "mode"
     }
   }
 }

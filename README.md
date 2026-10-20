@@ -57,9 +57,10 @@ fraction of a cent.
 In Claude Code:
 
 ```
-/plugin marketplace add Civalski/claujev
-/plugin install claujev@claujev
+/plugin install claujev --marketplace Civalski/claujev
 ```
+
+(On Claude Code older than 2.1.275: `/plugin marketplace add Civalski/claujev`, then `/plugin install claujev@claujev`.)
 
 Claude Code asks for your **TypeSafe AI key** (kept in the system's secure storage), the
 **language** (`en` or `pt`) and the **mode** (`observe` to start). If it doesn't ask (for example when installed
@@ -68,7 +69,7 @@ from the terminal with `claude plugin install`), run `/plugin configure claujev@
 **Optional, the mod** (status line, toasts, automatic effort; needs a Claude Code version with mods):
 
 ```
-/plugin install claujev-mod@claujev
+/plugin install claujev-mod --marketplace Civalski/claujev
 ```
 
 **Check it works:** ask Claude *"check that ClauJev works"*. The bundled `claujev-setup` skill runs
@@ -217,7 +218,24 @@ flowchart LR
 Objects merge key by key. `rules` and `ignoreFiles` **add up** across layers; use
 `"replace_rules": true` to replace instead.
 
-### Mode per hook
+### Turn features on and off
+
+Every feature has its own row in `/config` (and in `/plugin configure claujev@claujev`):
+
+| Setting | Feature |
+| --- | --- |
+| Request triage | hints + effort suggestion |
+| Command guard | confirmation before risky commands |
+| Rule review | every edit against your rules |
+| Final check | completeness check before Claude finishes |
+| Subagent routing | simple subagents on a smaller model |
+| Subagent report check | false-claim detector |
+
+Each one takes `mode` (follows the **Mode** setting, the default), `observe`, `enforce` or `off`.
+A feature you switch `off` there stays off even if a project's `.claude/claujev.json` turns it on;
+features left on can still be tuned per project.
+
+### Mode per hook (config files)
 
 ```json
 {

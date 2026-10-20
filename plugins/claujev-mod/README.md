@@ -1,5 +1,7 @@
 # ClauJev mod
 
+Install: `/plugin install claujev-mod --marketplace Civalski/claujev`
+
 Optional companion of the `claujev` plugin (installed with it as a dependency). It needs a Claude Code
 version with mods.
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.0 — 2026-10-20
+
+### Added
+- **Feature menu**: one setting per feature in `/config` and `/plugin configure` (Request triage,
+  Command guard, Rule review, Final check, Subagent routing, Subagent report check), each `mode`,
+  `observe`, `enforce` or `off`. `off` there wins over any config file.
+- One-step install: `/plugin install claujev --marketplace Civalski/claujev`.
+
 ## 2.0.0 — 2026-10-20
 
 **ClauJev is now a Claude Code plugin.** Install with
