@@ -29,6 +29,7 @@ if (major < 20) {
 const cmd = (hook) => `node "${SCRIPT.replace(/\\/g, '/')}" ${hook}`;
 const entry = (hook, timeout) => ({ type: 'command', command: cmd(hook), timeout });
 const HOOKS = {
+  SessionStart: [{ hooks: [entry('session', 10)] }],
   UserPromptSubmit: [{ hooks: [entry('prompt', 15)] }],
   PreToolUse: [
     { matcher: 'Bash|PowerShell', hooks: [entry('bash', 15)] },

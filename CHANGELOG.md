@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.2.0 — 2026-10-20
+
+### Added
+- **Guided setup** (`/claujev:configure`): Claude asks a few multiple-choice questions (language, mode,
+  features to turn off, automatic effort) and applies them with `claude plugin configure --values-stdin`.
+  The API key is never asked in the chat.
+- **First-run offer**: a light `SessionStart` hook (it never calls Jev) asks Claude to offer the guided
+  setup once on ClauJev's first session, and reminds about a missing API key on later sessions.
+
 ## 2.1.0 — 2026-10-20
 
 ### Added

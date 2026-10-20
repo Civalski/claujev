@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ClauJev: Jev (TypeSafe AI) as a second pair of eyes for Claude Code.
-// Usage: node claujev.mjs <prompt|edit|stop|bash|agent|subagent|selftest|report>
+// Usage: node claujev.mjs <prompt|edit|stop|bash|agent|subagent|session|selftest|report>
 // Hooks never break the session: any error is logged and Claude carries on.
 import { readFileSync, writeFileSync, mkdirSync, existsSync, appendFileSync, readdirSync, realpathSync } from 'node:fs';
 import { join, basename, extname, resolve, relative, isAbsolute } from 'node:path';
@@ -168,7 +168,11 @@ const TEXT = {
       empty: 'No logs yet.', distribution: '\nDistribution per question (0..1):', recent: '\nLatest flagged events/errors:', effort: '\nSuggested effort:',
       cols: { hook: 'hook', calls: 'calls', errors: 'errors', flagged: 'flagged', uncertain: 'uncertain', acted: 'acted', latency: 'avg latency (ms)', tokens: 'input tokens', cost: 'cost US$', question: 'question', median: 'median' },
     },
-    usage: 'Usage: node claujev.mjs <prompt|edit|stop|bash|agent|subagent|selftest|report>',
+    session: {
+      firstRun: (hasKey) => `[ClauJev] ClauJev (Jev hooks by TypeSafe AI) was just installed and this is its first session. Once, at a natural moment (after answering the user's current request if they asked for something), offer the guided setup: the /claujev:configure skill asks a few basic preferences (language, mode, which features to keep) and applies them.${hasKey ? '' : ' The TypeSafe AI key is not set yet, so ClauJev is idle until the user runs /plugin configure claujev@claujev. Never ask for the key in the chat.'}`,
+      noKey: '[ClauJev] The TypeSafe AI key is not set, so ClauJev is idle. Mention it once to the user: run /plugin configure claujev@claujev (or /claujev:configure for the guided setup). Never ask for the key in the chat.',
+    },
+    usage: 'Usage: node claujev.mjs <prompt|edit|stop|bash|agent|subagent|session|selftest|report>',
   },
 
   pt: {
@@ -287,7 +291,11 @@ const TEXT = {
       empty: 'Sem logs ainda.', distribution: '\nDistribuição por pergunta (0..1):', recent: '\nÚltimos eventos sinalizados/erros:', effort: '\nEsforço sugerido:',
       cols: { hook: 'hook', calls: 'chamadas', errors: 'erros', flagged: 'sinalizados', uncertain: 'incertos', acted: 'agiu', latency: 'latência média (ms)', tokens: 'tokens entrada', cost: 'custo US$', question: 'pergunta', median: 'mediana' },
     },
-    usage: 'Uso: node claujev.mjs <prompt|edit|stop|bash|agent|subagent|selftest|report>',
+    session: {
+      firstRun: (hasKey) => `[ClauJev] O ClauJev (hooks do Jev, da TypeSafe AI) acabou de ser instalado e esta é a primeira sessão dele. Uma vez, num momento natural (depois de responder o pedido atual do usuário, se houver um), ofereça a configuração guiada: a skill /claujev:configure pergunta algumas preferências básicas (idioma, modo, quais recursos manter) e as aplica.${hasKey ? '' : ' A chave da TypeSafe AI ainda não foi definida, então o ClauJev fica parado até o usuário rodar /plugin configure claujev@claujev. Nunca peça a chave no chat.'}`,
+      noKey: '[ClauJev] A chave da TypeSafe AI não está definida, então o ClauJev está parado. Avise o usuário uma vez: rodar /plugin configure claujev@claujev (ou /claujev:configure para a configuração guiada). Nunca peça a chave no chat.',
+    },
+    usage: 'Uso: node claujev.mjs <prompt|edit|stop|bash|agent|subagent|session|selftest|report>',
   },
 };
 
@@ -476,6 +484,26 @@ function suggestEffort({ taskType, taskConf, scope, ambiguous }) {
   // An ambiguous bug needs more investigation than its size suggests.
   if (taskType === 'bug' && (ambiguous ?? 0) >= 0.7) i = Math.min(i + 1, 3);
   return EFFORTS[i];
+}
+
+// ---------- hook: session start (SessionStart) ----------
+// Never calls Jev. On the very first session it asks Claude to offer the guided setup once;
+// afterwards it only speaks up when the key is missing (ClauJev is idle without it).
+
+function onSession(input, cfg) {
+  if (input.source && input.source !== 'startup') return;
+  const t = T(cfg).session;
+  const marker = join(HERE, 'onboarding.json');
+  const hasKey = !!apiKey();
+  let message = null;
+  if (!existsSync(marker)) {
+    mkdirSync(HERE, { recursive: true });
+    writeFileSync(marker, JSON.stringify({ offered: new Date().toISOString() }));
+    message = t.firstRun(hasKey);
+  } else if (!hasKey) {
+    message = t.noKey;
+  }
+  if (message) emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: message } });
 }
 
 // ---------- hook: user request (UserPromptSubmit) ----------
@@ -859,7 +887,7 @@ function report(cfg) {
 
 // ---------- entry ----------
 
-const HANDLERS = { prompt: onPrompt, edit: onEdit, stop: onStop, bash: onBash, agent: onAgent, subagent: onSubagent };
+const HANDLERS = { prompt: onPrompt, edit: onEdit, stop: onStop, bash: onBash, agent: onAgent, subagent: onSubagent, session: onSession };
 
 // Pure functions exported for the tests.
 export { DEFAULTS, TEXT, redact, band, normScore, loadConfig, isReadOnly, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, EFFECTFUL, EXPLICIT_EFFORT };
@@ -880,7 +908,8 @@ if (isMain) {
     else if (cmd === 'report') report(cfg);
     else if (HANDLERS[cmd]) {
       const disabled = process.env.CLAUJEV_DISABLED === '1' || process.env.JEV_DISABLED === '1';
-      if (cfg.enabled && !disabled) await HANDLERS[cmd](input, cfg, cfg.hooks[cmd] || 'observe');
+      if (cmd === 'session') { if (cfg.enabled && !disabled) onSession(input, cfg); }
+      else if (cfg.enabled && !disabled) await HANDLERS[cmd](input, cfg, cfg.hooks[cmd] || 'observe');
     } else {
       console.error(TXT.usage);
       process.exitCode = 1;

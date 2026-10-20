@@ -40,9 +40,11 @@ No Claude Code:
 /plugin install claujev --marketplace Civalski/claujev
 ```
 
-Preencha a chave da TypeSafe AI, o idioma (`pt`) e o modo quando ele pedir (ou depois, com
-`/plugin configure claujev@claujev`) e abra uma conversa nova. Tudo começa em modo `observe`: o Jev só
-registra até você mudar para `enforce`.
+Preencha a chave da TypeSafe AI quando ele pedir (ou depois, com `/plugin configure claujev@claujev`) e
+abra uma conversa nova. Nessa primeira conversa o Claude oferece a **configuração guiada**
+(`/claujev:configure`): algumas perguntas de múltipla escolha (idioma, modo, recursos que você quer
+manter), aplicadas para você. Tudo começa em modo `observe`: o Jev só registra até você mudar para
+`enforce`.
 
 Opcional, para a barra de status e o esforço automático: `/plugin install claujev-mod --marketplace Civalski/claujev`.
 
@@ -52,20 +54,21 @@ Cole isto no Claude Code:
 
 ```text
 Configure o ClauJev (github.com/Civalski/claujev) para mim:
-1. Instale pelo terminal: `claude plugin install claujev --marketplace Civalski/claujev`.
-   Pergunte se eu também quero o `claujev-mod` (barra de status + esforço automático) e instale do mesmo jeito.
-2. Peça para eu rodar `/plugin configure claujev@claujev` e preencher a chave da TypeSafe AI, o idioma
-   (pt) e o modo. Nunca peça para eu colar a chave no chat.
-3. Peça para eu rodar `/reload-plugins` e então use a skill claujev-setup: rode o autoteste, leia o
-   CLAUDE.md/AGENTS.md deste projeto e proponha um `.claude/claujev.json` (regras, áreas, contexto,
-   verify) para eu aprovar antes de gravar.
-4. Deixe todos os recursos em modo observe e me diga como ver o relatório daqui a alguns dias.
+1. Instale pelo terminal: `claude plugin install claujev --marketplace Civalski/claujev`, e pergunte se
+   eu também quero o `claujev-mod` (barra de status + esforço automático).
+2. Pergunte minhas preferências básicas com perguntas de múltipla escolha (idioma, observe ou enforce,
+   recursos a desligar, esforço automático) e grave com `claude plugin configure claujev@claujev --values-stdin`
+   (`claude plugin configure claujev@claujev --json` lista as opções).
+3. Peça para eu rodar `/plugin configure claujev@claujev` e colar a chave da TypeSafe AI eu mesmo (nunca
+   no chat) e reiniciar o Claude Code. Depois, `/claujev:claujev-setup` escreve as regras deste projeto.
 ```
 
 ## Comandos
 
 | Comando | O que faz |
 | --- | --- |
+| `/claujev:configure` | configuração guiada: pergunta suas preferências básicas e aplica |
+| `/claujev:claujev-setup` | regras do projeto a partir do `CLAUDE.md`, autoteste, relatório e ajustes |
 | `/plugin configure claujev@claujev` | chave, idioma, modo e liga/desliga de cada recurso |
 | `/config` | liga e desliga cada recurso: Request triage, Command guard, Rule review, Final check, Subagent routing, Subagent report check |
 | `/plugin configure claujev-mod@claujev` | esforço automático (`observe`/`on`/`off`), limites de esforço, barra de status |

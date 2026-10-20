@@ -1,6 +1,17 @@
 {
   "description": "ClauJev: asks Jev (TypeSafe AI) about requests, commands, edits and finished work",
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/claujev.mjs\" session",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [

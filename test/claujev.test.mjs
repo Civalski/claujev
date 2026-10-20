@@ -213,6 +213,20 @@ test('the key from the plugin settings is used before the .env file', () => {
   assert.doesNotMatch(last, /TYPESAFE_API_KEY not set/);
 });
 
+test('first session: offers the guided setup once, then only reminds about a missing key', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'claujev-session-'));
+  const run = (env) => runHook('session', { session_id: 's', cwd: home, source: 'startup' }, { CLAUJEV_HOME: dir, ...env });
+  const first = JSON.parse(run({ TYPESAFE_API_KEY: 'k' }));
+  assert.equal(first.hookSpecificOutput.hookEventName, 'SessionStart');
+  assert.match(first.hookSpecificOutput.additionalContext, /\/claujev:configure/);
+  assert.doesNotMatch(first.hookSpecificOutput.additionalContext, /not set/, 'with a key, no key warning');
+  assert.equal(run({ TYPESAFE_API_KEY: 'k' }), '', 'second session with a key: silent');
+  assert.match(JSON.parse(run({})).hookSpecificOutput.additionalContext, /key is not set/, 'without a key: reminder');
+  assert.equal(runHook('session', { session_id: 's', cwd: home, source: 'resume' }, { CLAUJEV_HOME: dir }), '', 'resume/compact: silent');
+  const pt = mkdtempSync(join(tmpdir(), 'claujev-session-'));
+  assert.match(runHook('session', { session_id: 's', cwd: home, source: 'startup' }, { CLAUJEV_HOME: pt, CLAUDE_PLUGIN_OPTION_LANG: 'pt' }), /configuração guiada/);
+});
+
 test('installer: creates files, keeps third-party hooks, uninstalls cleanly', () => {
   const fakeHome = mkdtempSync(join(tmpdir(), 'claujev-home-'));
   const env = { ...process.env, HOME: fakeHome, USERPROFILE: fakeHome };
@@ -235,7 +249,7 @@ test('installer: creates files, keeps third-party hooks, uninstalls cleanly', ()
   assert.equal(s.model, 'opus', 'other settings stay untouched');
   assert.equal(s.hooks.PreToolUse.length, 3, 'third-party hook + bash + agent');
   assert.equal(s.hooks.UserPromptSubmit.length, 1);
-  assert.deepEqual(Object.keys(s.hooks).sort(), ['PostToolUse', 'PreToolUse', 'Stop', 'SubagentStop', 'UserPromptSubmit']);
+  assert.deepEqual(Object.keys(s.hooks).sort(), ['PostToolUse', 'PreToolUse', 'SessionStart', 'Stop', 'SubagentStop', 'UserPromptSubmit']);
 
   run('--uninstall');
   s = JSON.parse(readFileSync(settingsPath, 'utf8'));
@@ -255,6 +269,6 @@ test('installer: refuses to double up when the plugin is installed', () => {
 test('plugin hooks.json points every hook at the script', () => {
   const hooks = JSON.parse(readFileSync(join(REPO, 'plugins', 'claujev', 'hooks', 'hooks.json'), 'utf8')).hooks;
   const cmds = Object.values(hooks).flat().flatMap((g) => g.hooks.map((h) => h.command));
-  assert.equal(cmds.length, 6);
-  for (const c of cmds) assert.match(c, /^node "\$\{CLAUDE_PLUGIN_ROOT\}\/hooks\/claujev\.mjs" (prompt|bash|agent|edit|stop|subagent)$/);
+  assert.equal(cmds.length, 7);
+  for (const c of cmds) assert.match(c, /^node "\$\{CLAUDE_PLUGIN_ROOT\}\/hooks\/claujev\.mjs" (session|prompt|bash|agent|edit|stop|subagent)$/);
 });
