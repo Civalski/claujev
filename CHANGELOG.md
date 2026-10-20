@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.3.0 — 2026-10-20
+
+### Changed
+- **License: MIT** (was MIT-0). Still free to use, modify and redistribute, but copies must keep the
+  copyright notice crediting the author, Alisson Civalski.
+- **Settings screen in Portuguese and English**: every option title and description shows both
+  languages in plain words, since Claude Code shows them as written in the manifest.
+
 ## 2.2.0 — 2026-10-20
 
 ### Added

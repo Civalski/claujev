@@ -1,3 +1,4 @@
+// ClauJev mod. Copyright (c) 2026 Alisson Civalski — MIT License — https://github.com/Civalski/claujev
 import type { EngineInterface, Register } from 'claude-code'
 
 // The claujev plugin's hooks write to ~/.claude/claujev; the mod only reads it.

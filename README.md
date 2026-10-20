@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="License MIT-0" src="https://img.shields.io/badge/license-MIT--0-blue"></a>
+  <a href="LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
   <img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-d97757">
   <img alt="Zero dependencies" src="https://img.shields.io/badge/dependencies-0-brightgreen">
 </p>
@@ -39,8 +39,8 @@ In Claude Code:
 /plugin install claujev --marketplace Civalski/claujev
 ```
 
-Fill in your TypeSafe AI key when asked (or later with `/plugin configure claujev@claujev`) and open a
-new session. On that first session Claude offers the **guided setup** (`/claujev:configure`): a few
+Fill in your TypeSafe AI key when asked (or later with `/plugin configure claujev@claujev`): it is the
+only required setting, the rest can stay as is. Then open a new session. On that first session Claude offers the **guided setup** (`/claujev:configure`): a few
 multiple-choice questions (language, mode, features to keep) applied for you. Everything starts in
 `observe` mode: Jev only logs until you switch it to `enforce`.
 
@@ -149,4 +149,5 @@ the mod's, `npm run validate` the manifests.
 
 ## License
 
-[MIT-0](LICENSE): use, modify and redistribute freely, with no attribution required.
+Created by **[Alisson Civalski](https://github.com/Civalski)**. [MIT](LICENSE): free to use, modify and
+redistribute, including commercially, as long as the copyright notice is kept.

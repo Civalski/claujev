@@ -43,5 +43,5 @@
     <text x="640" y="500">triage · automatic effort · command guard · rule review</text>
     <text x="640" y="534">final check · subagent routing · false-claim detector</text>
   </g>
-  <text x="640" y="598" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="20" fill="#7d86a3">Claude Code plugin  ·  github.com/Civalski/claujev  ·  MIT-0</text>
+  <text x="640" y="598" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="20" fill="#7d86a3">Claude Code plugin  ·  github.com/Civalski/claujev  ·  MIT</text>
 </svg>

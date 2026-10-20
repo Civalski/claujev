@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// ClauJev. Copyright (c) 2026 Alisson Civalski — MIT License — https://github.com/Civalski/claujev
 // Manual installer for ClauJev (the plugin is the recommended way). Linux, macOS and Windows, Node 20+.
 //
 //   node install.mjs              install or update

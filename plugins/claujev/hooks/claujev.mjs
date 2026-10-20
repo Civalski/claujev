@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // ClauJev: Jev (TypeSafe AI) as a second pair of eyes for Claude Code.
+// Copyright (c) 2026 Alisson Civalski — MIT License — https://github.com/Civalski/claujev
 // Usage: node claujev.mjs <prompt|edit|stop|bash|agent|subagent|session|selftest|report>
 // Hooks never break the session: any error is logged and Claude carries on.
 import { readFileSync, writeFileSync, mkdirSync, existsSync, appendFileSync, readdirSync, realpathSync } from 'node:fs';

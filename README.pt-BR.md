@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="Licença MIT-0" src="https://img.shields.io/badge/licen%C3%A7a-MIT--0-blue"></a>
+  <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-blue"></a>
   <img alt="Plugin do Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-d97757">
   <img alt="Zero dependências" src="https://img.shields.io/badge/depend%C3%AAncias-0-brightgreen">
 </p>
@@ -40,8 +40,9 @@ No Claude Code:
 /plugin install claujev --marketplace Civalski/claujev
 ```
 
-Preencha a chave da TypeSafe AI quando ele pedir (ou depois, com `/plugin configure claujev@claujev`) e
-abra uma conversa nova. Nessa primeira conversa o Claude oferece a **configuração guiada**
+Preencha a chave da TypeSafe AI quando ele pedir (ou depois, com `/plugin configure claujev@claujev`): é
+a única opção obrigatória, o resto pode ficar como está (a tela vem em português e inglês). Depois abra
+uma conversa nova. Nessa primeira conversa o Claude oferece a **configuração guiada**
 (`/claujev:configure`): algumas perguntas de múltipla escolha (idioma, modo, recursos que você quer
 manter), aplicadas para você. Tudo começa em modo `observe`: o Jev só registra até você mudar para
 `enforce`.
@@ -151,4 +152,5 @@ os do mod, e `npm run validate` valida os manifestos.
 
 ## Licença
 
-[MIT-0](LICENSE): use, modifique e redistribua como quiser, sem precisar citar o autor.
+Criado por **[Alisson Civalski](https://github.com/Civalski)**. [MIT](LICENSE): livre para usar, modificar e
+redistribuir, inclusive comercialmente, desde que o aviso de copyright seja mantido.

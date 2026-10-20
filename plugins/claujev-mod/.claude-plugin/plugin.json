@@ -1,47 +1,75 @@
 {
   "name": "claujev-mod",
   "displayName": "ClauJev mod",
-  "version": "2.0.0",
-  "description": "Applies Jev's effort suggestion per request, shows Jev's activity in the status line and toasts when Jev acts. Needs the claujev plugin.",
-  "author": { "name": "Alisson Civalski", "url": "https://github.com/Civalski" },
+  "version": "2.0.1",
+  "description": "Optional companion of ClauJev / Complemento opcional do ClauJev: automatic effort, status line, toasts and /claujev.",
+  "author": {
+    "name": "Alisson Civalski",
+    "url": "https://github.com/Civalski"
+  },
   "homepage": "https://github.com/Civalski/claujev",
   "repository": "https://github.com/Civalski/claujev",
-  "license": "MIT-0",
-  "keywords": ["jev", "effort", "status-line", "mod"],
-  "dependencies": ["claujev"],
+  "license": "MIT",
+  "keywords": [
+    "jev",
+    "effort",
+    "status-line",
+    "mod"
+  ],
+  "dependencies": [
+    "claujev"
+  ],
   "userConfig": {
     "effort": {
       "type": "string",
-      "title": "Automatic effort",
-      "description": "observe shows Jev's suggested effort in the status line; on applies it to each request (within the limits below); off does nothing.",
-      "options": ["observe", "on", "off"],
+      "title": "Esforço automático · Automatic effort",
+      "description": "observe = só mostra a sugestão do Jev na barra de status (recomendado); on = aplica a sugestão em cada pedido; off = desligado. · observe shows it; on applies it; off disables.",
+      "options": [
+        "observe",
+        "on",
+        "off"
+      ],
       "default": "observe"
     },
     "min_effort": {
       "type": "string",
-      "title": "Lowest effort",
-      "description": "Jev never sets the effort below this.",
-      "options": ["low", "medium", "high", "xhigh"],
+      "title": "Esforço mínimo · Lowest effort",
+      "description": "O Jev nunca escolhe menos que isso. · Jev never goes below this.",
+      "options": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
       "default": "low"
     },
     "max_effort": {
       "type": "string",
-      "title": "Highest effort",
-      "description": "Jev never sets the effort above this.",
-      "options": ["low", "medium", "high", "xhigh", "max"],
+      "title": "Esforço máximo · Highest effort",
+      "description": "O Jev nunca escolhe mais que isso. · Jev never goes above this.",
+      "options": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
       "default": "xhigh"
     },
     "status": {
       "type": "boolean",
-      "title": "Status line",
-      "description": "Show Jev's activity of the day in the status line.",
+      "title": "Barra de status · Status line",
+      "description": "Mostra a atividade do Jev hoje na barra de status. · Shows Jev activity of the day in the status line.",
       "default": true
     },
     "lang": {
       "type": "string",
-      "title": "Language",
-      "description": "Language of the status line, toasts and the /claujev command.",
-      "options": ["en", "pt"],
+      "title": "Idioma · Language",
+      "description": "pt = português, en = English. Idioma da barra de status, avisos e /claujev. · Language of the status line, toasts and /claujev.",
+      "options": [
+        "en",
+        "pt"
+      ],
       "default": "en"
     }
   }
