@@ -6,7 +6,6 @@
   <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-blue"></a>
   <img alt="Node 20+" src="https://img.shields.io/badge/node-%E2%89%A520-339933">
   <img alt="Zero dependências" src="https://img.shields.io/badge/depend%C3%AAncias-0-brightgreen">
-  <a href="https://github.com/Civalski/claujev/actions/workflows/test.yml"><img alt="Testes" src="https://github.com/Civalski/claujev/actions/workflows/test.yml/badge.svg"></a>
 </p>
 
 <p align="center">
