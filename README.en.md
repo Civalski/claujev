@@ -117,4 +117,5 @@ answers, latency and a content **hash**, not the content itself.
 
 ## License
 
-[MIT](LICENSE) © Alisson Civalski
+[MIT No Attribution (MIT-0)](LICENSE): use, modify and redistribute freely, including
+commercially, **with no attribution or copyright notice required**.

@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-blue"></a>
+  <a href="LICENSE"><img alt="Licença MIT-0" src="https://img.shields.io/badge/licen%C3%A7a-MIT--0-blue"></a>
   <img alt="Node 20+" src="https://img.shields.io/badge/node-%E2%89%A520-339933">
   <img alt="Zero dependências" src="https://img.shields.io/badge/depend%C3%AAncias-0-brightgreen">
 </p>
@@ -460,4 +460,5 @@ npm run selftest    # chamada real ao Jev (precisa de chave)
 
 ## Licença
 
-[MIT](LICENSE) © Alisson Civalski
+[MIT No Attribution (MIT-0)](LICENSE): use, modifique e redistribua como quiser, inclusive em
+projetos comerciais, **sem precisar citar o autor nem manter aviso de copyright**.

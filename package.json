@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "O Jev (TypeSafe AI) como segundo par de olhos do Claude Code: hooks que classificam pedidos, revisam edições, seguram comandos perigosos e conferem o trabalho antes de encerrar.",
   "type": "module",
-  "license": "MIT",
+  "license": "MIT-0",
   "author": "Alisson Civalski",
   "repository": { "type": "git", "url": "git+https://github.com/Civalski/claujev.git" },
   "keywords": ["claude-code", "hooks", "jev", "typesafe-ai", "ai-agents", "guardrails"],

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14161f"/>
+      <stop offset="1" stop-color="#1e2233"/>
+    </linearGradient>
+    <linearGradient id="claude" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e8875f"/>
+      <stop offset="1" stop-color="#c8613b"/>
+    </linearGradient>
+    <linearGradient id="jev" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5fb4e8"/>
+      <stop offset="1" stop-color="#3b7fc8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <g fill="none" stroke="#2c3247" stroke-width="1">
+    <path d="M0 80H1280M0 160H1280M0 240H1280M0 320H1280M0 400H1280M0 480H1280M0 560H1280"/>
+    <path d="M160 0V640M320 0V640M480 0V640M640 0V640M800 0V640M960 0V640M1120 0V640"/>
+  </g>
+
+  <text x="640" y="150" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="96" font-weight="800" fill="#f3f4f8">Clau<tspan fill="#5fb4e8">Jev</tspan></text>
+  <text x="640" y="205" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" fill="#b8bfd3">um segundo par de olhos para o seu agente</text>
+
+  <g transform="translate(250 270)">
+    <rect width="300" height="150" rx="20" fill="url(#claude)"/>
+    <text x="150" y="68" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="30" font-weight="700" fill="#fff">Claude Code</text>
+    <text x="150" y="108" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" fill="#fff" opacity=".92">faz o trabalho</text>
+  </g>
+  <g stroke="#9aa3bd" stroke-width="3.5" fill="none" stroke-linecap="round">
+    <path d="M572 325H708"/><path d="M694 313l14 12-14 12"/>
+    <path d="M708 365H572"/><path d="M586 353l-14 12 14 12"/>
+  </g>
+  <text x="640" y="305" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="17" fill="#9aa3bd">hooks</text>
+  <text x="640" y="400" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="17" fill="#9aa3bd">~400 ms</text>
+  <g transform="translate(730 270)">
+    <rect width="300" height="150" rx="20" fill="url(#jev)"/>
+    <text x="150" y="68" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="30" font-weight="700" fill="#fff">Jev</text>
+    <text x="150" y="108" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" fill="#fff" opacity=".92">confere</text>
+  </g>
+
+  <g font-family="DejaVu Sans, Arial, sans-serif" font-size="21" fill="#d6dbea" text-anchor="middle">
+    <text x="640" y="500">triagem do pedido · guarda de comandos · revisão por regras</text>
+    <text x="640" y="534">conferência final · roteamento de subagentes · relatório falso</text>
+  </g>
+  <text x="640" y="598" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="20" fill="#7d86a3">github.com/Civalski/claujev  ·  1 arquivo  ·  0 dependências  ·  MIT-0</text>
+</svg>
