@@ -62,7 +62,8 @@ In Claude Code:
 ```
 
 Claude Code asks for your **TypeSafe AI key** (kept in the system's secure storage), the
-**language** (`en` or `pt`) and the **mode** (`observe` to start). Open a new session and you are done.
+**language** (`en` or `pt`) and the **mode** (`observe` to start). If it doesn't ask (for example when installed
+from the terminal with `claude plugin install`), run `/plugin configure claujev@claujev`. Open a new session and you are done.
 
 **Optional, the mod** (status line, toasts, automatic effort; needs a Claude Code version with mods):
 

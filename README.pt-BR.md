@@ -62,7 +62,8 @@ No Claude Code:
 ```
 
 O Claude Code pede a **chave da TypeSafe AI** (guardada no cofre seguro do sistema), o **idioma**
-(escolha `pt`) e o **modo** (`observe` para começar). Abra uma conversa nova e pronto.
+(escolha `pt`) e o **modo** (`observe` para começar). Se ele não perguntar (por exemplo, ao instalar pelo
+terminal com `claude plugin install`), rode `/plugin configure claujev@claujev`. Abra uma conversa nova e pronto.
 
 **Opcional, o mod** (barra de status, avisos e esforço automático; precisa de uma versão do Claude Code com mods):
 
