@@ -221,6 +221,23 @@ const runHook = (hook, input, env = {}) => execFileSync(process.execPath, [SCRIP
   env: { ...process.env, TYPESAFE_API_KEY: '', ...env },
 });
 
+test('LOCAL_DANGER: the safety net catches plainly destructive commands only', () => {
+  for (const c of ['git push --force origin main', 'git push --force-with-lease origin main', 'git push -f', 'git reset --hard HEAD~3', 'rm -rf build', 'psql -c "DROP TABLE users"', 'npm publish'])
+    assert.ok(m.LOCAL_DANGER.test(c), c);
+  for (const c of ['git push origin main', 'git status', 'npm test', 'rm notes.txt', 'git commit -m "fix"'])
+    assert.ok(!m.LOCAL_DANGER.test(c), c);
+});
+
+test('when Jev cannot answer, a destructive command still asks; a normal one passes', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'claujev-fallback-'));
+  writeFileSync(join(dir, 'config.json'), JSON.stringify({ mode: 'enforce' }));
+  const run = (command) => runHook('bash', { session_id: 'f', cwd: home, tool_name: 'Bash', tool_input: { command } }, { CLAUJEV_HOME: dir });
+  const out = JSON.parse(run('git push --force origin main'));
+  assert.equal(out.hookSpecificOutput.permissionDecision, 'ask');
+  assert.match(out.hookSpecificOutput.permissionDecisionReason, /could not check/);
+  assert.equal(run('npm install'), '', 'without an answer from Jev, an ordinary command is not held');
+});
+
 test('a hook without a key never breaks the session: no output, error in the log', () => {
   const out = runHook('prompt', { session_id: 'nokey', cwd: home, prompt: 'Create a new customer sign-up route in the API' });
   assert.equal(out, '', 'without a key nothing is sent to Claude');

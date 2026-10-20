@@ -141,6 +141,7 @@ const TEXT = {
       destructive: (p) => `destructive effect (p=${p})`,
       creds: (p) => `credential access (p=${p})`,
       ask: (reasons) => `[Jev] Command flagged: ${reasons}`,
+      fallback: '[Jev] Jev could not check this command in time, and it looks destructive (local check): confirm it yourself.',
     },
     agent: {
       state: (type, desc) => `Task delegated to a subagent (${type}): ${desc}`,
@@ -265,6 +266,7 @@ const TEXT = {
       destructive: (p) => `efeito destrutivo (p=${p})`,
       creds: (p) => `acesso a credenciais (p=${p})`,
       ask: (reasons) => `[Jev] Comando sinalizado: ${reasons}`,
+      fallback: '[Jev] O Jev não conseguiu checar este comando a tempo, e ele parece destrutivo (checagem local): confirme você mesmo.',
     },
     agent: {
       state: (type, desc) => `Tarefa delegada a um subagente (${type}): ${desc}`,
@@ -793,6 +795,8 @@ const READ_ONLY = /^\s*(ls|dir|pwd|cat|type|head|tail|wc|echo|which|where|grep|r
 const SHELL_META = /[;&|<>`\n]|\$\(|\$\{|-delete\b|-exec\b|--output\b|-o\s/;
 const SENSITIVE = /\.env|secret|credential|\.ssh|\.pem|\.key\b|token|passw|senha|\.npmrc|\.gitconfig\.local/i;
 const isReadOnly = (cmd) => READ_ONLY.test(cmd) && !SHELL_META.test(cmd) && !SENSITIVE.test(cmd);
+// Safety net when Jev cannot answer (timeout, network, no key): plainly destructive commands still ask.
+const LOCAL_DANGER = /\bgit\s+push\b[^|;&]*(--force|-f\b|--force-with-lease|\+\w)|\bgit\s+(reset\s+--hard|clean\s+-\w*f|branch\s+-D|filter-branch)|\brm\s+-\w*[rf]|\b(drop|truncate)\s+(table|database|schema)\b|\bdelete\s+from\b|\bmkfs\b|\bdd\s+if=|\bchmod\s+-R\s+777|\bnpm\s+publish\b|\bterraform\s+destroy\b|\bkubectl\s+delete\b/i;
 
 async function onBash(input, cfg, mode) {
   if (mode === 'off') return;
@@ -800,10 +804,19 @@ async function onBash(input, cfg, mode) {
   const cmd = input.tool_input?.command || '';
   if (!cmd.trim()) return;
   if (isReadOnly(cmd)) { log({ hook: 'bash', mode, project: basename(input.cwd || ''), skipped: 'read-only' }); return; }
-  const r = await askJev(cfg, `${t.state(input.tool_name)}\n${redact(clip(cmd, 4000))}`, {
-    side_effects: { type: 'noul', instructions: t.sideEffects.instructions, criteria: t.sideEffects.criteria },
-    credentials: { type: 'noul', instructions: t.credentials.instructions, criteria: t.credentials.criteria },
-  });
+  let r;
+  try {
+    r = await askJev(cfg, `${t.state(input.tool_name)}\n${redact(clip(cmd, 4000))}`, {
+      side_effects: { type: 'noul', instructions: t.sideEffects.instructions, criteria: t.sideEffects.criteria },
+      credentials: { type: 'noul', instructions: t.credentials.instructions, criteria: t.credentials.criteria },
+    });
+  } catch (e) {
+    // Never block on an error, but never wave a destructive command through unchecked either.
+    const acted = mode === 'enforce' && LOCAL_DANGER.test(cmd);
+    log({ hook: 'bash', mode, project: basename(input.cwd || ''), error: String(e?.message || e), contentHash: hash(cmd), fallback: LOCAL_DANGER.test(cmd), acted });
+    if (acted) emit({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'ask', permissionDecisionReason: t.fallback } });
+    return;
+  }
   const a = r.answers || {};
   const sideBand = band(a.side_effects?.noul, cfg.thresholds.sideEffects);
   const credBand = band(a.credentials?.noul, cfg.thresholds.credentials);
@@ -926,7 +939,7 @@ function report(cfg) {
 const HANDLERS = { prompt: onPrompt, edit: onEdit, stop: onStop, bash: onBash, agent: onAgent, subagent: onSubagent, session: onSession };
 
 // Pure functions exported for the tests.
-export { DEFAULTS, TEXT, redact, hasLiteralSecret, band, normScore, loadConfig, isReadOnly, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, EFFECTFUL, EXPLICIT_EFFORT };
+export { DEFAULTS, TEXT, redact, hasLiteralSecret, LOCAL_DANGER, band, normScore, loadConfig, isReadOnly, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, EFFECTFUL, EXPLICIT_EFFORT };
 
 // Runs only when called directly (node claujev.mjs ...), not when imported by the tests.
 const isMain = (() => {

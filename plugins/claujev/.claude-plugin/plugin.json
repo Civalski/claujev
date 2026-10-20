@@ -1,7 +1,7 @@
 {
   "name": "claujev",
   "displayName": "ClauJev",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "Jev (TypeSafe AI) as a second pair of eyes for Claude Code / O Jev como segundo par de olhos do Claude Code: triage, automatic effort, command guard, rule review, final check.",
   "author": {
     "name": "Alisson Civalski",

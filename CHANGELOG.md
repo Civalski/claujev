@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.4.2 — 2026-10-20
+
+### Fixed
+- **Command guard safety net.** When Jev cannot answer in time (a 3 s timeout during a recording let a
+  `git push --force-with-lease` through unchecked), plainly destructive commands (`push --force`,
+  `reset --hard`, `rm -rf`, `DROP TABLE`, `npm publish`…) now still ask for confirmation, from a local
+  check. Ordinary commands keep passing, so the session never blocks on an error.
+
 ## 2.4.1 — 2026-10-20
 
 ### Fixed
