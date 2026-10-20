@@ -1,0 +1,43 @@
+{
+  "hooks": {
+    "edit": "enforce",
+    "stop": "enforce"
+  },
+  "rules": [
+    "Funções assíncronas devem tratar erros (try/catch ou .catch) em vez de deixar a promise rejeitar sem tratamento.",
+    "Não fazer consultas ao banco dentro de laços; busque tudo de uma vez.",
+    "Não alterar arquivos de migração já aplicados; crie uma migração nova."
+  ],
+  "areas": {
+    "backend": {
+      "description": "API, rotas, banco de dados ou regras de negócio no servidor",
+      "hint": "Tarefa de backend: rode os testes da API antes de encerrar."
+    },
+    "frontend": {
+      "description": "Telas, componentes, CSS ou interface",
+      "hint": "Tarefa de interface: confira o resultado visual no navegador antes de encerrar."
+    }
+  },
+  "context": ["CLAUDE.md"],
+  "verify": "npm test --silent",
+  "questions": {
+    "stop": {
+      "needs_test": {
+        "type": "noul",
+        "instructions": "A mudança cria ou altera comportamento que deveria ter teste automatizado novo ou atualizado, e nenhum teste foi alterado?",
+        "act": { "threshold": { "low": 0.5, "high": 0.8 }, "message": "a mudança parece precisar de teste" }
+      },
+      "breaking_change": {
+        "type": "noul",
+        "instructions": "A mudança altera uma interface pública (função exportada, rota de API, formato de dados) de forma incompatível com quem já a usa?",
+        "act": { "threshold": { "low": 0.5, "high": 0.8 }, "message": "possível quebra de contrato público" }
+      },
+      "change_risk": {
+        "type": "score",
+        "instructions": "Qual o risco desta mudança quebrar algo em produção?",
+        "criteria": ["Trivial", "Baixo", "Médio", "Alto", "Crítico"],
+        "act": { "threshold": { "low": 0.5, "high": 0.75 }, "message": "risco alto: peça revisão humana antes de commit ou deploy" }
+      }
+    }
+  }
+}

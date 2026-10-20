@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "model": "jev-latest",
+  "hooks": {
+    "prompt": "observe",
+    "edit": "observe",
+    "stop": "observe",
+    "bash": "observe",
+    "agent": "observe",
+    "subagent": "observe"
+  }
+}
