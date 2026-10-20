@@ -100,6 +100,7 @@ const TEXT = {
       before: '--- previous snippet', after: '+++ new snippet', full: '+++ full file content', cell: '+++ new cell',
       rule: (rule) => `Does this code change violate the following rule? Rule: ${rule}`,
       criteria: { true: 'The new code clearly violates the rule', false: 'The new code follows the rule, or the rule does not apply to this snippet' },
+      localSecret: 'A secret (API key, token or password) is written directly in the new code; move it to an environment variable (detected on this machine, never sent to Jev)',
       block: (file, list) => `[Jev] Possible problems in ${file}:\n${list}\nReview the snippet. If it is a false positive, carry on without changing anything.`,
     },
     stop: {
@@ -223,6 +224,7 @@ const TEXT = {
       before: '--- trecho anterior', after: '+++ trecho novo', full: '+++ conteúdo completo do arquivo', cell: '+++ célula nova',
       rule: (rule) => `Esta alteração de código viola a regra a seguir? Regra: ${rule}`,
       criteria: { true: 'O código novo claramente viola a regra', false: 'O código novo respeita a regra, ou a regra não se aplica a este trecho' },
+      localSecret: 'Há um segredo (chave de API, token ou senha) escrito direto no código novo; mova para variável de ambiente (detectado nesta máquina, nunca enviado ao Jev)',
       block: (file, list) => `[Jev] Possíveis problemas em ${file}:\n${list}\nRevise o trecho. Se for falso positivo, siga em frente sem mudar nada.`,
     },
     stop: {
@@ -319,6 +321,16 @@ function redact(s) {
     .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]{16,}/gi, `Bearer ${TXT.removedSecret}`)
     .replace(/((?:api[_-]?key|token|secret|password|passwd|senha)["']?\s*[:=]\s*["']?)[^\s"',;]{6,}/gi, `$1${TXT.removedSecret}`);
 }
+
+// Secrets written as literals in new code. Stricter than redact(): a value must be a quoted literal or a
+// known key format, so `token = getToken()` is not flagged. Used to flag the edit locally, since Jev only
+// ever sees the redacted text.
+const LITERAL_SECRET = [
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
+  /\b(?:sk|pk|rk|ghp|gho|xox[abp])[-_][A-Za-z0-9_-]{16,}/,
+  /\b(?:api[_-]?key|apikey|token|secret|password|passwd|senha)\w*["']?\s*[:=]\s*["'][^"'\s]{8,}["']/i,
+];
+const hasLiteralSecret = (text) => LITERAL_SECRET.some((re) => re.test(text || ''));
 
 function readJson(path) {
   try { return JSON.parse(readFileSync(path, 'utf8')); } catch { return null; }
@@ -608,6 +620,8 @@ async function onEdit(input, cfg, mode) {
   if (['.md', '.txt', '.json'].includes(extname(file).toLowerCase()) && !cfg.checkDocs) return;
   const change = describeChange(ti, t);
   if (!change.trim()) return;
+  const newCode = [ti.new_string, ...(ti.edits || []).map((e) => e.new_string), ti.content, ti.new_source].filter(Boolean).join('\n');
+  const localSecret = hasLiteralSecret(newCode);
 
   const rules = cfg.rules.slice(0, 20);
   const questions = {
@@ -620,6 +634,7 @@ async function onEdit(input, cfg, mode) {
   const ruleBands = rules.map((rule, i) => ({ rule, p: scores[i], band: band(scores[i], cfg.thresholds.rule) }));
   const extra = evalCustom(cfg, 'edit', r.answers);
   const flagged = [
+    ...(localSecret ? [t.localSecret] : []),
     ...ruleBands.filter((x) => x.band === 'high').map((x) => `${x.rule} (p=${fmt(x.p)})`),
     ...extra.filter((x) => x.band === 'high').map((x) => `${x.message} (${x.value})`),
   ];
@@ -631,7 +646,7 @@ async function onEdit(input, cfg, mode) {
   const acted = mode === 'enforce' && flagged.length > 0;
   log({
     ...baseLog('edit', mode, input, r), file: basename(file), contentHash: hash(change),
-    scores, custom: Object.fromEntries(extra.map((x) => [x.id, x.value ?? x.choice])), flagged, uncertain, acted,
+    scores, localSecret, custom: Object.fromEntries(extra.map((x) => [x.id, x.value ?? x.choice])), flagged, uncertain, acted,
   });
   if (acted) emit({ decision: 'block', reason: t.block(basename(file), flagged.map((f) => `- ${f}`).join('\n')) });
 }
@@ -911,7 +926,7 @@ function report(cfg) {
 const HANDLERS = { prompt: onPrompt, edit: onEdit, stop: onStop, bash: onBash, agent: onAgent, subagent: onSubagent, session: onSession };
 
 // Pure functions exported for the tests.
-export { DEFAULTS, TEXT, redact, band, normScore, loadConfig, isReadOnly, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, EFFECTFUL, EXPLICIT_EFFORT };
+export { DEFAULTS, TEXT, redact, hasLiteralSecret, band, normScore, loadConfig, isReadOnly, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, EFFECTFUL, EXPLICIT_EFFORT };
 
 // Runs only when called directly (node claujev.mjs ...), not when imported by the tests.
 const isMain = (() => {

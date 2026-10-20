@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.4.1 — 2026-10-20
+
+### Fixed
+- **Secrets written in code are now caught for sure.** Jev only sees code after secrets are redacted,
+  so the "no secrets in code" rule scored ~0.65 (uncertain) on a hardcoded API key. Rule review now
+  also detects literal secrets in the new code on the user's machine (quoted values for
+  `api_key`/`token`/`password`…, `sk-…`, `ghp_…`, private keys) and flags them directly; the secret
+  still never leaves the machine. Code that only handles secrets (`process.env.API_KEY`,
+  `token = getToken()`) is not flagged.
+
 ## 2.4.0 — 2026-10-20
 
 ### Changed

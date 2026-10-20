@@ -52,6 +52,13 @@ test('redact: removes secrets before anything is sent to Jev', () => {
   assert.match(out, /KEY REMOVED/);
 });
 
+test('hasLiteralSecret: flags secrets written in code, not code that handles them', () => {
+  for (const c of ['const API_KEY = "abc123secretvalue";', "password: 'hunter2hunter2'", 'const k = "sk-ant-abcdefghijklmnopqrstu"', '-----BEGIN RSA PRIVATE KEY-----', 'TOKEN="ghp_abcdefghijklmnopqrstuvwxyz"'])
+    assert.ok(m.hasLiteralSecret(c), c);
+  for (const c of ['const token = getToken(user);', 'const key = process.env.API_KEY;', 'password: req.body.password', 'const secret = ""', 'if (!token) throw new Error("no token")'])
+    assert.ok(!m.hasLiteralSecret(c), c);
+});
+
 test('isReadOnly: the shortcut only applies to plain reads', () => {
   assert.equal(m.isReadOnly('git status'), true);
   assert.equal(m.isReadOnly('ls -la src'), true);
