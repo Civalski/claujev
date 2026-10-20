@@ -41,7 +41,6 @@ e custa frações de centavo.
 - [Por que existe](#por-que-existe)
 - [Como funciona](#como-funciona)
 - [Os seis recursos](#os-seis-recursos)
-- [Um turno, do pedido ao fim](#um-turno-do-pedido-ao-fim)
 - [Observar antes de agir: as faixas de decisão](#observar-antes-de-agir-as-faixas-de-decisão)
 - [Instalação](#instalação)
 - [Configuração](#configuração)
@@ -120,50 +119,6 @@ Detalhes que fazem diferença:
 - **Verificação opcional.** Com `verify: "npm test --silent"`, o Stop roda o comando e um código de saída diferente de zero já impede o encerramento.
 
 O texto exato de cada pergunta está em [`docs/perguntas.md`](docs/perguntas.md).
-
----
-
-## Um turno, do pedido ao fim
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor U as Você
-    participant C as Claude Code
-    participant J as ClauJev
-    participant T as Jev (API)
-
-    U->>C: "corrige o bug do login e roda os testes"
-    C->>J: UserPromptSubmit
-    J->>J: guarda o pedido e o commit atual (HEAD)
-    J->>T: tipo? tamanho? ambíguo?
-    T-->>J: bug · pequena · não
-    J-->>C: [Jev] mudança pequena: vá direto aos arquivos
-
-    C->>J: PreToolUse · Bash "rg login src/"
-    Note over J: leitura pura: passa sem chamar o Jev
-
-    C->>C: Edit src/auth.ts
-    C->>J: PostToolUse · Edit
-    J->>T: viola "não engolir erros"? viola "sem segredos no código"?
-    T-->>J: 0.04 · 0.02
-    Note over J: tudo baixo: nada a fazer
-
-    C->>J: PreToolUse · Bash "npm test"
-    J->>T: destrutivo? credenciais?
-    T-->>J: 0.03 · 0.01
-
-    C->>J: Stop (quer encerrar)
-    J->>J: git diff desde o commit do início + verify
-    J->>T: completo? inacabado? fora do escopo?
-    T-->>J: 4/4 · 0.05 · 0.08
-    J-->>C: (nada) — o Claude encerra
-    C-->>U: "corrigido, testes passando"
-```
-
-Se no passo do Stop o Jev tivesse dado completude 2/4, o Claude receberia
-*"[Jev] Antes de encerrar: o pedido pode não estar completo (nota 50/100). Confira o pedido
-original contra o que foi feito"* e continuaria trabalhando.
 
 ---
 
