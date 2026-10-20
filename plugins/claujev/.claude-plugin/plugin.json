@@ -1,7 +1,7 @@
 {
   "name": "claujev",
   "displayName": "ClauJev",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Jev (TypeSafe AI) as a second pair of eyes for Claude Code / O Jev como segundo par de olhos do Claude Code: triage, automatic effort, command guard, rule review, final check.",
   "author": {
     "name": "Alisson Civalski",
@@ -21,14 +21,14 @@
   "userConfig": {
     "api_key": {
       "type": "string",
-      "title": "Chave da API TypeSafe AI · TypeSafe AI API key",
-      "description": "Obrigatória. Pegue em typesafe.ai; fica guardada no cofre seguro do sistema. · Required. Get it at typesafe.ai; kept in the system secure storage.",
+      "title": "TypeSafe AI API key · Chave da API",
+      "description": "Required, from typesafe.ai. · Obrigatória, pegue em typesafe.ai.",
       "sensitive": true
     },
     "lang": {
       "type": "string",
-      "title": "Idioma · Language",
-      "description": "pt = português, en = English. Idioma das mensagens do ClauJev (esta tela de configuração continua bilíngue). · Language of ClauJev messages.",
+      "title": "Language · Idioma",
+      "description": "Language of ClauJev messages. · Idioma das mensagens do ClauJev.",
       "options": [
         "en",
         "pt"
@@ -37,8 +37,8 @@
     },
     "mode": {
       "type": "string",
-      "title": "Modo geral · Main mode",
-      "description": "observe = só anota no log, não interrompe (recomendado no começo); enforce = o Jev age (dicas, confirmações, revisão final); off = desliga tudo. · observe logs only; enforce acts; off disables.",
+      "title": "Main mode · Modo geral",
+      "description": "observe: log only · só anota | enforce: Jev acts · o Jev age | off: disabled · desligado",
       "options": [
         "observe",
         "enforce",
@@ -48,8 +48,8 @@
     },
     "triage": {
       "type": "string",
-      "title": "Triagem do pedido · Request triage",
-      "description": "Analisa cada pedido, dá uma dica ao Claude e sugere o esforço. Pode deixar \"mode\" (segue o Modo geral) ou \"off\" para desligar. · Classifies each request, hints Claude and suggests the effort. Leave \"mode\" or set \"off\".",
+      "title": "Request triage · Triagem do pedido",
+      "description": "Hint + effort per request. · Dica e esforço por pedido. (mode = follow Main mode · segue o Modo geral)",
       "options": [
         "mode",
         "observe",
@@ -60,8 +60,8 @@
     },
     "command_guard": {
       "type": "string",
-      "title": "Guarda de comandos · Command guard",
-      "description": "Pede sua confirmação antes de comandos perigosos ou com senhas/chaves. Pode deixar \"mode\" (segue o Modo geral) ou \"off\" para desligar. · Asks before destructive or credential commands. Leave \"mode\" or set \"off\".",
+      "title": "Command guard · Guarda de comandos",
+      "description": "Asks before risky commands. · Pede confirmação antes de comandos perigosos.",
       "options": [
         "mode",
         "observe",
@@ -72,8 +72,8 @@
     },
     "rule_review": {
       "type": "string",
-      "title": "Revisão por regras · Rule review",
-      "description": "Confere cada edição de código contra as regras. Pode deixar \"mode\" (segue o Modo geral) ou \"off\" para desligar. · Checks every code edit against the rules. Leave \"mode\" or set \"off\".",
+      "title": "Rule review · Revisão por regras",
+      "description": "Checks each edit against the rules. · Confere cada edição contra as regras.",
       "options": [
         "mode",
         "observe",
@@ -84,8 +84,8 @@
     },
     "final_check": {
       "type": "string",
-      "title": "Conferência final · Final check",
-      "description": "Antes de o Claude dizer \"pronto\", confere se o pedido foi atendido. Pode deixar \"mode\" (segue o Modo geral) ou \"off\" para desligar. · Checks the work before Claude finishes. Leave \"mode\" or set \"off\".",
+      "title": "Final check · Conferência final",
+      "description": "Checks the work before Claude finishes. · Confere o trabalho antes de encerrar.",
       "options": [
         "mode",
         "observe",
@@ -96,8 +96,8 @@
     },
     "subagent_routing": {
       "type": "string",
-      "title": "Roteamento de subagentes · Subagent routing",
-      "description": "Manda tarefas simples de subagentes para um modelo menor e mais rápido. Pode deixar \"mode\" (segue o Modo geral) ou \"off\" para desligar. · Sends simple subagent tasks to a smaller model. Leave \"mode\" or set \"off\".",
+      "title": "Subagent routing · Roteamento de subagentes",
+      "description": "Simple subagents on a smaller model. · Subagentes simples num modelo menor.",
       "options": [
         "mode",
         "observe",
@@ -108,8 +108,8 @@
     },
     "subagent_check": {
       "type": "string",
-      "title": "Checagem de subagentes · Subagent report check",
-      "description": "Pega subagentes que dizem ter feito o que não fizeram. Pode deixar \"mode\" (segue o Modo geral) ou \"off\" para desligar. · Catches subagents claiming work they did not do. Leave \"mode\" or set \"off\".",
+      "title": "Subagent report check · Checagem de subagentes",
+      "description": "Catches false subagent reports. · Pega relatórios falsos de subagentes.",
       "options": [
         "mode",
         "observe",

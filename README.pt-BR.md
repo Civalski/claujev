@@ -40,29 +40,12 @@ No Claude Code:
 /plugin install claujev --marketplace Civalski/claujev
 ```
 
-Preencha a chave da TypeSafe AI quando ele pedir (ou depois, com `/plugin configure claujev@claujev`): é
-a única opção obrigatória, o resto pode ficar como está (a tela vem em português e inglês). Depois abra
-uma conversa nova. Nessa primeira conversa o Claude oferece a **configuração guiada**
-(`/claujev:configure`): algumas perguntas de múltipla escolha (idioma, modo, recursos que você quer
-manter), aplicadas para você. Tudo começa em modo `observe`: o Jev só registra até você mudar para
-`enforce`.
+Preencha a chave da TypeSafe AI (a única opção obrigatória) e reinicie o Claude Code. Na primeira
+conversa, o Claude oferece uma configuração guiada em português.
 
-Opcional, para a barra de status e o esforço automático: `/plugin install claujev-mod --marketplace Civalski/claujev`.
-
-### Ou deixe o Claude configurar
-
-Cole isto no Claude Code:
-
-```text
-Configure o ClauJev (github.com/Civalski/claujev) para mim:
-1. Instale pelo terminal: `claude plugin install claujev --marketplace Civalski/claujev`, e pergunte se
-   eu também quero o `claujev-mod` (barra de status + esforço automático).
-2. Pergunte minhas preferências básicas com perguntas de múltipla escolha (idioma, observe ou enforce,
-   recursos a desligar, esforço automático) e grave com `claude plugin configure claujev@claujev --values-stdin`
-   (`claude plugin configure claujev@claujev --json` lista as opções).
-3. Peça para eu rodar `/plugin configure claujev@claujev` e colar a chave da TypeSafe AI eu mesmo (nunca
-   no chat) e reiniciar o Claude Code. Depois, `/claujev:claujev-setup` escreve as regras deste projeto.
-```
+Opcional, **depois** do passo acima: `/plugin install claujev-mod --marketplace Civalski/claujev` para a
+barra de status e o esforço automático. (Instalar o mod primeiro também instala o ClauJev, mas sem pedir
+a chave: aí rode `/plugin configure claujev@claujev`.)
 
 ## Comandos
 

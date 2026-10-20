@@ -1,7 +1,7 @@
 {
   "name": "claujev-mod",
   "displayName": "ClauJev mod",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Optional companion of ClauJev / Complemento opcional do ClauJev: automatic effort, status line, toasts and /claujev.",
   "author": {
     "name": "Alisson Civalski",
@@ -22,8 +22,8 @@
   "userConfig": {
     "effort": {
       "type": "string",
-      "title": "Esforço automático · Automatic effort",
-      "description": "observe = só mostra a sugestão do Jev na barra de status (recomendado); on = aplica a sugestão em cada pedido; off = desligado. · observe shows it; on applies it; off disables.",
+      "title": "Automatic effort · Esforço automático",
+      "description": "observe: show it · só mostra | on: apply it · aplica | off: disabled · desligado",
       "options": [
         "observe",
         "on",
@@ -33,8 +33,8 @@
     },
     "min_effort": {
       "type": "string",
-      "title": "Esforço mínimo · Lowest effort",
-      "description": "O Jev nunca escolhe menos que isso. · Jev never goes below this.",
+      "title": "Lowest effort · Esforço mínimo",
+      "description": "Jev never goes below this. · O Jev nunca escolhe menos que isso.",
       "options": [
         "low",
         "medium",
@@ -45,8 +45,8 @@
     },
     "max_effort": {
       "type": "string",
-      "title": "Esforço máximo · Highest effort",
-      "description": "O Jev nunca escolhe mais que isso. · Jev never goes above this.",
+      "title": "Highest effort · Esforço máximo",
+      "description": "Jev never goes above this. · O Jev nunca escolhe mais que isso.",
       "options": [
         "low",
         "medium",
@@ -58,14 +58,14 @@
     },
     "status": {
       "type": "boolean",
-      "title": "Barra de status · Status line",
-      "description": "Mostra a atividade do Jev hoje na barra de status. · Shows Jev activity of the day in the status line.",
+      "title": "Status line · Barra de status",
+      "description": "Shows Jev activity today. · Mostra a atividade do Jev hoje.",
       "default": true
     },
     "lang": {
       "type": "string",
-      "title": "Idioma · Language",
-      "description": "pt = português, en = English. Idioma da barra de status, avisos e /claujev. · Language of the status line, toasts and /claujev.",
+      "title": "Language · Idioma",
+      "description": "Language of the status line and /claujev. · Idioma da barra de status e do /claujev.",
       "options": [
         "en",
         "pt"

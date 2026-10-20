@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.3.1 — 2026-10-20
+
+### Fixed
+- Settings screen: short texts in English and Portuguese (English first), so both fit on screen.
+  Claude Code shows these texts as written; they cannot switch language with the Language option.
+- Install order documented: install `claujev` before `claujev-mod`. Installing the mod first pulls
+  ClauJev in as a dependency without showing its settings, so the API key is not asked.
+- Shorter install section; the guided setup replaces the long copy-paste prompt.
+
 ## 2.3.0 — 2026-10-20
 
 ### Changed

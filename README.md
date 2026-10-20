@@ -39,27 +39,12 @@ In Claude Code:
 /plugin install claujev --marketplace Civalski/claujev
 ```
 
-Fill in your TypeSafe AI key when asked (or later with `/plugin configure claujev@claujev`): it is the
-only required setting, the rest can stay as is. Then open a new session. On that first session Claude offers the **guided setup** (`/claujev:configure`): a few
-multiple-choice questions (language, mode, features to keep) applied for you. Everything starts in
-`observe` mode: Jev only logs until you switch it to `enforce`.
+Enter your TypeSafe AI key (the only required setting) and restart Claude Code. On the first session
+Claude offers a short guided setup in your language.
 
-Optional, for the status line and automatic effort: `/plugin install claujev-mod --marketplace Civalski/claujev`.
-
-### Or let Claude set it up
-
-Paste this into Claude Code:
-
-```text
-Set up ClauJev (github.com/Civalski/claujev) for me:
-1. Install it from the terminal: `claude plugin install claujev --marketplace Civalski/claujev`, and ask
-   me whether I also want `claujev-mod` (status line + automatic effort).
-2. Ask me my basic preferences with multiple-choice questions (language, observe or enforce, features to
-   turn off, automatic effort) and save them with `claude plugin configure claujev@claujev --values-stdin`
-   (`claude plugin configure claujev@claujev --json` lists the options).
-3. Tell me to run `/plugin configure claujev@claujev` to paste my TypeSafe AI key myself (never in the
-   chat) and to restart Claude Code. Afterwards `/claujev:claujev-setup` writes this project's rules.
-```
+Optional, **after** the step above: `/plugin install claujev-mod --marketplace Civalski/claujev` for the
+status line and automatic effort. (Installing the mod first also installs ClauJev, but without asking
+for the key: then run `/plugin configure claujev@claujev`.)
 
 ## Commands
 
