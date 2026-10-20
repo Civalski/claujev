@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.4.0 — 2026-10-20
+
+### Changed
+- **The install screen only asks for the API key.** Claude Code shows plugin settings exactly as
+  written and cannot translate them, so language, mode, features on/off and the mod's automatic
+  effort moved to `/claujev:configure`, which asks in the user's own language.
+- Preferences live in `~/.claude/claujev/config.json`: `lang`, `mode`, `features` (e.g.
+  `{"command_guard": "off"}`) and `mod` (`effort`, `minEffort`, `maxEffort`, `status`). They apply on
+  the next request, with no restart. "off" there beats any project config.
+- The mod has no settings screen any more; it reads the same file. The `/config` rows are gone.
+
 ## 2.3.1 — 2026-10-20
 
 ### Fixed

@@ -20,19 +20,24 @@ Objects merge key by key. `rules` and `ignoreFiles` **add up** across layers; us
 
 ### Turn features on and off
 
-Every feature has its own row in `/config` (and in `/plugin configure claujev@claujev`):
+Run `/claujev:configure`: Claude asks, in your language, which features to keep and saves the answer
+in `~/.claude/claujev/config.json`. The same keys can be written by hand:
 
-| Setting | Feature |
+```json
+{ "lang": "en", "mode": "observe", "features": { "command_guard": "off", "subagent_routing": "off" } }
+```
+
+| Key | Feature |
 | --- | --- |
-| Request triage | hints + effort suggestion |
-| Command guard | confirmation before risky commands |
-| Rule review | every edit against your rules |
-| Final check | completeness check before Claude finishes |
-| Subagent routing | simple subagents on a smaller model |
-| Subagent report check | false-claim detector |
+| `triage` | hints + effort suggestion |
+| `command_guard` | confirmation before risky commands |
+| `rule_review` | every edit against your rules |
+| `final_check` | completeness check before Claude finishes |
+| `subagent_routing` | simple subagents on a smaller model |
+| `subagent_check` | false-claim detector |
 
-Each one takes `mode` (follows the **Mode** setting, the default), `observe`, `enforce` or `off`.
-A feature you switch `off` there stays off even if a project's `.claude/claujev.json` turns it on;
+`mode` sets every feature (`observe`, `enforce` or `off`); `features` sets one at a time. A feature
+switched `off` in this global file stays off even if a project's `.claude/claujev.json` turns it on;
 features left on can still be tuned per project.
 
 ### Mode per hook (config files)
@@ -110,6 +115,8 @@ is in [`examples/claujev.json`](../examples/claujev.json).
 | --- | --- | --- |
 | `enabled` | `true` | turns everything on/off |
 | `lang` | `"en"` | `en` or `pt`: messages to Claude, questions to Jev |
+| `mode` | `"observe"` | sets every feature at once |
+| `features` | `{}` | one feature at a time (keys in the table above) |
 | `model` | `"jev-latest"` | Jev model |
 | `timeoutMs` | `3000` | max time per call |
 | `hooks` | all `observe` | mode per hook |
@@ -124,8 +131,8 @@ is in [`examples/claujev.json`](../examples/claujev.json).
 | `checkDocs` | `false` | whether `.md`, `.txt` and `.json` edits go through rule review too |
 | `maxDiffChars` | `30000` | max diff size sent at the final check |
 
-Mod settings (in `/plugin` → ClauJev mod): `effort` (`observe`/`on`/`off`), `min_effort`, `max_effort`,
-`status` (status line on/off), `lang`.
+Mod settings, in the same `config.json` (also chosen by `/claujev:configure`):
+`"mod": { "effort": "observe" | "on" | "off", "minEffort": "low", "maxEffort": "xhigh", "status": true }`.
 
 Environment variables: `TYPESAFE_API_KEY` (alternative to the plugin setting), `CLAUJEV_HOME` (another
 data folder, default `~/.claude/claujev`) and `CLAUJEV_DISABLED=1` (turns it off for one session).

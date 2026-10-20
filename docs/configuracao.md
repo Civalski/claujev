@@ -21,20 +21,25 @@ Objetos são mesclados chave a chave. `rules` e `ignoreFiles` são **somados** e
 
 ### Ligar e desligar recursos
 
-Cada recurso tem a própria linha no `/config` (e em `/plugin configure claujev@claujev`):
+Rode `/claujev:configure`: o Claude pergunta, em português, quais recursos manter e grava a resposta em
+`~/.claude/claujev/config.json`. As mesmas chaves podem ser escritas à mão:
 
-| Opção | Recurso |
+```json
+{ "lang": "pt", "mode": "observe", "features": { "command_guard": "off", "subagent_routing": "off" } }
+```
+
+| Chave | Recurso |
 | --- | --- |
-| Request triage | dicas + sugestão de esforço |
-| Command guard | confirmação antes de comandos arriscados |
-| Rule review | cada edição contra as suas regras |
-| Final check | conferência antes de o Claude encerrar |
-| Subagent routing | subagentes simples num modelo menor |
-| Subagent report check | detector de relatório falso |
+| `triage` | dicas + sugestão de esforço |
+| `command_guard` | confirmação antes de comandos arriscados |
+| `rule_review` | cada edição contra as suas regras |
+| `final_check` | conferência antes de o Claude encerrar |
+| `subagent_routing` | subagentes simples num modelo menor |
+| `subagent_check` | detector de relatório falso |
 
-Cada uma aceita `mode` (segue a opção **Mode**, o padrão), `observe`, `enforce` ou `off`. Um recurso
-desligado ali fica desligado mesmo que o `.claude/claujev.json` de um projeto tente ligá-lo; os recursos
-ligados continuam ajustáveis por projeto.
+`mode` vale para todos os recursos (`observe`, `enforce` ou `off`); `features` ajusta um de cada vez.
+Um recurso desligado (`off`) nesse arquivo global continua desligado mesmo que o `.claude/claujev.json`
+de um projeto tente ligá-lo; os recursos ligados continuam ajustáveis por projeto.
 
 ### Modo de cada hook (arquivos de configuração)
 
@@ -112,6 +117,8 @@ completo está em [`examples/claujev.json`](../examples/claujev.json).
 | --- | --- | --- |
 | `enabled` | `true` | liga/desliga tudo |
 | `lang` | `"en"` | `en` ou `pt`: mensagens ao Claude e perguntas ao Jev |
+| `mode` | `"observe"` | vale para todos os recursos de uma vez |
+| `features` | `{}` | um recurso de cada vez (chaves na tabela acima) |
 | `model` | `"jev-latest"` | modelo do Jev |
 | `timeoutMs` | `3000` | tempo máximo de cada chamada |
 | `hooks` | tudo `observe` | modo de cada hook |
@@ -126,8 +133,8 @@ completo está em [`examples/claujev.json`](../examples/claujev.json).
 | `checkDocs` | `false` | se `.md`, `.txt` e `.json` também passam pela revisão de regras |
 | `maxDiffChars` | `30000` | tamanho máximo do diff enviado na conferência final |
 
-Opções do mod (em `/plugin` → ClauJev mod): `effort` (`observe`/`on`/`off`), `min_effort`,
-`max_effort`, `status` (barra de status ligada/desligada) e `lang`.
+Opções do mod, no mesmo `config.json` (também escolhidas pelo `/claujev:configure`):
+`"mod": { "effort": "observe" | "on" | "off", "minEffort": "low", "maxEffort": "xhigh", "status": true }`.
 
 Variáveis de ambiente: `TYPESAFE_API_KEY` (alternativa à opção do plugin), `CLAUJEV_HOME` (outra pasta
 de dados; o padrão é `~/.claude/claujev`) e `CLAUJEV_DISABLED=1` (desliga para uma sessão).
@@ -219,4 +226,4 @@ node ~/.claude/claujev/claujev.mjs selftest
 O instalador copia o script para `~/.claude/claujev/`, mantém seus outros hooks, faz backup do
 `settings.json` e nunca sobrescreve seu `config.json` nem o `.env`. Ele se recusa a rodar quando o
 plugin está instalado, para o Jev nunca rodar em dobro. Para remover: `node install.mjs --uninstall`.
-Depois de instalar, ponha `"lang": "pt"` em `~/.claude/claujev/config.json` para as mensagens em português.
+Depois de instalar, rode `/claujev:configure` (ou ponha `"lang": "pt"` em `~/.claude/claujev/config.json`) para as mensagens em português.

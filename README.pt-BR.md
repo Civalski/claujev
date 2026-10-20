@@ -40,8 +40,9 @@ No Claude Code:
 /plugin install claujev --marketplace Civalski/claujev
 ```
 
-Preencha a chave da TypeSafe AI (a única opção obrigatória) e reinicie o Claude Code. Na primeira
-conversa, o Claude oferece uma configuração guiada em português.
+Preencha a chave da TypeSafe AI (a única coisa que a instalação pede) e reinicie o Claude Code. Na
+primeira conversa, o Claude oferece uma configuração guiada em português; para mudar depois, rode
+`/claujev:configure`.
 
 Opcional, **depois** do passo acima: `/plugin install claujev-mod --marketplace Civalski/claujev` para a
 barra de status e o esforço automático. (Instalar o mod primeiro também instala o ClauJev, mas sem pedir
@@ -51,11 +52,9 @@ a chave: aí rode `/plugin configure claujev@claujev`.)
 
 | Comando | O que faz |
 | --- | --- |
-| `/claujev:configure` | configuração guiada: pergunta suas preferências básicas e aplica |
+| `/claujev:configure` | menu de preferências, em português: idioma, modo, ligar/desligar recursos, esforço automático |
 | `/claujev:claujev-setup` | regras do projeto a partir do `CLAUDE.md`, autoteste, relatório e ajustes |
-| `/plugin configure claujev@claujev` | chave, idioma, modo e liga/desliga de cada recurso |
-| `/config` | liga e desliga cada recurso: Request triage, Command guard, Rule review, Final check, Subagent routing, Subagent report check |
-| `/plugin configure claujev-mod@claujev` | esforço automático (`observe`/`on`/`off`), limites de esforço, barra de status |
+| `/plugin configure claujev@claujev` | sua chave da TypeSafe AI |
 | `/claujev` | atividade do Jev hoje: chamadas, ações, custo, esforço (precisa do mod) |
 | `/reload-plugins` | aplica uma instalação ou atualização sem reiniciar |
 | `claude plugin update claujev@claujev` | atualiza para a última versão |

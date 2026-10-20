@@ -336,19 +336,37 @@ function readEnvFile() {
 // Key order: plugin setting (secure storage) > environment > .env file.
 const apiKey = () => OPT('API_KEY') || process.env.TYPESAFE_API_KEY || readEnvFile().TYPESAFE_API_KEY;
 
-// The feature menu: one plugin option per hook, shown in /config and /plugin configure.
+// Features the user can switch: config keys (lowercase) and the hook each one drives.
 const FEATURES = { TRIAGE: 'prompt', COMMAND_GUARD: 'bash', RULE_REVIEW: 'edit', FINAL_CHECK: 'stop', SUBAGENT_ROUTING: 'agent', SUBAGENT_CHECK: 'subagent' };
 const MODES = ['observe', 'enforce', 'off'];
 
-// Layers: defaults < plugin options < global config.json < project .claude/claujev.json (jev.json accepted for compatibility).
-// A feature switched "off" in the plugin menu stays off whatever the files say: it is the user's own choice.
+// Turns the friendly keys of a config file into per-hook modes:
+//   "mode": "observe" | "enforce" | "off"            -> every hook
+//   "features": { "command_guard": "off", ... }      -> one hook each (keys of FEATURES, lowercase)
+// "hooks" written explicitly in the same file wins over both.
+function normalizeLayer(l) {
+  if (!l) return l;
+  const { mode, features, ...rest } = l;
+  const hooks = {};
+  if (MODES.includes(mode)) for (const h of Object.keys(DEFAULTS.hooks)) hooks[h] = mode;
+  for (const [k, v] of Object.entries(features || {})) {
+    const hook = FEATURES[k.toUpperCase()];
+    if (hook && MODES.includes(v)) hooks[hook] = v;
+  }
+  return { ...rest, hooks: { ...hooks, ...(l.hooks || {}) } };
+}
+
+// Layers: defaults < plugin options < global ~/.claude/claujev/config.json < project .claude/claujev.json
+// (jev.json accepted for compatibility). A feature the user switched "off" (in the global config, written by
+// /claujev:configure, or in a plugin option) stays off whatever a project says: it is the user's own choice.
 function loadConfig(cwd) {
   const project = cwd && (readJson(join(cwd, '.claude', 'claujev.json')) || readJson(join(cwd, '.claude', 'jev.json')));
+  const global = readJson(join(HERE, 'config.json'));
   const pluginLayer = { hooks: {} };
   if (OPT('LANG')) pluginLayer.lang = OPT('LANG');
   if (MODES.includes(OPT('MODE'))) for (const h of Object.keys(DEFAULTS.hooks)) pluginLayer.hooks[h] = OPT('MODE');
   for (const [opt, hook] of Object.entries(FEATURES)) if (MODES.includes(OPT(opt))) pluginLayer.hooks[hook] = OPT(opt);
-  const layers = [pluginLayer, readJson(join(HERE, 'config.json')), project].filter(Boolean);
+  const layers = [pluginLayer, normalizeLayer(global), normalizeLayer(project)].filter(Boolean);
 
   const cfg = structuredClone(DEFAULTS);
   cfg.lang = [...layers].reverse().find((l) => l.lang)?.lang || DEFAULTS.lang;
@@ -360,7 +378,9 @@ function loadConfig(cwd) {
       else cfg[k] = v;
     }
   }
-  for (const [opt, hook] of Object.entries(FEATURES)) if (OPT(opt) === 'off') cfg.hooks[hook] = 'off';
+  for (const [opt, hook] of Object.entries(FEATURES)) {
+    if (OPT(opt) === 'off' || global?.features?.[opt.toLowerCase()] === 'off') cfg.hooks[hook] = 'off';
+  }
   return cfg;
 }
 

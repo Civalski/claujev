@@ -3,12 +3,13 @@ import type { On } from 'claude-code'
 import type { Engine } from 'claude-code/testing'
 
 // The world beneath the mod: the state the claujev hooks wrote, a fixed session and home.
-function world(on: On, state: object | null, statuses: string[] = []) {
+function world(on: On, state: object | null, statuses: string[] = [], settings: object | null = null) {
   mock.env(on, { HOME: '/home/u' })
   mock.clock(on, { now: Date.UTC(2026, 9, 20, 12) })
   on('session.id', () => ({ value: 's-1' }))
   on('fs.read', (_, e) => {
     if (e.path === '/home/u/.claude/claujev/state/s-1.json' && state) return { value: JSON.stringify(state) }
+    if (e.path === '/home/u/.claude/claujev/config.json' && settings) return { value: JSON.stringify(settings) }
     if (e.path === '/home/u/.claude/claujev/logs/2026-10-20.jsonl') return { value: '{"hook":"bash","acted":true,"flagged":["destructive effect (p=0.97)"]}\n' }
     throw new Error('missing')
   })
@@ -29,13 +30,13 @@ async function step($: Engine, on: On, effort: 'medium' | 'high' = 'medium', age
   return sent
 }
 
-test('effort "on": the suggestion reaches the model request', { options: { effort: 'on' } }, async ($, on) => {
-  world(on, { effort: 'high' })
+test('effort "on": the suggestion reaches the model request', async ($, on) => {
+  world(on, { effort: 'high' }, [], { mod: { effort: 'on' } })
   expect(await step($, on)).toBe('high')
 })
 
-test('effort "on": the suggestion is kept within max_effort', { options: { effort: 'on', max_effort: 'medium' } }, async ($, on) => {
-  world(on, { effort: 'xhigh' })
+test('effort "on": the suggestion is kept within maxEffort', async ($, on) => {
+  world(on, { effort: 'xhigh' }, [], { mod: { effort: 'on', maxEffort: 'medium' } })
   expect(await step($, on, 'high')).toBe('medium')
 })
 
@@ -48,17 +49,31 @@ test('effort "observe" (default): the request keeps its effort, the status line 
   expect(statuses.some(s => /effort high \(suggested\)/.test(s))).toBe(true)
 })
 
-test('a request that asked for effort itself is never overridden', { options: { effort: 'on' } }, async ($, on) => {
-  world(on, { effort: 'low', explicitEffort: true })
+test('a request that asked for effort itself is never overridden', async ($, on) => {
+  world(on, { effort: 'low', explicitEffort: true }, [], { mod: { effort: 'on' } })
   expect(await step($, on, 'high')).toBe('high')
 })
 
-test('subagents keep their own effort', { options: { effort: 'on' } }, async ($, on) => {
-  world(on, { effort: 'low' })
+test('subagents keep their own effort', async ($, on) => {
+  world(on, { effort: 'low' }, [], { mod: { effort: 'on' } })
   expect(await step($, on, 'high', 'agent-1')).toBe('high')
 })
 
-test('no suggestion (Jev failed): the effort is left alone', { options: { effort: 'on' } }, async ($, on) => {
-  world(on, null)
+test('no suggestion (Jev failed): the effort is left alone', async ($, on) => {
+  world(on, null, [], { mod: { effort: 'on' } })
   expect(await step($, on, 'high')).toBe('high')
+})
+
+test('effort "off": nothing is touched and nothing is suggested', async ($, on) => {
+  const statuses: string[] = []
+  world(on, { effort: 'low' }, statuses, { mod: { effort: 'off' } })
+  expect(await step($, on, 'high')).toBe('high')
+})
+
+test('Portuguese settings: the status line speaks Portuguese', async ($, on) => {
+  const statuses: string[] = []
+  world(on, { effort: 'high' }, statuses, { lang: 'pt' })
+  await step($, on, 'medium')
+  for (let i = 0; i < 50 && !statuses.length; i++) await Promise.resolve()
+  expect(statuses.some(s => /esforço high \(sugerido\)/.test(s))).toBe(true)
 })

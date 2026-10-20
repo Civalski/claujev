@@ -27,11 +27,10 @@ Run `node "${CLAUDE_PLUGIN_ROOT}/hooks/claujev.mjs" selftest` and show the resul
 
 ## Turning features on and off
 
-Each feature is a plugin setting the user changes in `/config` or `/plugin configure claujev@claujev`:
-Request triage, Command guard, Rule review, Final check, Subagent routing, Subagent report check. Each
-takes `mode` (follows Mode), `observe`, `enforce` or `off`; `off` there beats any config file. When the
-user wants a feature off everywhere, point them to that menu. For one project only, use `hooks` in
-`.claude/claujev.json` (keys `prompt`, `bash`, `edit`, `stop`, `agent`, `subagent`).
+Preferences (language, mode, features on/off, the mod's automatic effort) are chosen with the
+`/claujev:configure` skill and saved in `~/.claude/claujev/config.json` (`lang`, `mode`, `features`,
+`mod`). A feature set to `"off"` there beats any project config. For one project only, use `hooks`
+in `.claude/claujev.json` (keys `prompt`, `bash`, `edit`, `stop`, `agent`, `subagent`).
 
 ## 2. Write the project config
 

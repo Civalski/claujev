@@ -39,8 +39,8 @@ In Claude Code:
 /plugin install claujev --marketplace Civalski/claujev
 ```
 
-Enter your TypeSafe AI key (the only required setting) and restart Claude Code. On the first session
-Claude offers a short guided setup in your language.
+Enter your TypeSafe AI key (the only thing the install asks) and restart Claude Code. On the first
+session Claude offers a short guided setup in your language; run `/claujev:configure` to change it later.
 
 Optional, **after** the step above: `/plugin install claujev-mod --marketplace Civalski/claujev` for the
 status line and automatic effort. (Installing the mod first also installs ClauJev, but without asking
@@ -50,11 +50,9 @@ for the key: then run `/plugin configure claujev@claujev`.)
 
 | Command | What it does |
 | --- | --- |
-| `/claujev:configure` | guided setup: asks your basic preferences and applies them |
+| `/claujev:configure` | preferences menu, in your language: language, mode, features on/off, automatic effort |
 | `/claujev:claujev-setup` | project rules from your `CLAUDE.md`, self-test, report and tuning |
-| `/plugin configure claujev@claujev` | API key, language, mode and per-feature switches |
-| `/config` | turn each feature on/off: Request triage, Command guard, Rule review, Final check, Subagent routing, Subagent report check |
-| `/plugin configure claujev-mod@claujev` | automatic effort (`observe`/`on`/`off`), effort limits, status line |
+| `/plugin configure claujev@claujev` | your TypeSafe AI key |
 | `/claujev` | today's Jev activity: calls, actions, cost, effort (needs the mod) |
 | `/reload-plugins` | apply an install or update without restarting |
 | `claude plugin update claujev@claujev` | update to the latest version |

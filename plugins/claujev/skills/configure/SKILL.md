@@ -1,72 +1,81 @@
 ---
 name: configure
-description: Guided setup of ClauJev. Asks the user a few basic preferences (language, mode, which features to keep, automatic effort) and applies them to the plugin settings. Use when the user runs /claujev:configure, asks to configure or set up ClauJev or Jev preferences, or accepts the guided setup offered on ClauJev's first session.
+description: ClauJev preferences menu and guided setup. Asks the user, in their own language, the basic preferences (language, mode, which features to keep, automatic effort, status line) and saves them. Use when the user runs /claujev:configure, asks to configure ClauJev or Jev, change its language or mode, turn a ClauJev feature on or off, or accepts the guided setup offered on ClauJev's first session.
 ---
 
-# ClauJev guided setup
+# ClauJev preferences
 
-Goal: in one short exchange, learn the user's basic preferences and apply them. Speak the user's
-language. Keep it light: one round of questions, then apply, then a two-line summary.
+Goal: one short exchange in the user's language, then save, then a two-line summary. This is the
+only place where preferences are chosen: the plugin install screen only asks for the API key.
 
-Never ask for, read, print or write the TypeSafe AI key. It is a sensitive setting the user enters
-themselves in `/plugin configure claujev@claujev`, where it goes to the system's secure storage.
+Never ask for, read, print or write the TypeSafe AI key. The user enters it in
+`/plugin configure claujev@claujev` (system secure storage) or in `~/.claude/claujev/.env`.
 
 ## 1. Read the current state
 
-Run both, quietly:
+- Preferences file: `~/.claude/claujev/config.json` (may not exist yet). Read it if it exists.
+- `claude plugin list` tells whether `claujev-mod@claujev` is installed.
+- `claude plugin configure claujev@claujev` tells whether `api_key` is set (it never shows the value).
 
-- `claude plugin configure claujev@claujev --json` — current values and which are unset
-  (`api_key` only shows whether it is set).
-- `claude plugin list` — whether `claujev-mod@claujev` is installed.
+## 2. Ask, in one round
 
-## 2. Ask the basic preferences in one round
+Use the AskUserQuestion tool, in the language the user writes in. Put the recommended option first,
+marked as recommended. Skip a question whose answer you already know.
 
-Use the AskUserQuestion tool with these questions (skip one whose answer you already know for sure).
-Put the recommended option first and mark it "(Recommended)".
+1. **Language** of ClauJev's messages and of the questions sent to Jev: Português (`pt`) or English
+   (`en`). Recommend the user's language.
+2. **Mode**: `observe` (recommended at first: Jev only takes notes, nothing interrupts; check the
+   report after a few days) or `enforce` (Jev acts now: hints, confirmation before risky commands,
+   check before finishing).
+3. **Features to turn off** (multiSelect; selecting none keeps all). Explain each in a few plain words:
+   - Request triage (`triage`): a hint per request and the effort suggestion
+   - Command guard (`command_guard`): asks before destructive or credential commands
+   - Rule review (`rule_review`): checks each code edit against rules
+   - Final check (`final_check`): checks the work before Claude says it is done
+   - Subagent routing (`subagent_routing`): simple subagents on a smaller, cheaper model
+   - Subagent report check (`subagent_check`): catches subagents claiming work they did not do
+4. **Automatic effort**, only if `claujev-mod` is installed: `observe` (recommended: show Jev's
+   suggestion in the status line), `on` (apply it to each request, between `low` and `xhigh`), `off`.
+   If the mod is not installed, do not ask; at the end mention that
+   `/plugin install claujev-mod --marketplace Civalski/claujev` adds it.
 
-1. **Language** of the messages Claude gets from ClauJev and of the questions sent to Jev:
-   English (`en`) or Português (`pt`). Recommend the language the user is writing in.
-2. **Mode**: `observe` (Recommended for the first days: Jev only logs, nothing interrupts, then read
-   the report) or `enforce` (Jev acts now: hints, confirmations before risky commands, final check).
-3. **Features to turn off** (multiSelect; none selected keeps everything): Request triage, Command
-   guard, Rule review, Final check, Subagent routing, Subagent report check. Describe each in a few
-   words: triage = hint + effort suggestion per request; command guard = asks before destructive or
-   credential commands; rule review = checks each edit against rules; final check = checks the work
-   before Claude finishes; subagent routing = simple subagents on a smaller model; subagent report
-   check = catches subagents claiming work they did not do.
-4. **Automatic effort** — only if `claujev-mod` is installed: `observe` (Recommended: show Jev's
-   suggestion in the status line), `on` (apply it to each request, between low and xhigh), `off`.
-   If the mod is not installed, do not ask; mention at the end that
-   `/plugin install claujev-mod --marketplace Civalski/claujev` adds the status line and this feature.
+## 3. Save
 
-## 3. Apply
+Merge the answers into `~/.claude/claujev/config.json`, keeping every other key already there
+(rules, areas, thresholds…). Shape:
 
-Build one JSON object of single-line strings and pipe it to the CLI. Only include what changes;
-options left out keep their values. Feature keys: `triage`, `command_guard`, `rule_review`,
-`final_check`, `subagent_routing`, `subagent_check`; a feature the user turned off gets `"off"`,
-one they keep gets `"mode"` (follows the Mode setting).
-
-```bash
-echo '{"lang":"pt","mode":"observe","command_guard":"mode","subagent_routing":"off"}' | claude plugin configure claujev@claujev --values-stdin
+```json
+{
+  "lang": "pt",
+  "mode": "observe",
+  "features": { "command_guard": "off" },
+  "mod": { "effort": "observe", "minEffort": "low", "maxEffort": "xhigh", "status": true }
+}
 ```
 
-For the mod (when installed and asked):
+- `features`: list only the ones turned off, as `"off"`. A feature turned back on is removed from
+  `features`. "off" here wins over any project's `.claude/claujev.json`.
+- `mod`: only when the mod is installed.
+
+A safe way to merge (replace the JSON in `NEW` with the answers):
 
 ```bash
-echo '{"effort":"observe","lang":"pt"}' | claude plugin configure claujev-mod@claujev --values-stdin
+node -e '
+const fs=require("fs"),p=require("os").homedir()+"/.claude/claujev/config.json";
+const cur=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,"utf8")):{};
+const NEW={"lang":"pt","mode":"observe","features":{"command_guard":"off"}};
+const out={...cur,...NEW,mod:{...(cur.mod||{}),...(NEW.mod||{})}};
+if(!Object.keys(out.mod).length) delete out.mod;
+fs.mkdirSync(require("path").dirname(p),{recursive:true});
+fs.writeFileSync(p,JSON.stringify(out,null,2)+"\n"); console.log(JSON.stringify(out))'
 ```
 
-Run `claude plugin configure claujev@claujev` afterwards to confirm the values were saved.
+Changes apply on the next request: no restart needed.
 
-## 4. Key and next steps
+## 4. Finish
 
-- If `api_key` is not set: tell the user ClauJev stays idle until they run
-  `/plugin configure claujev@claujev` and paste their key from typesafe.ai there (not in the chat).
-- Tell the user to restart Claude Code (open a new session) so the new settings apply; the CLI
-  confirms with "Configuration saved. Restart Claude Code to apply it."
-- Offer, in one line, the project setup: the `claujev-setup` skill reads the project's
+- If `api_key` is not set: say ClauJev stays idle until they run `/plugin configure claujev@claujev`
+  and paste the key from typesafe.ai there, never in the chat.
+- One line on what was saved, and that `/claujev:configure` changes it again any time.
+- Offer, in one line, the project setup: `/claujev:claujev-setup` reads the project's
   `CLAUDE.md`/`AGENTS.md` and proposes rules and areas in `.claude/claujev.json`.
-- Mention where to change things later: `/config` (one row per feature) or `/claujev:configure`.
-
-If the `claude plugin configure` command is missing (older Claude Code), give the user the values to
-pick in `/plugin configure claujev@claujev` instead.

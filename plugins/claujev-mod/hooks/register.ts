@@ -52,7 +52,11 @@ const TEXT = {
 type Texts = (typeof TEXT)['en'] | (typeof TEXT)['pt']
 
 // What the hooks share; module variables start over on a reload, which only costs one re-read.
-type Ctx = { t: Texts; showStatus: boolean; seenLines: number }
+type Ctx = { t: Texts; showStatus: boolean; seenLines: number; mode: string; minEffort: Effort; maxEffort: Effort }
+
+// Preferences written by /claujev:configure in ~/.claude/claujev/config.json:
+//   { "lang": "pt", "mod": { "effort": "observe" | "on" | "off", "minEffort": "low", "maxEffort": "xhigh", "status": true } }
+type Settings = { lang?: string; mod?: { effort?: string; minEffort?: string; maxEffort?: string; status?: boolean } }
 
 const isLevel = (v: unknown): v is Effort => typeof v === 'string' && (LEVELS as readonly string[]).includes(v)
 
@@ -86,6 +90,23 @@ async function dataDir($: EngineInterface): Promise<string | undefined> {
   if (custom) return custom.replace(/\\/g, '/')
   const home = (await $.env.get('HOME')) || (await $.env.get('USERPROFILE'))
   return home ? `${home.replace(/\\/g, '/')}/.claude/claujev` : undefined
+}
+
+// Re-read at session start and at each new request, so a change made by /claujev:configure applies right away.
+async function loadSettings($: EngineInterface, ctx: Ctx): Promise<void> {
+  const dir = await dataDir($)
+  let s: Settings = {}
+  try {
+    if (dir) s = JSON.parse(await $.fs.read(`${dir}/config.json`)) as Settings
+  } catch {
+    // no config yet: defaults
+  }
+  const m = s.mod ?? {}
+  ctx.t = s.lang === 'pt' ? TEXT.pt : TEXT.en
+  ctx.mode = m.effort === 'on' || m.effort === 'off' ? m.effort : 'observe'
+  ctx.minEffort = isLevel(m.minEffort) ? m.minEffort : 'low'
+  ctx.maxEffort = isLevel(m.maxEffort) ? m.maxEffort : 'xhigh'
+  ctx.showStatus = m.status !== false
 }
 
 async function readState($: EngineInterface): Promise<TurnState | null> {
@@ -153,14 +174,12 @@ async function summary($: EngineInterface, t: Texts): Promise<string> {
   ].filter(Boolean).join('\n')
 }
 
-export const register: Register = (on, options) => {
-  const mode = String(options.effort ?? 'observe')
-  const minEffort: Effort = isLevel(options.min_effort) ? options.min_effort : 'low'
-  const maxEffort: Effort = isLevel(options.max_effort) ? options.max_effort : 'xhigh'
-  const ctx: Ctx = { t: options.lang === 'pt' ? TEXT.pt : TEXT.en, showStatus: options.status !== false, seenLines: -1 }
+export const register: Register = on => {
+  const ctx: Ctx = { t: TEXT.en, showStatus: true, seenLines: -1, mode: 'observe', minEffort: 'low', maxEffort: 'xhigh' }
   const decided = new Map<string, { effort: Effort; applied: boolean } | null>()
 
   on('session.start', async ($, e, next) => {
+    await loadSettings($, ctx)
     await $.command.register({ name: 'claujev', description: ctx.t.commandDesc })
     void refresh($, ctx)
     return next(e)
@@ -169,13 +188,18 @@ export const register: Register = (on, options) => {
   // Effort is set per model request, only in the main loop, never in subagents.
   // turn.step streams: the hook is an async generator and `yield* next(...)` forwards the stream.
   on('turn.step', async function* ($, e, next) {
-    if (e.agentId !== undefined || mode === 'off' || e.effort === undefined) return yield* next(e)
+    if (e.agentId !== undefined || e.effort === undefined) return yield* next(e)
 
     if (!decided.has(e.turnId)) {
+      await loadSettings($, ctx)
+      if (ctx.mode === 'off') {
+        decided.set(e.turnId, null)
+        return yield* next(e)
+      }
       const st = await readState($)
       // A request that asks for effort itself ("ultrathink") is never overridden.
       const suggestion = st && !st.explicitEffort && isLevel(st.effort) ? st.effort : null
-      decided.set(e.turnId, suggestion ? { effort: clampEffort(suggestion, minEffort, maxEffort), applied: mode === 'on' } : null)
+      decided.set(e.turnId, suggestion ? { effort: clampEffort(suggestion, ctx.minEffort, ctx.maxEffort), applied: ctx.mode === 'on' } : null)
       if (decided.size > 50) decided.delete(decided.keys().next().value as string)
       void refresh($, ctx, effortLabel(ctx.t, decided.get(e.turnId)))
     }

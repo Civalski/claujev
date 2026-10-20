@@ -1,7 +1,7 @@
 {
   "name": "claujev-mod",
   "displayName": "ClauJev mod",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Optional companion of ClauJev / Complemento opcional do ClauJev: automatic effort, status line, toasts and /claujev.",
   "author": {
     "name": "Alisson Civalski",
@@ -18,59 +18,5 @@
   ],
   "dependencies": [
     "claujev"
-  ],
-  "userConfig": {
-    "effort": {
-      "type": "string",
-      "title": "Automatic effort · Esforço automático",
-      "description": "observe: show it · só mostra | on: apply it · aplica | off: disabled · desligado",
-      "options": [
-        "observe",
-        "on",
-        "off"
-      ],
-      "default": "observe"
-    },
-    "min_effort": {
-      "type": "string",
-      "title": "Lowest effort · Esforço mínimo",
-      "description": "Jev never goes below this. · O Jev nunca escolhe menos que isso.",
-      "options": [
-        "low",
-        "medium",
-        "high",
-        "xhigh"
-      ],
-      "default": "low"
-    },
-    "max_effort": {
-      "type": "string",
-      "title": "Highest effort · Esforço máximo",
-      "description": "Jev never goes above this. · O Jev nunca escolhe mais que isso.",
-      "options": [
-        "low",
-        "medium",
-        "high",
-        "xhigh",
-        "max"
-      ],
-      "default": "xhigh"
-    },
-    "status": {
-      "type": "boolean",
-      "title": "Status line · Barra de status",
-      "description": "Shows Jev activity today. · Mostra a atividade do Jev hoje.",
-      "default": true
-    },
-    "lang": {
-      "type": "string",
-      "title": "Language · Idioma",
-      "description": "Language of the status line and /claujev. · Idioma da barra de status e do /claujev.",
-      "options": [
-        "en",
-        "pt"
-      ],
-      "default": "en"
-    }
-  }
+  ]
 }

@@ -115,13 +115,29 @@ test('feature menu: each feature follows the mode, can be set alone, and "off" a
   }
 });
 
-test('plugin manifest: every feature option maps to a hook', () => {
+test('plugin manifest: the install screen only asks for the API key', () => {
   const opts = JSON.parse(readFileSync(join(REPO, 'plugins', 'claujev', '.claude-plugin', 'plugin.json'), 'utf8')).userConfig;
-  for (const k of ['triage', 'command_guard', 'rule_review', 'final_check', 'subagent_routing', 'subagent_check']) {
-    assert.deepEqual(opts[k].options, ['mode', 'observe', 'enforce', 'off'], k);
-    assert.equal(opts[k].default, 'mode', k);
-  }
+  assert.deepEqual(Object.keys(opts), ['api_key']);
   assert.equal(opts.api_key.sensitive, true);
+  const mod = JSON.parse(readFileSync(join(REPO, 'plugins', 'claujev-mod', '.claude-plugin', 'plugin.json'), 'utf8'));
+  assert.equal(mod.userConfig, undefined, 'the mod has no install screen');
+});
+
+test('global config from /claujev:configure: mode, features, and "off" beats the project', () => {
+  writeFileSync(join(process.env.CLAUJEV_HOME, 'config.json'), JSON.stringify({ lang: 'pt', mode: 'enforce', features: { rule_review: 'observe', command_guard: 'off' } }));
+  try {
+    const cfg = m.loadConfig(project('p6', { hooks: { bash: 'enforce', stop: 'observe' } }));
+    assert.equal(cfg.lang, 'pt');
+    assert.equal(cfg.hooks.prompt, 'enforce', 'mode sets every hook');
+    assert.equal(cfg.hooks.edit, 'observe', 'a feature can have its own mode');
+    assert.equal(cfg.hooks.bash, 'off', 'off chosen by the user beats the project');
+    assert.equal(cfg.hooks.stop, 'observe', 'the project still tunes features left on');
+    const proj = m.loadConfig(project('p7', { mode: 'off' }));
+    assert.equal(proj.hooks.final_check, undefined);
+    assert.equal(proj.hooks.stop, 'off', 'a project can use "mode" too');
+  } finally {
+    writeFileSync(join(process.env.CLAUJEV_HOME, 'config.json'), JSON.stringify({ hooks: { bash: 'enforce' }, rules: ['global'] }));
+  }
 });
 
 test('TEXT: en and pt have the same keys', () => {

@@ -1,7 +1,7 @@
 {
   "name": "claujev",
   "displayName": "ClauJev",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "Jev (TypeSafe AI) as a second pair of eyes for Claude Code / O Jev como segundo par de olhos do Claude Code: triage, automatic effort, command guard, rule review, final check.",
   "author": {
     "name": "Alisson Civalski",
@@ -21,102 +21,9 @@
   "userConfig": {
     "api_key": {
       "type": "string",
-      "title": "TypeSafe AI API key · Chave da API",
-      "description": "Required, from typesafe.ai. · Obrigatória, pegue em typesafe.ai.",
+      "title": "TypeSafe AI API key · Chave da API TypeSafe AI",
+      "description": "Get it at typesafe.ai. Preferences come next, in your language: /claujev:configure. · Pegue em typesafe.ai. As preferências vêm depois, em português: /claujev:configure.",
       "sensitive": true
-    },
-    "lang": {
-      "type": "string",
-      "title": "Language · Idioma",
-      "description": "Language of ClauJev messages. · Idioma das mensagens do ClauJev.",
-      "options": [
-        "en",
-        "pt"
-      ],
-      "default": "en"
-    },
-    "mode": {
-      "type": "string",
-      "title": "Main mode · Modo geral",
-      "description": "observe: log only · só anota | enforce: Jev acts · o Jev age | off: disabled · desligado",
-      "options": [
-        "observe",
-        "enforce",
-        "off"
-      ],
-      "default": "observe"
-    },
-    "triage": {
-      "type": "string",
-      "title": "Request triage · Triagem do pedido",
-      "description": "Hint + effort per request. · Dica e esforço por pedido. (mode = follow Main mode · segue o Modo geral)",
-      "options": [
-        "mode",
-        "observe",
-        "enforce",
-        "off"
-      ],
-      "default": "mode"
-    },
-    "command_guard": {
-      "type": "string",
-      "title": "Command guard · Guarda de comandos",
-      "description": "Asks before risky commands. · Pede confirmação antes de comandos perigosos.",
-      "options": [
-        "mode",
-        "observe",
-        "enforce",
-        "off"
-      ],
-      "default": "mode"
-    },
-    "rule_review": {
-      "type": "string",
-      "title": "Rule review · Revisão por regras",
-      "description": "Checks each edit against the rules. · Confere cada edição contra as regras.",
-      "options": [
-        "mode",
-        "observe",
-        "enforce",
-        "off"
-      ],
-      "default": "mode"
-    },
-    "final_check": {
-      "type": "string",
-      "title": "Final check · Conferência final",
-      "description": "Checks the work before Claude finishes. · Confere o trabalho antes de encerrar.",
-      "options": [
-        "mode",
-        "observe",
-        "enforce",
-        "off"
-      ],
-      "default": "mode"
-    },
-    "subagent_routing": {
-      "type": "string",
-      "title": "Subagent routing · Roteamento de subagentes",
-      "description": "Simple subagents on a smaller model. · Subagentes simples num modelo menor.",
-      "options": [
-        "mode",
-        "observe",
-        "enforce",
-        "off"
-      ],
-      "default": "mode"
-    },
-    "subagent_check": {
-      "type": "string",
-      "title": "Subagent report check · Checagem de subagentes",
-      "description": "Catches false subagent reports. · Pega relatórios falsos de subagentes.",
-      "options": [
-        "mode",
-        "observe",
-        "enforce",
-        "off"
-      ],
-      "default": "mode"
     }
   }
 }
