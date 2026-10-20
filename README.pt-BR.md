@@ -28,6 +28,12 @@ respostas em ação:
 
 Cerca de **400 ms** por checagem. Seis dias de uso diário custaram ao autor **US$ 0,07**.
 
+**Também pode economizar tokens do Claude.** O Jev custa frações de centavo e afasta o Claude dos
+hábitos caros: esforço `low` (menos raciocínio) em perguntas simples, "vá direto ao arquivo" em vez de
+explorar o repositório inteiro para mudar uma linha, nenhuma edição quando você só fez uma pergunta, e
+tarefas simples de subagente num modelo menor e mais barato. A conferência final ainda pega trabalho
+inacabado antes de você precisar pedir de novo.
+
 > [!NOTE]
 > Projeto da comunidade, sem vínculo oficial com a TypeSafe AI nem com a Anthropic. Você precisa de
 > uma chave da [TypeSafe AI](https://typesafe.ai).

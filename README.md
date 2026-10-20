@@ -27,6 +27,12 @@ While Claude works, Jev answers short, typed questions such as *"is this command
 
 About **400 ms** per check. Six days of daily use cost the author **US$ 0.07**.
 
+**It can also save Claude tokens.** Jev costs a fraction of a cent, and it steers Claude away from the
+expensive habits: `low` effort (less thinking) on simple questions, "go straight to the file" instead
+of exploring the whole repository for a one-line change, no edits when you only asked a question, and
+simple subagent tasks on a smaller, cheaper model. The final check also catches unfinished work before
+you have to ask again.
+
 > [!NOTE]
 > Community project, not affiliated with TypeSafe AI or Anthropic. You need a
 > [TypeSafe AI](https://typesafe.ai) API key.
