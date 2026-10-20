@@ -118,7 +118,7 @@ is in [`examples/claujev.json`](../examples/claujev.json).
 | `mode` | `"observe"` | sets every feature at once |
 | `features` | `{}` | one feature at a time (keys in the table above) |
 | `model` | `"jev-latest"` | Jev model |
-| `timeoutMs` | `3000` | max time per call |
+| `timeoutMs` | `5000` | max time per call (a timeout is retried once) |
 | `hooks` | all `observe` | mode per hook |
 | `thresholds` | see the table above | `low`/`high` bands per question |
 | `routeModel` | `"haiku"` | model for simple subagents |

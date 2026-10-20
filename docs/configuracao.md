@@ -120,7 +120,7 @@ completo está em [`examples/claujev.json`](../examples/claujev.json).
 | `mode` | `"observe"` | vale para todos os recursos de uma vez |
 | `features` | `{}` | um recurso de cada vez (chaves na tabela acima) |
 | `model` | `"jev-latest"` | modelo do Jev |
-| `timeoutMs` | `3000` | tempo máximo de cada chamada |
+| `timeoutMs` | `5000` | tempo máximo de cada chamada (um estouro é tentado de novo uma vez) |
 | `hooks` | tudo `observe` | modo de cada hook |
 | `thresholds` | ver tabela acima | faixas `low`/`high` de cada pergunta |
 | `routeModel` | `"haiku"` | modelo usado em subagentes simples |

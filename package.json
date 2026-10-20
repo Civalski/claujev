@@ -1,6 +1,6 @@
 {
   "name": "claujev",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "private": true,
   "description": "Jev (TypeSafe AI) as a second pair of eyes for Claude Code: request triage, automatic effort, command guard, rule review and a final check before finishing.",
   "type": "module",

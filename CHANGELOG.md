@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.4.3 — 2026-10-20
+
+### Fixed
+- **Fewer skipped checks on slow answers.** Jev calls now wait up to 5 s (was 3 s) and a timed-out
+  call is retried once, still well inside Claude Code's 15 s hook budget. Two checks were skipped by
+  timeouts during today's recordings.
+
 ## 2.4.2 — 2026-10-20
 
 ### Fixed

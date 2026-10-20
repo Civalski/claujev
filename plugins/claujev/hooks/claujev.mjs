@@ -22,7 +22,7 @@ const DEFAULTS = {
   enabled: true,
   lang: 'en',
   model: 'jev-latest',
-  timeoutMs: 3000,
+  timeoutMs: 5000, // per attempt; a timed-out call is retried once (hooks have a 15 s budget)
   // Per hook: "observe" only logs, "enforce" acts on Claude, "off" disables.
   hooks: { prompt: 'observe', edit: 'observe', stop: 'observe', bash: 'observe', agent: 'observe', subagent: 'observe' },
   // Model suggested for subagents with a simple task.
@@ -444,12 +444,19 @@ async function askJev(cfg, state, questions) {
   if (!key) throw new Error(T(cfg).selftest.noKey);
   for (let attempt = 0; ; attempt++) {
     const t0 = Date.now();
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: cfg.model, state, questions }),
-      signal: AbortSignal.timeout(cfg.timeoutMs),
-    });
+    let res;
+    try {
+      res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: cfg.model, state, questions }),
+        signal: AbortSignal.timeout(cfg.timeoutMs),
+      });
+    } catch (e) {
+      // Latency spikes happen: one more try on a timeout, then give up (the caller decides what is safe).
+      if ((e?.name === 'TimeoutError' || e?.name === 'AbortError') && attempt < 1) continue;
+      throw e;
+    }
     if ((res.status === 429 || res.status === 529) && attempt < 2) { await sleep(400 * 2 ** attempt); continue; }
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${clip(await res.text(), 300)}`);
     const data = await res.json();
