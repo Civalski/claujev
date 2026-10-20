@@ -25,6 +25,8 @@ While Claude works, Jev answers short, typed questions such as *"is this command
 - ✅ **Final check**: stops "done!" when the work looks incomplete or your tests fail.
 - 🪄 **Subagent routing** and 🕵️ **false-claim detector** for subagents.
 
+<p align="center"><img src="docs/demo.gif" alt="ClauJev holding a git push --force for confirmation in Claude Code" width="100%"></p>
+
 About **400 ms** per check. Six days of daily use cost the author **US$ 0.07**.
 
 **It can also save Claude tokens.** Jev costs a fraction of a cent, and it steers Claude away from the

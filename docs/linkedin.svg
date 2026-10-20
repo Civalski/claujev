@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1350" width="1080" height="1350">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#13151d"/>
+      <stop offset="1" stop-color="#1d2131"/>
+    </linearGradient>
+    <linearGradient id="jev" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5fb4e8"/>
+      <stop offset="1" stop-color="#3b7fc8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1350" fill="url(#bg)"/>
+  <g fill="none" stroke="#252a3b" stroke-width="1">
+    <path d="M0 150H1080M0 300H1080M0 450H1080M0 600H1080M0 750H1080M0 900H1080M0 1050H1080M0 1200H1080"/>
+    <path d="M135 0V1350M270 0V1350M405 0V1350M540 0V1350M675 0V1350M810 0V1350M945 0V1350"/>
+  </g>
+
+  <!-- título -->
+  <text x="80" y="150" font-family="DejaVu Sans, Arial, sans-serif" font-size="58" font-weight="800" fill="#f3f4f8">Meu Claude Code ganhou</text>
+  <text x="80" y="222" font-family="DejaVu Sans, Arial, sans-serif" font-size="58" font-weight="800" fill="#f3f4f8">um <tspan fill="#5fb4e8">segundo par de olhos</tspan></text>
+  <text x="80" y="282" font-family="DejaVu Sans, Arial, sans-serif" font-size="27" fill="#aab2c8">O Jev confere o que o Claude faz, em ~400 ms.</text>
+
+  <!-- terminal -->
+  <g transform="translate(80 340)">
+    <rect width="920" height="470" rx="18" fill="#0d0f15" stroke="#2c3247" stroke-width="2"/>
+    <rect width="920" height="52" rx="18" fill="#1a1e2b"/>
+    <rect y="34" width="920" height="18" fill="#1a1e2b"/>
+    <circle cx="34" cy="26" r="8" fill="#e8655f"/><circle cx="60" cy="26" r="8" fill="#e8b15f"/><circle cx="86" cy="26" r="8" fill="#6cc46c"/>
+    <text x="460" y="33" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="18" fill="#7d86a3">claude</text>
+
+    <g font-family="DejaVu Sans Mono, monospace" font-size="22">
+      <text x="34" y="110" fill="#e8875f">❯</text>
+      <text x="62" y="110" fill="#f3f4f8">força o push da minha main por cima do origin</text>
+
+      <text x="34" y="170" fill="#9aa3bd">●</text>
+      <text x="62" y="170" fill="#d6dbea">Bash</text>
+      <text x="62" y="204" fill="#9aa3bd">git push --force origin main</text>
+
+      <rect x="34" y="236" width="852" height="196" rx="10" fill="#141a2a" stroke="url(#jev)" stroke-width="2"/>
+      <text x="58" y="280" fill="#5fb4e8" font-weight="700">[Jev] Comando sinalizado:</text>
+      <text x="58" y="314" fill="#f3f4f8">efeito destrutivo (p=0.99)</text>
+      <text x="58" y="364" fill="#d6dbea">Deseja continuar?</text>
+      <text x="58" y="402" fill="#6cc46c">❯ 1. Sim</text>
+      <text x="260" y="402" fill="#9aa3bd">2. Não</text>
+    </g>
+  </g>
+
+  <!-- o que ele faz -->
+  <g font-family="DejaVu Sans, Arial, sans-serif" font-size="28" fill="#e6e9f2">
+    <g transform="translate(80 900)">
+      <circle cx="10" cy="-9" r="7" fill="#5fb4e8"/><text x="36" y="0">Pede confirmação antes de comandos perigosos</text>
+    </g>
+    <g transform="translate(80 958)">
+      <circle cx="10" cy="-9" r="7" fill="#5fb4e8"/><text x="36" y="0">Revisa cada edição contra as regras do projeto</text>
+    </g>
+    <g transform="translate(80 1016)">
+      <circle cx="10" cy="-9" r="7" fill="#5fb4e8"/><text x="36" y="0">Segura o "pronto!" quando falta trabalho</text>
+    </g>
+    <g transform="translate(80 1074)">
+      <circle cx="10" cy="-9" r="7" fill="#5fb4e8"/><text x="36" y="0">Ajusta o esforço por pedido e economiza tokens</text>
+    </g>
+  </g>
+
+  <!-- números -->
+  <g transform="translate(80 1150)">
+    <rect width="440" height="96" rx="14" fill="#1a1e2b" stroke="#2c3247"/>
+    <text x="220" y="48" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="36" font-weight="800" fill="#f3f4f8">US$ 0,07</text>
+    <text x="220" y="78" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" fill="#aab2c8">em 6 dias de uso diário</text>
+  </g>
+  <g transform="translate(560 1150)">
+    <rect width="440" height="96" rx="14" fill="#1a1e2b" stroke="#2c3247"/>
+    <text x="220" y="48" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="36" font-weight="800" fill="#f3f4f8">open source</text>
+    <text x="220" y="78" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" fill="#aab2c8">plugin do Claude Code · MIT</text>
+  </g>
+
+  <text x="80" y="1300" font-family="DejaVu Sans, Arial, sans-serif" font-size="30" font-weight="800" fill="#f3f4f8">Clau<tspan fill="#5fb4e8">Jev</tspan></text>
+  <text x="1000" y="1300" text-anchor="end" font-family="DejaVu Sans Mono, monospace" font-size="22" fill="#7d86a3">github.com/Civalski/claujev</text>
+</svg>

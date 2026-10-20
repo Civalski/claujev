@@ -26,6 +26,8 @@ respostas em ação:
 - ✅ **Conferência final**: segura o "pronto!" quando o trabalho parece incompleto ou os testes falham.
 - 🪄 **Roteamento** e 🕵️ **detector de relatório falso** para subagentes.
 
+<p align="center"><img src="docs/demo.gif" alt="O ClauJev segurando um git push --force para confirmação no Claude Code" width="100%"></p>
+
 Cerca de **400 ms** por checagem. Seis dias de uso diário custaram ao autor **US$ 0,07**.
 
 **Também pode economizar tokens do Claude.** O Jev custa frações de centavo e afasta o Claude dos
