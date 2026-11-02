@@ -1,6 +1,6 @@
 ---
 name: configure
-description: ClauJev preferences menu and guided setup. Asks the user, in their own language, the basic preferences (language, mode, which features to keep, automatic effort, status line) and saves them. Use when the user runs /claujev:configure, asks to configure ClauJev or Jev, change its language or mode, turn a ClauJev feature on or off, or accepts the guided setup offered on ClauJev's first session.
+description: ClauJev preferences menu and guided setup. Asks the user, in their own language, the basic preferences (language, mode, which features to keep, effort suggestion, status line) and saves them. Use when the user runs /claujev:configure, asks to configure ClauJev or Jev, change its language or mode, turn a ClauJev feature on or off, or accepts the guided setup offered on ClauJev's first session.
 ---
 
 # ClauJev preferences
@@ -24,9 +24,10 @@ marked as recommended. Skip a question whose answer you already know.
 
 1. **Language** of ClauJev's messages and of the questions sent to Jev: Português (`pt`) or English
    (`en`). Recommend the user's language.
-2. **Mode**: `observe` (recommended at first: Jev only takes notes, nothing interrupts; check the
-   report after a few days) or `enforce` (Jev acts now: hints, confirmation before risky commands,
-   check before finishing).
+2. **Mode**: `default` (recommended: Jev acts where a false alarm is cheap: hints to Claude,
+   confirmation before risky commands, check before finishing, rule review, subagent reports; it only
+   watches subagent routing), `observe` (Jev only takes notes, nothing interrupts) or `enforce`
+   (everything acts, subagent routing to a smaller model included).
 3. **Features to turn off** (multiSelect; selecting none keeps all). Explain each in a few plain words:
    - Request triage (`triage`): a hint per request and the effort suggestion
    - Command guard (`command_guard`): asks before destructive or credential commands
@@ -34,8 +35,9 @@ marked as recommended. Skip a question whose answer you already know.
    - Final check (`final_check`): checks the work before Claude says it is done
    - Subagent routing (`subagent_routing`): simple subagents on a smaller, cheaper model
    - Subagent report check (`subagent_check`): catches subagents claiming work they did not do
-4. **Automatic effort**, only if `claujev-mod` is installed: `observe` (recommended: show Jev's
-   suggestion in the status line), `on` (apply it to each request, between `low` and `xhigh`), `off`.
+4. **Effort suggestion**, only if `claujev-mod` is installed: `ask` (recommended: when Jev suggests a
+   different effort, Claude Code asks before changing it), `observe` (only show the suggestion in the
+   status line), `on` (apply it without asking, between `low` and `xhigh`), `off`.
    If the mod is not installed, do not ask; at the end mention that
    `/plugin install claujev-mod --marketplace Civalski/claujev` adds it.
 
@@ -49,10 +51,11 @@ Merge the answers into `~/.claude/claujev/config.json`, keeping every other key 
   "lang": "pt",
   "mode": "observe",
   "features": { "command_guard": "off" },
-  "mod": { "effort": "observe", "minEffort": "low", "maxEffort": "xhigh", "status": true }
+  "mod": { "effort": "ask", "minEffort": "low", "maxEffort": "xhigh", "status": true }
 }
 ```
 
+- `mode`: for `default`, do not write `mode` (remove it if present), so the per-feature defaults apply.
 - `features`: list only the ones turned off, as `"off"`. A feature turned back on is removed from
   `features`. "off" here wins over any project's `.claude/claujev.json`.
 - `mod`: only when the mod is installed.
@@ -65,6 +68,7 @@ const fs=require("fs"),p=require("os").homedir()+"/.claude/claujev/config.json";
 const cur=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,"utf8")):{};
 const NEW={"lang":"pt","mode":"observe","features":{"command_guard":"off"}};
 const out={...cur,...NEW,mod:{...(cur.mod||{}),...(NEW.mod||{})}};
+if(out.mode==="default") delete out.mode;
 if(!Object.keys(out.mod).length) delete out.mod;
 fs.mkdirSync(require("path").dirname(p),{recursive:true});
 fs.writeFileSync(p,JSON.stringify(out,null,2)+"\n"); console.log(JSON.stringify(out))'

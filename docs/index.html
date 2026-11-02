@@ -109,8 +109,8 @@
         <li>
           <p class="hook">UserPromptSubmit</p>
           <h3><span lang="pt">Você pede</span><span lang="en">You ask</span></h3>
-          <p lang="pt"><strong>Triagem.</strong> É pergunta, mudança pequena, grande ou vago demais? O Claude recebe a dica e um esforço de <code>low</code> a <code>xhigh</code>.</p>
-          <p lang="en"><strong>Triage.</strong> A question, a small change, a big one, or too vague? Claude gets the hint and an effort from <code>low</code> to <code>xhigh</code>.</p>
+          <p lang="pt"><strong>Triagem.</strong> É pergunta, mudança pequena, grande ou vago demais? O Claude recebe a dica, e com o mod, o ClauJev pergunta se você quer mudar o esforço, de <code>low</code> a <code>xhigh</code>, antes de começar.</p>
+          <p lang="en"><strong>Triage.</strong> A question, a small change, a big one, or too vague? Claude gets the hint, and with the mod, ClauJev asks whether you want to change the effort, <code>low</code> to <code>xhigh</code>, before it starts.</p>
         </li>
         <li>
           <p class="hook">PreToolUse</p>
@@ -158,8 +158,8 @@
         <p class="caption" lang="en">Thresholds for the final check ("how much is left to do?"). Each question has its own, and you can tune them all.</p>
       </div>
       <ul class="promises">
-        <li lang="pt"><strong>Começa só observando.</strong><span>Todo hook vem em <code>observe</code>: registra e não interfere. Leia o relatório e ligue o <code>enforce</code> onde fizer sentido.</span></li>
-        <li lang="en"><strong>Starts by watching.</strong><span>Every hook ships in <code>observe</code>: it logs and stays out of the way. Read the report, then turn on <code>enforce</code> where it makes sense.</span></li>
+        <li lang="pt"><strong>Pronto para usar.</strong><span>Já vem agindo onde um alarme falso custa pouco. Quer só observar? Uma resposta em <code>/claujev:configure</code> põe tudo em <code>observe</code>.</span></li>
+        <li lang="en"><strong>Ready out of the box.</strong><span>It acts where a false alarm is cheap. Rather just watch? One answer in <code>/claujev:configure</code> sets everything to <code>observe</code>.</span></li>
         <li lang="pt"><strong>Nunca apaga nem desfaz nada.</strong><span>Um alarme falso custa uma frase do Claude, não o seu trabalho.</span></li>
         <li lang="en"><strong>Never deletes or undoes anything.</strong><span>A false alarm costs one sentence from Claude, not your work.</span></li>
         <li lang="pt"><strong>Nunca quebra a sessão.</strong><span>Se a API cair, vai para o log e o Claude segue. Em <code>enforce</code>, comandos claramente destrutivos ainda pedem confirmação, por uma checagem local.</span></li>

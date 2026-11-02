@@ -19,7 +19,7 @@ While Claude works, Jev answers short, typed questions such as *"is this command
 *"was the request fully done?"*, and ClauJev turns the answers into action:
 
 - 🧭 **Triage**: tells Claude whether a request is a question, a small change, a big one, or too vague.
-- 🎚️ **Automatic effort**: `low` for a quick question, `xhigh` for a tangled bug, chosen per request.
+- 🎚️ **Effort suggestion**: `low` for a quick question, `xhigh` for a tangled bug. It asks before changing anything.
 - 🛑 **Command guard**: asks for your confirmation before destructive or credential-touching commands.
 - 🔍 **Rule review**: checks every edit against rules you write in plain language.
 - ✅ **Final check**: stops "done!" when the work looks incomplete or your tests fail.
@@ -51,14 +51,14 @@ Enter your TypeSafe AI key (the only thing the install asks) and restart Claude 
 session Claude offers a short guided setup in your language; run `/claujev:configure` to change it later.
 
 Optional, **after** the step above: `/plugin install claujev-mod --marketplace Civalski/claujev` for the
-status line and automatic effort. (Installing the mod first also installs ClauJev, but without asking
+status line and the effort suggestion. (Installing the mod first also installs ClauJev, but without asking
 for the key: then run `/plugin configure claujev@claujev`.)
 
 ## Commands
 
 | Command | What it does |
 | --- | --- |
-| `/claujev:configure` | preferences menu, in your language: language, mode, features on/off, automatic effort |
+| `/claujev:configure` | preferences menu, in your language: language, mode, features on/off, effort suggestion |
 | `/claujev:claujev-setup` | project rules from your `CLAUDE.md`, self-test, report and tuning |
 | `/plugin configure claujev@claujev` | your TypeSafe AI key |
 | `/claujev` | today's Jev activity: calls, actions, cost, effort (needs the mod) |
@@ -88,11 +88,12 @@ flowchart TB
 ```
 
 - **Never breaks the session**: any error is logged and Claude carries on.
-- **Observe before acting**: each answer falls into a low / uncertain / high band; only *high* acts, and only in `enforce`.
+- **Sensible defaults**: it acts on commands, edits, the final check and subagent reports, and only watches
+  subagent routing. Each answer falls into a low / uncertain / high band; only *high* acts.
 - **A signal, not a verdict**: ClauJev never deletes or reverts anything. A false alarm costs one sentence from Claude.
 - **Sees the real work**: the final check reads the turn's diff *and* the commands Claude ran (commits, pushes, releases).
 
-## Automatic effort
+## Effort suggestion
 
 ```mermaid
 flowchart LR
@@ -103,8 +104,11 @@ flowchart LR
     J -->|"large change<br/>or ambiguous bug"| X["xhigh"]
 ```
 
-With `claujev-mod`, `observe` (default) shows the suggestion in the status line and `on` applies it,
-within the limits you set. `max` is never picked automatically, subagents keep their own effort, and a
+The effort **is never changed without your yes**. With `claujev-mod`, `ask` (default) opens Claude Code's
+question dialog when Jev's suggestion differs from the effort in use (*"Jev thinks this request is
+simple. Use low effort instead of high?"*); Esc keeps the current one. `observe` only shows the
+suggestion in the status line, `on` applies it without asking, `off` turns it off. All within the
+limits you set in `/claujev:configure`. `max` is never picked automatically, subagents keep their own effort, and a
 request that asks for effort itself (*"ultrathink"*) is never overridden.
 
 ## Privacy
@@ -126,7 +130,7 @@ removing keys and tokens. Kept locally in `~/.claude/claujev/`: logs with answer
 **Does it slow Claude down?** About 400 ms per check; read-only commands skip Jev entirely.
 
 **What if Jev is wrong?** Actions are reversible by design, thresholds are high on purpose, and the
-uncertain band never acts. Start in `observe` and read the report.
+uncertain band never acts. Want it quieter? `/claujev:configure` sets everything to `observe` (notes only).
 
 **Does Jev see the whole conversation?** No, only the state built for each question.
 

@@ -117,11 +117,11 @@ completo está em [`examples/claujev.json`](../examples/claujev.json).
 | --- | --- | --- |
 | `enabled` | `true` | liga/desliga tudo |
 | `lang` | `"en"` | `en` ou `pt`: mensagens ao Claude e perguntas ao Jev |
-| `mode` | `"observe"` | vale para todos os recursos de uma vez |
+| `mode` | (não definido) | vale para todos os recursos de uma vez |
 | `features` | `{}` | um recurso de cada vez (chaves na tabela acima) |
 | `model` | `"jev-latest"` | modelo do Jev |
 | `timeoutMs` | `5000` | tempo máximo de cada chamada (um estouro é tentado de novo uma vez) |
-| `hooks` | tudo `observe` | modo de cada hook |
+| `hooks` | `enforce`, menos `agent`: `observe` | modo de cada hook |
 | `thresholds` | ver tabela acima | faixas `low`/`high` de cada pergunta |
 | `routeModel` | `"haiku"` | modelo usado em subagentes simples |
 | `rules` | 3 regras | regras checadas a cada edição |
@@ -134,7 +134,7 @@ completo está em [`examples/claujev.json`](../examples/claujev.json).
 | `maxDiffChars` | `30000` | tamanho máximo do diff enviado na conferência final |
 
 Opções do mod, no mesmo `config.json` (também escolhidas pelo `/claujev:configure`):
-`"mod": { "effort": "observe" | "on" | "off", "minEffort": "low", "maxEffort": "xhigh", "status": true }`.
+`"mod": { "effort": "ask" | "observe" | "on" | "off", "minEffort": "low", "maxEffort": "xhigh", "status": true }`.
 
 Variáveis de ambiente: `TYPESAFE_API_KEY` (alternativa à opção do plugin), `CLAUJEV_HOME` (outra pasta
 de dados; o padrão é `~/.claude/claujev`) e `CLAUJEV_DISABLED=1` (desliga para uma sessão).
@@ -191,8 +191,8 @@ O relatório mostra:
 - **por pergunta:** mediana, p90, máximo e quantas respostas caíram em cada quarto de 0..1;
 - **as sugestões de esforço** e os **últimos eventos sinalizados**.
 
-O fluxo sugerido é deixar tudo em `observe` por alguns dias, olhar a distribuição e só então ligar
-`enforce` onde o sinal faz sentido. Se uma pergunta vive na faixa incerta, ajuste o `high` dela ou
+Por padrão todo recurso vem em `enforce`, menos o roteamento de subagentes (`observe`). Para ajustar,
+leia este relatório depois de alguns dias e desligue ou suba os limiares onde o sinal não ajuda. Se uma pergunta vive na faixa incerta, ajuste o `high` dela ou
 reescreva a regra.
 
 

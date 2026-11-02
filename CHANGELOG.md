@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.6.0 (mod 2.2.0) — 2026-11-02
+
+### Changed
+- **Opinionated defaults: ClauJev acts out of the box.** Every feature now defaults to `enforce`
+  (triage hints, command guard, rule review, final check, subagent report check), except subagent
+  routing, which stays in `observe` since moving a subagent to a smaller model unasked can cost
+  quality. Users who chose a mode in `/claujev:configure` keep it; the guided setup now offers
+  `default` (recommended), `observe` or `enforce`.
+- **The mod asks before changing the effort.** New default `effort: ask`: when Jev's suggestion
+  differs from the effort in use, Claude Code's question dialog asks *"Jev thinks this request is
+  simple. Use low effort instead of high?"*, and the request runs with the effort chosen; Esc keeps the
+  current one, as does a session with nobody to ask (`claude -p`). `observe`, `on` and `off` stay.
+- Docs no longer imply the effort changes by itself: "automatic effort" is now "effort suggestion".
+
 ## 2.5.0 — 2026-11-02
 
 Tuned against 18 days of real use (7,643 logged events, each matched back to the command or request it

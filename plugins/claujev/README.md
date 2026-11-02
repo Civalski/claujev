@@ -7,10 +7,10 @@ review of edits, false-claim check of subagent reports, and a final check before
 Install: `/plugin install claujev --marketplace Civalski/claujev`
 
 - **Setup:** the install only asks for your TypeSafe AI key. Preferences (language, mode, features
-  on/off) come from `/claujev:configure`, in your language. Everything starts in `observe` mode.
+  on/off) come from `/claujev:configure`, in your language. It acts out of the box (only subagent routing just watches); `observe` is one answer away.
 - **Help:** ask Claude to "set up ClauJev for this project" or "show the ClauJev report"; the bundled
   `claujev-setup` skill does it.
 - **Data:** `~/.claude/claujev` (logs with content hashes only, turn state, optional `config.json`).
-- **Optional:** `claujev-mod` applies the effort suggestion and shows Jev's activity in the status line.
+- **Optional:** `claujev-mod` asks before applying Jev's effort suggestion and shows Jev's activity in the status line.
 
 Full documentation: https://github.com/Civalski/claujev

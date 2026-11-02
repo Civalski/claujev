@@ -20,7 +20,7 @@ comando é destrutivo?"* ou *"o pedido foi atendido por completo?"*, e o ClauJev
 respostas em ação:
 
 - 🧭 **Triagem**: diz ao Claude se o pedido é pergunta, mudança pequena, grande ou vago demais.
-- 🎚️ **Esforço automático**: `low` numa pergunta rápida, `xhigh` num bug difícil, escolhido a cada pedido.
+- 🎚️ **Sugestão de esforço**: `low` numa pergunta rápida, `xhigh` num bug difícil. Pergunta antes de mudar.
 - 🛑 **Guarda de comandos**: pede sua confirmação antes de comandos destrutivos ou que mexem com credenciais.
 - 🔍 **Revisão por regras**: confere cada edição contra regras que você escreve em português comum.
 - ✅ **Conferência final**: segura o "pronto!" quando o trabalho parece incompleto ou os testes falham.
@@ -53,14 +53,14 @@ primeira conversa, o Claude oferece uma configuração guiada em português; par
 `/claujev:configure`.
 
 Opcional, **depois** do passo acima: `/plugin install claujev-mod --marketplace Civalski/claujev` para a
-barra de status e o esforço automático. (Instalar o mod primeiro também instala o ClauJev, mas sem pedir
+barra de status e a sugestão de esforço. (Instalar o mod primeiro também instala o ClauJev, mas sem pedir
 a chave: aí rode `/plugin configure claujev@claujev`.)
 
 ## Comandos
 
 | Comando | O que faz |
 | --- | --- |
-| `/claujev:configure` | menu de preferências, em português: idioma, modo, ligar/desligar recursos, esforço automático |
+| `/claujev:configure` | menu de preferências, em português: idioma, modo, ligar/desligar recursos, sugestão de esforço |
 | `/claujev:claujev-setup` | regras do projeto a partir do `CLAUDE.md`, autoteste, relatório e ajustes |
 | `/plugin configure claujev@claujev` | sua chave da TypeSafe AI |
 | `/claujev` | atividade do Jev hoje: chamadas, ações, custo, esforço (precisa do mod) |
@@ -90,11 +90,12 @@ flowchart TB
 ```
 
 - **Nunca quebra a sessão**: qualquer erro vai para o log e o Claude segue normalmente.
-- **Observa antes de agir**: cada resposta cai numa faixa baixa / incerta / alta; só a *alta* age, e só em `enforce`.
+- **Padrão sensato**: age nos comandos, nas edições, na conferência final e nos relatórios de subagentes, e só
+  observa o roteamento de subagentes. Cada resposta cai numa faixa baixa / incerta / alta; só a *alta* age.
 - **Sinal, não sentença**: o ClauJev nunca apaga nem desfaz nada. Um alarme falso custa uma frase do Claude.
 - **Vê o trabalho real**: a conferência final lê o diff do turno *e* os comandos que o Claude rodou (commits, push, releases).
 
-## Esforço automático
+## Sugestão de esforço
 
 ```mermaid
 flowchart LR
@@ -105,8 +106,11 @@ flowchart LR
     J -->|"mudança grande<br/>ou bug ambíguo"| X["xhigh"]
 ```
 
-Com o `claujev-mod`, `observe` (padrão) mostra a sugestão na barra de status e `on` aplica, dentro dos
-limites que você definir. `max` nunca é escolhido sozinho, subagentes mantêm o próprio esforço, e um
+O esforço **nunca muda sem o seu sim**. Com o `claujev-mod`, `ask` (padrão) abre a caixa de pergunta do
+Claude Code quando a sugestão do Jev é diferente do esforço em uso (*"O Jev acha este pedido simples.
+Usar esforço low em vez de high?"*); Esc mantém o atual. `observe` só mostra a sugestão na barra de
+status, `on` aplica sem perguntar e `off` desliga. Tudo dentro dos limites que você definir em
+`/claujev:configure`. `max` nunca é escolhido sozinho, subagentes mantêm o próprio esforço, e um
 pedido que já pede esforço (*"ultrathink"*, *"pense bem"*) nunca é sobrescrito.
 
 ## Privacidade
@@ -128,7 +132,7 @@ e um **hash** do conteúdo, nunca o conteúdo. A chave fica no cofre seguro do s
 **Deixa o Claude mais lento?** Cerca de 400 ms por checagem; comandos só de leitura nem chamam o Jev.
 
 **E se o Jev errar?** As ações são reversíveis por desenho, os limites são altos de propósito, e a
-faixa incerta nunca age. Comece em `observe` e leia o relatório.
+faixa incerta nunca age. Quer mais silêncio? `/claujev:configure` põe tudo em `observe` (só anota).
 
 **O Jev vê a conversa toda?** Não, só o estado montado para cada pergunta.
 

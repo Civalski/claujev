@@ -24,7 +24,9 @@ const DEFAULTS = {
   model: 'jev-latest',
   timeoutMs: 5000, // per attempt; a timed-out call is retried once (hooks have a 15 s budget)
   // Per hook: "observe" only logs, "enforce" acts on Claude, "off" disables.
-  hooks: { prompt: 'observe', edit: 'observe', stop: 'observe', bash: 'observe', agent: 'observe', subagent: 'observe' },
+  // Opinionated defaults: act where a false alarm costs one sentence or one confirmation; only watch the
+  // subagent routing, since moving a subagent to a smaller model unasked can cost quality.
+  hooks: { prompt: 'enforce', edit: 'enforce', stop: 'enforce', bash: 'enforce', agent: 'observe', subagent: 'enforce' },
   // Model suggested for subagents with a simple task.
   routeModel: 'haiku',
   // Bands: value >= high => acts (in enforce); between low and high => "uncertain" (log only); below low => nothing.

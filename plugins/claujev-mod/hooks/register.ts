@@ -34,6 +34,11 @@ const TEXT = {
     cost: 'cost',
     efforts: 'suggested effort',
     commandDesc: "Show today's Jev activity: calls, actions, cost and suggested effort",
+    askHeader: 'Effort',
+    askQuestion: (up: boolean, s: Effort, c: Effort) =>
+      `Jev thinks this request is ${up ? 'complex' : 'simple'}. Use ${s} effort instead of ${c}?`,
+    use: (e: Effort) => `Use ${e}`,
+    keep: (e: Effort) => `Keep ${e}`,
   },
   pt: {
     effort: 'esforço',
@@ -47,6 +52,11 @@ const TEXT = {
     cost: 'custo',
     efforts: 'esforço sugerido',
     commandDesc: 'Mostra a atividade do Jev hoje: chamadas, ações, custo e esforço sugerido',
+    askHeader: 'Esforço',
+    askQuestion: (up: boolean, s: Effort, c: Effort) =>
+      `O Jev acha este pedido ${up ? 'complexo' : 'simples'}. Usar esforço ${s} em vez de ${c}?`,
+    use: (e: Effort) => `Usar ${e}`,
+    keep: (e: Effort) => `Manter ${e}`,
   },
 }
 type Texts = (typeof TEXT)['en'] | (typeof TEXT)['pt']
@@ -55,7 +65,8 @@ type Texts = (typeof TEXT)['en'] | (typeof TEXT)['pt']
 type Ctx = { t: Texts; showStatus: boolean; seenLines: number; mode: string; minEffort: Effort; maxEffort: Effort }
 
 // Preferences written by /claujev:configure in ~/.claude/claujev/config.json:
-//   { "lang": "pt", "mod": { "effort": "observe" | "on" | "off", "minEffort": "low", "maxEffort": "xhigh", "status": true } }
+//   { "lang": "pt", "mod": { "effort": "ask" | "observe" | "on" | "off", "minEffort": "low", "maxEffort": "xhigh", "status": true } }
+// ask (default): asks before changing the effort; observe: only shows it; on: applies it; off: nothing.
 type Settings = { lang?: string; mod?: { effort?: string; minEffort?: string; maxEffort?: string; status?: boolean } }
 
 const isLevel = (v: unknown): v is Effort => typeof v === 'string' && (LEVELS as readonly string[]).includes(v)
@@ -103,10 +114,23 @@ async function loadSettings($: EngineInterface, ctx: Ctx): Promise<void> {
   }
   const m = s.mod ?? {}
   ctx.t = s.lang === 'pt' ? TEXT.pt : TEXT.en
-  ctx.mode = m.effort === 'on' || m.effort === 'off' ? m.effort : 'observe'
+  ctx.mode = m.effort === 'on' || m.effort === 'off' || m.effort === 'observe' ? m.effort : 'ask'
   ctx.minEffort = isLevel(m.minEffort) ? m.minEffort : 'low'
   ctx.maxEffort = isLevel(m.maxEffort) ? m.maxEffort : 'xhigh'
   ctx.showStatus = m.status !== false
+}
+
+// Asks in Claude Code's own question dialog. A $ call: the wait does not count against the hook's budget.
+// Dismissed, or nobody to ask (claude -p): the current effort stays.
+export async function askEffort($: EngineInterface, t: Texts, suggested: Effort, current: Effort): Promise<Effort> {
+  const up = LEVELS.indexOf(suggested) > LEVELS.indexOf(current)
+  const use = t.use(suggested)
+  try {
+    const answer = await $.ui.ask(t.askQuestion(up, suggested, current), { header: t.askHeader, options: [use, t.keep(current)] })
+    return answer === use ? suggested : current
+  } catch {
+    return current
+  }
 }
 
 async function readState($: EngineInterface): Promise<TurnState | null> {
@@ -175,7 +199,7 @@ async function summary($: EngineInterface, t: Texts): Promise<string> {
 }
 
 export const register: Register = on => {
-  const ctx: Ctx = { t: TEXT.en, showStatus: true, seenLines: -1, mode: 'observe', minEffort: 'low', maxEffort: 'xhigh' }
+  const ctx: Ctx = { t: TEXT.en, showStatus: true, seenLines: -1, mode: 'ask', minEffort: 'low', maxEffort: 'xhigh' }
   const decided = new Map<string, { effort: Effort; applied: boolean } | null>()
 
   on('session.start', async ($, e, next) => {
@@ -199,7 +223,13 @@ export const register: Register = on => {
       const st = await readState($)
       // A request that asks for effort itself ("ultrathink") is never overridden.
       const suggestion = st && !st.explicitEffort && isLevel(st.effort) ? st.effort : null
-      decided.set(e.turnId, suggestion ? { effort: clampEffort(suggestion, ctx.minEffort, ctx.maxEffort), applied: ctx.mode === 'on' } : null)
+      let d = suggestion ? { effort: clampEffort(suggestion, ctx.minEffort, ctx.maxEffort), applied: ctx.mode === 'on' } : null
+      // "ask": only when Jev's suggestion differs from the effort in use, once per request.
+      if (d && ctx.mode === 'ask' && isLevel(e.effort) && d.effort !== e.effort) {
+        const chosen = await askEffort($, ctx.t, d.effort, e.effort)
+        d = { effort: chosen, applied: chosen !== e.effort }
+      }
+      decided.set(e.turnId, d)
       if (decided.size > 50) decided.delete(decided.keys().next().value as string)
       void refresh($, ctx, effortLabel(ctx.t, decided.get(e.turnId)))
     }

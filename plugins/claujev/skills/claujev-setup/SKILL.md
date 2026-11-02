@@ -27,7 +27,7 @@ Run `node "${CLAUDE_PLUGIN_ROOT}/hooks/claujev.mjs" selftest` and show the resul
 
 ## Turning features on and off
 
-Preferences (language, mode, features on/off, the mod's automatic effort) are chosen with the
+Preferences (language, mode, features on/off, the mod's effort suggestion) are chosen with the
 `/claujev:configure` skill and saved in `~/.claude/claujev/config.json` (`lang`, `mode`, `features`,
 `mod`). A feature set to `"off"` there beats any project config. For one project only, use `hooks`
 in `.claude/claujev.json` (keys `prompt`, `bash`, `edit`, `stop`, `agent`, `subagent`).
@@ -49,7 +49,7 @@ pyproject.toml, etc.). Then propose `.claude/claujev.json` and show it to the us
 - `verify`: a fast command that exits non-zero on failure (`npm test --silent`, `pytest -q`,
   `cargo check`). It runs at the end of every turn with edits, with a 45 s timeout, so skip slow
   suites.
-- `hooks`: leave everything in `observe` for a new project.
+- `hooks`: leave the defaults (every hook `enforce`, `agent` `observe`) unless the user asks otherwise.
 - `lang`: `"en"` or `"pt"`, the language of the messages Claude gets and of the questions to Jev.
 
 Example:
@@ -91,6 +91,6 @@ changes apply on the next event.
 
 Each request gets an effort suggestion: questions and trivial changes → `low`, small → `medium`,
 medium → `high`, large or ambiguous bugs → `xhigh` (never `max`). Without the `claujev-mod` plugin
-it is only logged. With it, the mod setting `effort` decides: `observe` shows the suggestion in the
-status line, `on` applies it within `minEffort`…`maxEffort`. A request that asks for effort itself
+it is only logged. With it, the mod setting `effort` decides: `ask` (default) asks before changing it, `observe`
+shows the suggestion in the status line, `on` applies it within `minEffort`…`maxEffort`. A request that asks for effort itself
 ("ultrathink", "think hard") is never overridden.

@@ -91,11 +91,12 @@ test('isSystemMessage: messages Claude Code injects are not triaged', () => {
 
 test('loadConfig: defaults < global < project, rules are added up', () => {
   mkdirSync(process.env.CLAUJEV_HOME, { recursive: true });
-  writeFileSync(join(process.env.CLAUJEV_HOME, 'config.json'), JSON.stringify({ hooks: { bash: 'enforce' }, rules: ['global'] }));
-  const cfg = m.loadConfig(project('p1', { hooks: { edit: 'enforce' }, rules: ['project'], verify: 'npm test' }));
-  assert.equal(cfg.hooks.bash, 'enforce');
-  assert.equal(cfg.hooks.edit, 'enforce');
-  assert.equal(cfg.hooks.stop, 'observe', 'untouched values keep the default');
+  writeFileSync(join(process.env.CLAUJEV_HOME, 'config.json'), JSON.stringify({ hooks: { bash: 'observe' }, rules: ['global'] }));
+  const cfg = m.loadConfig(project('p1', { hooks: { edit: 'observe' }, rules: ['project'], verify: 'npm test' }));
+  assert.equal(cfg.hooks.bash, 'observe');
+  assert.equal(cfg.hooks.edit, 'observe');
+  assert.equal(cfg.hooks.stop, 'enforce', 'untouched values keep the default');
+  assert.equal(cfg.hooks.agent, 'observe', 'subagent routing only watches by default');
   assert.equal(cfg.verify, 'npm test');
   assert.equal(cfg.lang, 'en', 'English is the default');
   assert.deepEqual(cfg.rules.slice(-2), ['global', 'project']);

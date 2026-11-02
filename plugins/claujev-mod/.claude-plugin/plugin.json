@@ -1,8 +1,8 @@
 {
   "name": "claujev-mod",
   "displayName": "ClauJev mod",
-  "version": "2.1.0",
-  "description": "Optional companion of ClauJev / Complemento opcional do ClauJev: automatic effort, status line, toasts and /claujev.",
+  "version": "2.2.0",
+  "description": "Optional companion of ClauJev / Complemento opcional do ClauJev: effort suggestion (asks before changing), status line, toasts and /claujev.",
   "author": {
     "name": "Alisson Civalski",
     "url": "https://github.com/Civalski"

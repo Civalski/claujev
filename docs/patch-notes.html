@@ -46,16 +46,39 @@
         <button type="button" data-copy="upd"><span lang="pt">Copiar</span><span lang="en">Copy</span></button>
       </div>
       <ul class="jump" aria-label="Versões / Versions">
-        <li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
+        <li><a href="#v2.6.0">2.6.0</a></li><li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
       </ul>
     </div>
+
+    <!-- 2.6.0 -->
+    <article class="release" id="v2.6.0">
+      <div class="ver">
+        <h2><a href="#v2.6.0">2.6.0</a></h2>
+        <time datetime="2026-11-02"><span lang="pt">2 nov 2026</span><span lang="en">Nov 2, 2026</span></time><br>
+        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+      </div>
+      <div>
+        <p class="summary" lang="pt">Pronto para usar desde a instalação, e o esforço só muda com o seu sim.</p>
+        <p class="summary" lang="en">Ready to use from install, and the effort only changes with your yes.</p>
+        <ul class="changes">
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt"><strong>Padrão opinativo: o ClauJev já age ao ser instalado.</strong> Triagem, guarda de comandos, revisão por regras, conferência final e checagem de relatórios de subagentes vêm em <code>enforce</code>. Só o roteamento de subagentes continua em <code>observe</code>, porque trocar o modelo de um subagente sem perguntar pode piorar o resultado. Quem já escolheu um modo em <code>/claujev:configure</code> mantém a escolha.</p>
+            <p lang="en"><strong>Opinionated defaults: ClauJev acts from install.</strong> Triage, command guard, rule review, final check and subagent report check default to <code>enforce</code>. Only subagent routing stays in <code>observe</code>, since moving a subagent to a smaller model unasked can cost quality. Anyone who picked a mode in <code>/claujev:configure</code> keeps it.</p></li>
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt"><strong>O mod pergunta antes de mudar o esforço</strong> (<code>claujev-mod</code> 2.2.0). Quando a sugestão do Jev é diferente do esforço em uso, a caixa de pergunta do Claude Code abre: "O Jev acha este pedido simples. Usar esforço low em vez de high?". O pedido roda com o que você escolher, e Esc mantém o atual. É o novo padrão, <code>ask</code>; <code>observe</code>, <code>on</code> e <code>off</code> continuam em <code>/claujev:configure</code>.</p>
+            <p lang="en"><strong>The mod asks before changing the effort</strong> (<code>claujev-mod</code> 2.2.0). When Jev's suggestion differs from the effort in use, Claude Code's question dialog opens: "Jev thinks this request is simple. Use low effort instead of high?". The request runs with what you pick, and Esc keeps the current one. It's the new default, <code>ask</code>; <code>observe</code>, <code>on</code> and <code>off</code> stay in <code>/claujev:configure</code>.</p></li>
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt">A documentação não dá mais a entender que o esforço muda sozinho: "esforço automático" virou "sugestão de esforço".</p>
+            <p lang="en">The docs no longer imply the effort changes by itself: "automatic effort" is now "effort suggestion".</p></li>
+        </ul>
+      </div>
+    </article>
 
     <!-- 2.5.0 -->
     <article class="release" id="v2.5.0">
       <div class="ver">
         <h2><a href="#v2.5.0">2.5.0</a></h2>
-        <time datetime="2026-11-02"><span lang="pt">2 nov 2026</span><span lang="en">Nov 2, 2026</span></time><br>
-        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+        <time datetime="2026-11-02"><span lang="pt">2 nov 2026</span><span lang="en">Nov 2, 2026</span></time>
       </div>
       <div>
         <p class="summary" lang="pt">Mais precisão, ajustada com 18 dias de uso real. A conferência final passa a ler a resposta do Claude, e a guarda de credenciais separa usar uma chave de expor uma chave.</p>
@@ -144,8 +167,8 @@
         <p class="summary" lang="en">The install asks only for the key. Everything else is set up in your language.</p>
         <ul class="changes">
           <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
-            <p lang="pt">Idioma, modo, recursos e o esforço automático do mod saíram da tela de instalação e foram para <code>/claujev:configure</code>, que pergunta no seu idioma. O Claude Code mostra a tela de instalação como está escrita, sem traduzir.</p>
-            <p lang="en">Language, mode, features and the mod's automatic effort moved from the install screen to <code>/claujev:configure</code>, which asks in your language. Claude Code shows the install screen as written and can't translate it.</p></li>
+            <p lang="pt">Idioma, modo, recursos e o sugestão de esforço do mod saíram da tela de instalação e foram para <code>/claujev:configure</code>, que pergunta no seu idioma. O Claude Code mostra a tela de instalação como está escrita, sem traduzir.</p>
+            <p lang="en">Language, mode, features and the mod's effort suggestion moved from the install screen to <code>/claujev:configure</code>, which asks in your language. Claude Code shows the install screen as written and can't translate it.</p></li>
           <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
             <p lang="pt">As preferências ficam em <code>~/.claude/claujev/config.json</code> e valem a partir do próximo pedido, sem reiniciar. Um recurso em <code>off</code> ali vence qualquer config de projeto.</p>
             <p lang="en">Preferences live in <code>~/.claude/claujev/config.json</code> and apply from the next request, no restart. A feature set to <code>off</code> there beats any project config.</p></li>
@@ -201,8 +224,8 @@
         <p class="summary" lang="en">Guided setup.</p>
         <ul class="changes">
           <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
-            <p lang="pt"><strong><code>/claujev:configure</code>.</strong> O Claude faz algumas perguntas de múltipla escolha (idioma, modo, recursos, esforço automático) e aplica as respostas. A chave nunca é pedida no chat.</p>
-            <p lang="en"><strong><code>/claujev:configure</code>.</strong> Claude asks a few multiple-choice questions (language, mode, features, automatic effort) and applies the answers. The key is never asked in the chat.</p></li>
+            <p lang="pt"><strong><code>/claujev:configure</code>.</strong> O Claude faz algumas perguntas de múltipla escolha (idioma, modo, recursos, sugestão de esforço) e aplica as respostas. A chave nunca é pedida no chat.</p>
+            <p lang="en"><strong><code>/claujev:configure</code>.</strong> Claude asks a few multiple-choice questions (language, mode, features, effort suggestion) and applies the answers. The key is never asked in the chat.</p></li>
           <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
             <p lang="pt">Na primeira sessão, o Claude oferece a configuração guiada. Nas seguintes, avisa se faltar a chave.</p>
             <p lang="en">On the first session, Claude offers the guided setup. On later ones, it reminds you if the key is missing.</p></li>
@@ -238,11 +261,11 @@
             <p lang="pt"><strong>Plugin <code>claujev</code></strong> com os seis hooks e a chave guardada no cofre seguro do sistema.</p>
             <p lang="en"><strong>The <code>claujev</code> plugin</strong>, with the six hooks and the key kept in the system's secure store.</p></li>
           <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
-            <p lang="pt"><strong>Esforço automático.</strong> A triagem sugere um esforço por pedido, de <code>low</code> a <code>xhigh</code>, nunca <code>max</code>.</p>
-            <p lang="en"><strong>Automatic effort.</strong> Triage suggests an effort per request, from <code>low</code> to <code>xhigh</code>, never <code>max</code>.</p></li>
+            <p lang="pt"><strong>Sugestão de esforço.</strong> A triagem sugere um esforço por pedido, de <code>low</code> a <code>xhigh</code>, nunca <code>max</code>. Por padrão só é mostrada.</p>
+            <p lang="en"><strong>Effort suggestion.</strong> Triage suggests an effort per request, from <code>low</code> to <code>xhigh</code>, never <code>max</code>. By default it is only shown.</p></li>
           <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
-            <p lang="pt"><strong>Mod <code>claujev-mod</code></strong> (opcional): aplica o esforço sugerido, mostra a atividade do Jev na barra de status e adiciona <code>/claujev</code>.</p>
-            <p lang="en"><strong>The <code>claujev-mod</code> mod</strong> (optional): applies the suggested effort, shows Jev's activity in the status line and adds <code>/claujev</code>.</p></li>
+            <p lang="pt"><strong>Mod <code>claujev-mod</code></strong> (opcional): mostra o esforço sugerido (e só aplica se você ligar), mostra a atividade do Jev na barra de status e adiciona <code>/claujev</code>.</p>
+            <p lang="en"><strong>The <code>claujev-mod</code> mod</strong> (optional): shows the suggested effort (and applies it only if you turn that on), shows Jev's activity in the status line and adds <code>/claujev</code>.</p></li>
           <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
             <p lang="pt"><strong>Skill <code>claujev-setup</code>:</strong> autoteste, regras do projeto a partir do <code>CLAUDE.md</code> e relatório para ajustar os limiares.</p>
             <p lang="en"><strong>The <code>claujev-setup</code> skill:</strong> self-test, project rules from your <code>CLAUDE.md</code>, and a report to tune thresholds.</p></li>

@@ -115,11 +115,11 @@ is in [`examples/claujev.json`](../examples/claujev.json).
 | --- | --- | --- |
 | `enabled` | `true` | turns everything on/off |
 | `lang` | `"en"` | `en` or `pt`: messages to Claude, questions to Jev |
-| `mode` | `"observe"` | sets every feature at once |
+| `mode` | (not set) | sets every feature at once |
 | `features` | `{}` | one feature at a time (keys in the table above) |
 | `model` | `"jev-latest"` | Jev model |
 | `timeoutMs` | `5000` | max time per call (a timeout is retried once) |
-| `hooks` | all `observe` | mode per hook |
+| `hooks` | `enforce`, except `agent`: `observe` | mode per hook |
 | `thresholds` | see the table above | `low`/`high` bands per question |
 | `routeModel` | `"haiku"` | model for simple subagents |
 | `rules` | 3 rules | rules checked on every edit |
@@ -132,7 +132,7 @@ is in [`examples/claujev.json`](../examples/claujev.json).
 | `maxDiffChars` | `30000` | max diff size sent at the final check |
 
 Mod settings, in the same `config.json` (also chosen by `/claujev:configure`):
-`"mod": { "effort": "observe" | "on" | "off", "minEffort": "low", "maxEffort": "xhigh", "status": true }`.
+`"mod": { "effort": "ask" | "observe" | "on" | "off", "minEffort": "low", "maxEffort": "xhigh", "status": true }`.
 
 Environment variables: `TYPESAFE_API_KEY` (alternative to the plugin setting), `CLAUJEV_HOME` (another
 data folder, default `~/.claude/claujev`) and `CLAUJEV_DISABLED=1` (turns it off for one session).
@@ -187,8 +187,8 @@ It shows, per hook: calls, errors, how often it flagged, was uncertain or acted,
 cost; per question: the value distribution (median, p90, max, count per quarter of 0..1); the effort
 suggestions; and the latest flagged events.
 
-Suggested flow: keep everything in `observe` for a few days, look at the distribution, then switch on
-`enforce` where the signal makes sense. If a question lives in the uncertain band, adjust its `high`
+Out of the box every feature is in `enforce` except subagent routing (`observe`). To tune, read this
+report after a few days and turn off or raise the thresholds where the signal does not help you. If a question lives in the uncertain band, adjust its `high`
 or rewrite the rule.
 
 
