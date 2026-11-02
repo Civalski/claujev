@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="pt-BR" data-lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClauJev patch notes</title>
+<script>(function(){var l;try{l=localStorage.getItem('claujev-lang')}catch(e){}if(l!=='pt'&&l!=='en')l=/^pt/i.test(navigator.language||'')?'pt':'en';var d=document.documentElement;d.setAttribute('data-lang',l);d.lang=l==='pt'?'pt-BR':'en'})()</script>
+<meta name="description" content="O que mudou em cada versão do ClauJev. What changed in every ClauJev release.">
+<link rel="canonical" href="https://civalski.github.io/claujev/patch-notes.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://civalski.github.io/claujev/patch-notes.html">
+<meta property="og:title" content="ClauJev patch notes">
+<meta property="og:description" content="ClauJev 2.5: ajustado com 18 dias de uso real.">
+<meta property="og:image" content="https://civalski.github.io/claujev/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#f2f4f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141722" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='13' height='22' x='2' y='5' rx='4' fill='%23c8613b'/%3E%3Crect width='13' height='22' x='17' y='5' rx='4' fill='%233b7fc8'/%3E%3C/svg%3E">
+<link rel="preload" href="assets/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main"><span lang="pt">Pular para o conteúdo</span><span lang="en">Skip to content</span></a>
+<div class="wrap">
+  <header class="top">
+    <a class="mark" href="./" aria-label="ClauJev"><i aria-hidden="true"><b></b><b></b></i>ClauJev</a>
+    <nav>
+      <a class="opt" href="./#como"><span lang="pt">Como funciona</span><span lang="en">How it works</span></a>
+      <a class="opt" href="patch-notes.html" aria-current="page"><span lang="pt">Notas de versão</span><span lang="en">Patch notes</span></a>
+      <a class="opt" href="./#instalar"><span lang="pt">Instalar</span><span lang="en">Install</span></a>
+      <a class="opt" href="https://github.com/Civalski/claujev">GitHub</a>
+      <span class="lang" role="group" aria-label="Idioma / Language">
+        <button type="button" data-set-lang="pt" aria-pressed="true">PT</button>
+        <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
+      </span>
+    </nav>
+  </header>
+
+  <main id="main">
+    <div class="notes-head">
+      <h1><span lang="pt">Notas de versão</span><span lang="en">Patch notes</span></h1>
+      <p class="lede" lang="pt">O que mudou em cada versão do ClauJev, da mais nova para a mais antiga. Para atualizar, rode no terminal o comando abaixo e depois <code>/reload-plugins</code> no Claude Code.</p>
+      <p class="lede" lang="en">What changed in each ClauJev release, newest first. To update, run the command below in your terminal, then <code>/reload-plugins</code> in Claude Code.</p>
+      <div class="install update">
+        <code id="upd"><span>claude plugin update claujev@claujev</span></code>
+        <button type="button" data-copy="upd"><span lang="pt">Copiar</span><span lang="en">Copy</span></button>
+      </div>
+      <ul class="jump" aria-label="Versões / Versions">
+        <li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
+      </ul>
+    </div>
+
+    <!-- 2.5.0 -->
+    <article class="release" id="v2.5.0">
+      <div class="ver">
+        <h2><a href="#v2.5.0">2.5.0</a></h2>
+        <time datetime="2026-11-02"><span lang="pt">2 nov 2026</span><span lang="en">Nov 2, 2026</span></time><br>
+        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+      </div>
+      <div>
+        <p class="summary" lang="pt">Mais precisão, ajustada com 18 dias de uso real. A conferência final passa a ler a resposta do Claude, e a guarda de credenciais separa usar uma chave de expor uma chave.</p>
+        <p class="summary" lang="en">More accurate, tuned on 18 days of real use. The final check now reads Claude's reply, and the credential guard tells using a key apart from exposing it.</p>
+        <div class="numbers">
+          <div><b><s>24</s>4</b><span lang="pt">alertas na conferência final, em 40 turnos</span><span lang="en">final-check alerts, out of 40 turns</span></div>
+          <div><b><s>100</s>6</b><span lang="pt">alertas de credenciais</span><span lang="en">credential alerts</span></div>
+          <div><b>12%</b><span lang="pt">menos chamadas ao Jev, sem perder alerta</span><span lang="en">fewer Jev calls, no alert lost</span></div>
+        </div>
+        <ul class="changes">
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt"><strong>A conferência final lê a resposta do Claude.</strong> O Jev vê o que o Claude diz que fez (até 3.000 caracteres, sem segredos), o pedido anterior e os comandos do turno, com mais detalhe nos que têm efeito. Uma pendência explicada na resposta conta como relatada, não como esquecida.</p>
+            <p lang="en"><strong>The final check reads Claude's reply.</strong> Jev sees what Claude says it did (up to 3,000 characters, secrets removed), the previous request and the turn's commands, with more detail on the ones that have effects. Work left pending and explained in the reply counts as reported, not forgotten.</p></li>
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt"><strong>Credenciais: expor, não usar.</strong> A pergunta agora é se o comando mostra, copia ou envia uma credencial. Carregar um <code>.env</code> para rodar um script local não conta. <code>cat .env</code>, <code>echo $KEY</code> e <code>gh auth token</code> continuam entre 0,81 e 0,99.</p>
+            <p lang="en"><strong>Credentials: exposure, not use.</strong> The question is now whether a command shows, copies or sends a credential. Loading an <code>.env</code> so a local script can run doesn't count. <code>cat .env</code>, <code>echo $KEY</code> and <code>gh auth token</code> still score 0.81–0.99.</p></li>
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt"><strong>Comandos destrutivos.</strong> <code>git add</code> e <code>commit</code> locais e arquivos temporários contam como fáceis de desfazer. Push, merge, deploy e migration, não.</p>
+            <p lang="en"><strong>Destructive commands.</strong> Local <code>git add</code> and <code>commit</code> and temporary files count as easy to undo. Push, merge, deploys and migrations don't.</p></li>
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt"><strong>Limiares.</strong> <code>incomplete</code> 0,30 / 0,50 (era 0,25 / 0,40) e <code>credentials</code> 0,45 / 0,65 (era 0,50 / 0,70).</p>
+            <p lang="en"><strong>Thresholds.</strong> <code>incomplete</code> 0.30 / 0.50 (was 0.25 / 0.40) and <code>credentials</code> 0.45 / 0.65 (was 0.50 / 0.70).</p></li>
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt"><strong>Atalho de leitura em comandos reais.</strong> 65% dos comandos começam com <code>cd … &amp;&amp;</code>, e todos iam ao Jev. Agora cada parte do encadeamento é conferida, então <code>cd repo &amp;&amp; git status | head</code> passa direto. Redirecionamento, substituição, <code>sed -i</code>, <code>&amp;</code> e arquivos sensíveis continuam indo ao Jev.</p>
+            <p lang="en"><strong>Read-only shortcut works on real commands.</strong> 65% of commands start with <code>cd … &amp;&amp;</code>, and all of them went to Jev. Each part of a chain is now checked, so <code>cd repo &amp;&amp; git status | head</code> goes straight through. Redirection, substitution, <code>sed -i</code>, <code>&amp;</code> and sensitive files still go to Jev.</p></li>
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt"><strong>Comandos que só parecem leitura.</strong> <code>git branch -D</code>, <code>find -execdir</code>, <code>rg --pre</code>, <code>PATH=…</code> antes de um comando, <code>echo $API_KEY</code>, <code>jq -n env</code> e arquivos como <code>.netrc</code> e o <code>hosts.yml</code> do <code>gh</code> passam a ir ao Jev.</p>
+            <p lang="en"><strong>Commands that only look like reads.</strong> <code>git branch -D</code>, <code>find -execdir</code>, <code>rg --pre</code>, <code>PATH=…</code> before a command, <code>echo $API_KEY</code>, <code>jq -n env</code> and files such as <code>.netrc</code> and <code>gh</code>'s <code>hosts.yml</code> now go to Jev.</p></li>
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt"><strong>Mensagens do sistema fora da triagem.</strong> <code>&lt;task-notification&gt;</code> e outras mensagens que o Claude Code injeta não são mais triadas como pedidos, nem substituem o pedido que a conferência final usa.</p>
+            <p lang="en"><strong>System messages skip triage.</strong> <code>&lt;task-notification&gt;</code> and other messages Claude Code injects are no longer triaged as requests, nor do they replace the request the final check compares against.</p></li>
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt"><strong>Respostas de conversa menos "ambíguas".</strong> A triagem recebe o pedido anterior como contexto.</p>
+            <p lang="en"><strong>Conversation replies are less "ambiguous".</strong> Triage now gets the previous request as context.</p></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 2.4.3 -->
+    <article class="release" id="v2.4.3">
+      <div class="ver"><h2><a href="#v2.4.3">2.4.3</a></h2><time datetime="2026-10-20"><span lang="pt">20 out 2026</span><span lang="en">Oct 20, 2026</span></time></div>
+      <div>
+        <p class="summary" lang="pt">Menos checagens perdidas quando o Jev demora.</p>
+        <p class="summary" lang="en">Fewer skipped checks when Jev is slow.</p>
+        <ul class="changes">
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt">As chamadas ao Jev esperam até 5 s (eram 3 s) e tentam de novo uma vez, ainda dentro do limite de 15 s dos hooks do Claude Code.</p>
+            <p lang="en">Jev calls now wait up to 5 s (was 3 s) and retry once, still well inside Claude Code's 15 s hook budget.</p></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 2.4.2 -->
+    <article class="release" id="v2.4.2">
+      <div class="ver"><h2><a href="#v2.4.2">2.4.2</a></h2><time datetime="2026-10-20"><span lang="pt">20 out 2026</span><span lang="en">Oct 20, 2026</span></time></div>
+      <div>
+        <p class="summary" lang="pt">Rede de segurança na guarda de comandos.</p>
+        <p class="summary" lang="en">A safety net for the command guard.</p>
+        <ul class="changes">
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt">Quando o Jev não responde a tempo, comandos claramente destrutivos (<code>push --force</code>, <code>reset --hard</code>, <code>rm -rf</code>, <code>DROP TABLE</code>, <code>npm publish</code>…) ainda pedem confirmação no modo <code>enforce</code>, por uma checagem local. Os outros comandos seguem, e a sessão nunca trava por erro.</p>
+            <p lang="en">When Jev can't answer in time, plainly destructive commands (<code>push --force</code>, <code>reset --hard</code>, <code>rm -rf</code>, <code>DROP TABLE</code>, <code>npm publish</code>…) still ask for confirmation in <code>enforce</code> mode, from a local check. Other commands pass, so the session never blocks on an error.</p></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 2.4.1 -->
+    <article class="release" id="v2.4.1">
+      <div class="ver"><h2><a href="#v2.4.1">2.4.1</a></h2><time datetime="2026-10-20"><span lang="pt">20 out 2026</span><span lang="en">Oct 20, 2026</span></time></div>
+      <div>
+        <p class="summary" lang="pt">Chave escrita no código é pega na sua máquina.</p>
+        <p class="summary" lang="en">Keys written in code are caught on your machine.</p>
+        <ul class="changes">
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt">O Jev só vê o código depois que os segredos são removidos, então uma chave escrita no código passava como "incerta". Agora a revisão por regras detecta segredos literais localmente (<code>api_key</code>, <code>token</code> ou <code>password</code> entre aspas, <code>sk-…</code>, <code>ghp_…</code>, chaves privadas), e o segredo nunca sai da máquina. Código que só lida com segredos, como <code>process.env.API_KEY</code>, não é marcado.</p>
+            <p lang="en">Jev only sees code after secrets are removed, so a key written in code scored as "uncertain". Rule review now detects literal secrets locally (quoted <code>api_key</code>, <code>token</code> or <code>password</code> values, <code>sk-…</code>, <code>ghp_…</code>, private keys), and the secret never leaves the machine. Code that only handles secrets, like <code>process.env.API_KEY</code>, isn't flagged.</p></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 2.4.0 -->
+    <article class="release" id="v2.4.0">
+      <div class="ver"><h2><a href="#v2.4.0">2.4.0</a></h2><time datetime="2026-10-20"><span lang="pt">20 out 2026</span><span lang="en">Oct 20, 2026</span></time></div>
+      <div>
+        <p class="summary" lang="pt">A instalação pede só a chave. O resto se configura no seu idioma.</p>
+        <p class="summary" lang="en">The install asks only for the key. Everything else is set up in your language.</p>
+        <ul class="changes">
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt">Idioma, modo, recursos e o esforço automático do mod saíram da tela de instalação e foram para <code>/claujev:configure</code>, que pergunta no seu idioma. O Claude Code mostra a tela de instalação como está escrita, sem traduzir.</p>
+            <p lang="en">Language, mode, features and the mod's automatic effort moved from the install screen to <code>/claujev:configure</code>, which asks in your language. Claude Code shows the install screen as written and can't translate it.</p></li>
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt">As preferências ficam em <code>~/.claude/claujev/config.json</code> e valem a partir do próximo pedido, sem reiniciar. Um recurso em <code>off</code> ali vence qualquer config de projeto.</p>
+            <p lang="en">Preferences live in <code>~/.claude/claujev/config.json</code> and apply from the next request, no restart. A feature set to <code>off</code> there beats any project config.</p></li>
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt">O mod não tem mais tela de configurações própria: lê o mesmo arquivo.</p>
+            <p lang="en">The mod has no settings screen of its own any more: it reads the same file.</p></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 2.3.1 -->
+    <article class="release" id="v2.3.1">
+      <div class="ver"><h2><a href="#v2.3.1">2.3.1</a></h2><time datetime="2026-10-20"><span lang="pt">20 out 2026</span><span lang="en">Oct 20, 2026</span></time></div>
+      <div>
+        <p class="summary" lang="pt">Textos de configuração que cabem na tela e ordem de instalação clara.</p>
+        <p class="summary" lang="en">Settings texts that fit on screen and a clear install order.</p>
+        <ul class="changes">
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt">Tela de configurações com textos curtos, em inglês e português.</p>
+            <p lang="en">Settings screen with short texts, in English and Portuguese.</p></li>
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt">Ordem de instalação documentada: primeiro o <code>claujev</code>, depois o <code>claujev-mod</code>. Na ordem inversa, a chave não é pedida.</p>
+            <p lang="en">Install order documented: <code>claujev</code> first, then <code>claujev-mod</code>. The other way round, the key isn't asked.</p></li>
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt">Seção de instalação mais curta: a configuração guiada substitui o prompt longo de copiar e colar.</p>
+            <p lang="en">Shorter install section: the guided setup replaces the long copy-paste prompt.</p></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 2.3.0 -->
+    <article class="release" id="v2.3.0">
+      <div class="ver"><h2><a href="#v2.3.0">2.3.0</a></h2><time datetime="2026-10-20"><span lang="pt">20 out 2026</span><span lang="en">Oct 20, 2026</span></time></div>
+      <div>
+        <p class="summary" lang="pt">Licença MIT e tela de opções bilíngue.</p>
+        <p class="summary" lang="en">MIT license and a bilingual options screen.</p>
+        <ul class="changes">
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt"><strong>Licença MIT</strong> (era MIT-0). Continua livre para usar, modificar e redistribuir, inclusive comercialmente, mantendo o aviso de copyright do autor.</p>
+            <p lang="en"><strong>MIT license</strong> (was MIT-0). Still free to use, modify and redistribute, commercially too, as long as the author's copyright notice is kept.</p></li>
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt">Cada opção da tela de configurações aparece em português e inglês.</p>
+            <p lang="en">Every option on the settings screen shows in Portuguese and English.</p></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 2.2.0 -->
+    <article class="release" id="v2.2.0">
+      <div class="ver"><h2><a href="#v2.2.0">2.2.0</a></h2><time datetime="2026-10-20"><span lang="pt">20 out 2026</span><span lang="en">Oct 20, 2026</span></time></div>
+      <div>
+        <p class="summary" lang="pt">Configuração guiada.</p>
+        <p class="summary" lang="en">Guided setup.</p>
+        <ul class="changes">
+          <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
+            <p lang="pt"><strong><code>/claujev:configure</code>.</strong> O Claude faz algumas perguntas de múltipla escolha (idioma, modo, recursos, esforço automático) e aplica as respostas. A chave nunca é pedida no chat.</p>
+            <p lang="en"><strong><code>/claujev:configure</code>.</strong> Claude asks a few multiple-choice questions (language, mode, features, automatic effort) and applies the answers. The key is never asked in the chat.</p></li>
+          <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
+            <p lang="pt">Na primeira sessão, o Claude oferece a configuração guiada. Nas seguintes, avisa se faltar a chave.</p>
+            <p lang="en">On the first session, Claude offers the guided setup. On later ones, it reminds you if the key is missing.</p></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 2.1.0 -->
+    <article class="release" id="v2.1.0">
+      <div class="ver"><h2><a href="#v2.1.0">2.1.0</a></h2><time datetime="2026-10-20"><span lang="pt">20 out 2026</span><span lang="en">Oct 20, 2026</span></time></div>
+      <div>
+        <p class="summary" lang="pt">Ligue e desligue cada recurso.</p>
+        <p class="summary" lang="en">Turn each feature on or off.</p>
+        <ul class="changes">
+          <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
+            <p lang="pt">Uma opção por recurso (triagem, guarda de comandos, revisão por regras, conferência final, roteamento e checagem de relatórios de subagentes), cada uma em <code>observe</code>, <code>enforce</code> ou <code>off</code>.</p>
+            <p lang="en">One setting per feature (triage, command guard, rule review, final check, subagent routing and report check), each <code>observe</code>, <code>enforce</code> or <code>off</code>.</p></li>
+          <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
+            <p lang="pt">Instalação em um passo: <code>/plugin install claujev --marketplace Civalski/claujev</code>.</p>
+            <p lang="en">One-step install: <code>/plugin install claujev --marketplace Civalski/claujev</code>.</p></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 2.0.0 -->
+    <article class="release" id="v2.0.0">
+      <div class="ver"><h2><a href="#v2.0.0">2.0.0</a></h2><time datetime="2026-10-20"><span lang="pt">20 out 2026</span><span lang="en">Oct 20, 2026</span></time></div>
+      <div>
+        <p class="summary" lang="pt">O ClauJev vira plugin do Claude Code.</p>
+        <p class="summary" lang="en">ClauJev becomes a Claude Code plugin.</p>
+        <ul class="changes">
+          <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
+            <p lang="pt"><strong>Plugin <code>claujev</code></strong> com os seis hooks e a chave guardada no cofre seguro do sistema.</p>
+            <p lang="en"><strong>The <code>claujev</code> plugin</strong>, with the six hooks and the key kept in the system's secure store.</p></li>
+          <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
+            <p lang="pt"><strong>Esforço automático.</strong> A triagem sugere um esforço por pedido, de <code>low</code> a <code>xhigh</code>, nunca <code>max</code>.</p>
+            <p lang="en"><strong>Automatic effort.</strong> Triage suggests an effort per request, from <code>low</code> to <code>xhigh</code>, never <code>max</code>.</p></li>
+          <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
+            <p lang="pt"><strong>Mod <code>claujev-mod</code></strong> (opcional): aplica o esforço sugerido, mostra a atividade do Jev na barra de status e adiciona <code>/claujev</code>.</p>
+            <p lang="en"><strong>The <code>claujev-mod</code> mod</strong> (optional): applies the suggested effort, shows Jev's activity in the status line and adds <code>/claujev</code>.</p></li>
+          <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
+            <p lang="pt"><strong>Skill <code>claujev-setup</code>:</strong> autoteste, regras do projeto a partir do <code>CLAUDE.md</code> e relatório para ajustar os limiares.</p>
+            <p lang="en"><strong>The <code>claujev-setup</code> skill:</strong> self-test, project rules from your <code>CLAUDE.md</code>, and a report to tune thresholds.</p></li>
+          <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
+            <p lang="pt">Inglês e português nas mensagens ao Claude e nas perguntas ao Jev.</p>
+            <p lang="en">English and Portuguese for messages to Claude and questions to Jev.</p></li>
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt">A conferência final lê os comandos do turno (commits, pushes, releases, deploys), o que tira alarmes falsos de trabalho feito pelo terminal.</p>
+            <p lang="en">The final check reads the turn's commands (commits, pushes, releases, deploys), which removes false alarms on work done through the terminal.</p></li>
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt">Dados em <code>~/.claude/claujev</code> e config de projeto em <code>.claude/claujev.json</code>.</p>
+            <p lang="en">Data in <code>~/.claude/claujev</code> and project config in <code>.claude/claujev.json</code>.</p></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 1.0.0 -->
+    <article class="release" id="v1.0.0">
+      <div class="ver"><h2><a href="#v1.0.0">1.0.0</a></h2><time datetime="2026-10-20"><span lang="pt">20 out 2026</span><span lang="en">Oct 20, 2026</span></time></div>
+      <div>
+        <p class="summary" lang="pt">Primeira versão pública: seis hooks do Claude Code com o Jev, instalador manual, relatório e testes.</p>
+        <p class="summary" lang="en">First public release: six Claude Code hooks backed by Jev, a manual installer, a report and tests.</p>
+        <p lang="pt"><a href="https://github.com/Civalski/claujev/blob/main/CHANGELOG.md">Detalhes técnicos de cada versão no CHANGELOG</a>.</p>
+        <p lang="en"><a href="https://github.com/Civalski/claujev/blob/main/CHANGELOG.md">Technical details for every release in the CHANGELOG</a>.</p>
+      </div>
+    </article>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap foot">
+    <p lang="pt">Projeto da comunidade, sem vínculo oficial com a TypeSafe AI nem com a Anthropic. Criado por <a href="https://github.com/Civalski">Alisson Civalski</a>, licença MIT.</p>
+    <p lang="en">Community project, not affiliated with TypeSafe AI or Anthropic. Made by <a href="https://github.com/Civalski">Alisson Civalski</a>, MIT license.</p>
+    <nav>
+      <a href="./">ClauJev</a>
+      <a href="https://github.com/Civalski/claujev/blob/main/CHANGELOG.md">CHANGELOG</a>
+      <a href="https://github.com/Civalski/claujev">GitHub</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>
