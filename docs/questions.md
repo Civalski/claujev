@@ -29,7 +29,9 @@ flowchart LR
 ## `prompt` · UserPromptSubmit
 
 **State:** the user's request (up to 6,000 characters). Messages under 40 characters are joined to the
-previous request. Slash commands and messages under 15 characters are not sent.
+previous request; longer ones carry the previous request as context (up to 1,500 characters). Slash
+commands, messages under 15 characters and messages Claude Code injects itself (`<task-notification>`,
+`<local-command-…>`, etc.) are not sent.
 
 | Question | Type | Options |
 | --- | --- | --- |
@@ -48,12 +50,14 @@ question (confidence ≥ 0.6) → `low`; scope ≤ 0.3 → `low`; ≤ 0.6 → `m
 
 ## `bash` · PreToolUse (Bash, PowerShell)
 
-**State:** the command (up to 4,000 characters). Plain read-only commands are not sent.
+**State:** the command (up to 4,000 characters). Plain read-only commands are not sent, including
+chains like `cd repo && git status | head` where every part is a read (no redirection, substitution or
+sensitive file).
 
 | Question | Type |
 | --- | --- |
-| `side_effects`: is the command destructive or hard to undo? | noul |
-| `credentials`: does it read, print, copy or send credentials? | noul |
+| `side_effects`: is the command destructive or hard to undo? (local `git add`/`commit` are not) | noul |
+| `credentials`: does it expose credentials (print, copy, send them elsewhere)? Loading an `.env` for a local tool is not exposure | noul |
 
 **Action:** `permissionDecision: "ask"`, so Claude Code asks for your confirmation.
 
@@ -95,13 +99,14 @@ Only called when the subagent edited something or ran commands.
 ## `stop` · Stop
 
 **State:** project context, the request, the edited files, the diff since the commit at the start of
-the turn (up to 30,000 characters), the commands Claude ran in the turn (read from the transcript) and
-the `verify` result. Called when the turn had an edit or a command with effects (`git commit`/`push`/
+the turn (up to 30,000 characters), the commands Claude ran in the turn (read from the transcript;
+commands with effects in more detail, the end of the turn kept when the list is long), the `verify`
+result and Claude's final reply (up to 3,000 characters). Called when the turn had an edit or a command with effects (`git commit`/`push`/
 `tag`, `gh … create`, `npm publish`, deploys, `curl -X POST`, etc.).
 
 | Question | Type |
 | --- | --- |
-| `completeness`: counting files and commands, how much of the request is done? | score (0–4) |
+| `completeness`: counting files, commands and the final reply, how much of the request is done? | score (0–4) |
 | `unfinished`: is anything left unfinished? | noul |
 | `out_of_scope`: did it touch things nobody asked for? *(logged only)* | noul |
 | `p_<id>`: your `questions.stop` | any |

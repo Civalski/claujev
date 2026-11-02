@@ -166,10 +166,10 @@ Default bands (`low` / `high`):
 | --- | --- | --- |
 | request is ambiguous | 0.50 | 0.70 |
 | edit breaks a rule | 0.50 | 0.85 |
-| request incomplete (1 − completeness) | 0.25 | 0.40 |
+| request incomplete (1 − completeness) | 0.30 | 0.50 |
 | unfinished work | 0.50 | 0.85 |
 | destructive command | 0.50 | 0.85 |
-| command touches credentials | 0.50 | 0.70 |
+| command exposes credentials | 0.45 | 0.65 |
 | simple subagent task | 0.50 | 0.80 |
 | subagent false claim | 0.50 | 0.80 |
 

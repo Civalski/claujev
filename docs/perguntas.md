@@ -27,8 +27,9 @@ flowchart LR
 ## `prompt` · UserPromptSubmit
 
 **Estado:** o pedido do usuário (até 6.000 caracteres). Mensagens com menos de 40 caracteres
-são somadas ao pedido anterior. Comandos `/` e mensagens com menos de 15 caracteres não são
-enviados.
+são somadas ao pedido anterior; as maiores levam o pedido anterior como contexto (até 1.500
+caracteres). Comandos `/`, mensagens com menos de 15 caracteres e mensagens que o próprio Claude Code
+injeta (`<task-notification>`, `<local-command-…>` etc.) não são enviados.
 
 | Pergunta | Tipo | Opções |
 | --- | --- | --- |
@@ -48,12 +49,14 @@ ou parecido fica marcado como `explicitEffort`, e o mod não mexe nele.
 
 ## `bash` · PreToolUse (Bash, PowerShell)
 
-**Estado:** o comando (até 4.000 caracteres). Comandos de leitura pura não são enviados.
+**Estado:** o comando (até 4.000 caracteres). Comandos de leitura pura não são enviados, inclusive
+encadeados como `cd repo && git status | head` quando todas as partes são leitura (sem
+redirecionamento, substituição ou arquivo sensível).
 
 | Pergunta | Tipo |
 | --- | --- |
 | `side_effects`: o comando é destrutivo ou difícil de desfazer? | noul |
-| `credentials`: o comando lê, mostra, copia ou envia credenciais? | noul |
+| `credentials`: o comando expõe credenciais (mostra, copia, envia para outro lugar)? Carregar um `.env` para uma ferramenta local não é exposição | noul |
 
 **Ação:** `permissionDecision: "ask"`, ou seja, o Claude Code pede a sua confirmação.
 
@@ -96,12 +99,13 @@ relatório final dele. Só é chamado se o subagente editou algo ou rodou comand
 
 **Estado:** contexto do projeto, o pedido, a lista de arquivos editados, o diff desde o commit
 do início do turno (até 30.000 caracteres), os comandos que o Claude rodou no turno (lidos do
-transcript) e o resultado do `verify`. É chamado quando o turno teve edição ou um comando com efeito
+transcript; os com efeito mais detalhados, e o fim do turno quando a lista é longa), o resultado do
+`verify` e a resposta final do Claude (até 3.000 caracteres). É chamado quando o turno teve edição ou um comando com efeito
 (`git commit`/`push`/`tag`, `gh … create`, `npm publish`, deploy, `curl -X POST` etc.).
 
 | Pergunta | Tipo |
 | --- | --- |
-| `completeness`: considerando arquivos e comandos, quanto do pedido foi feito? | score (0–4) |
+| `completeness`: considerando arquivos, comandos e a resposta final, quanto do pedido foi feito? | score (0–4) |
 | `unfinished`: ficou algo inacabado? | noul |
 | `out_of_scope`: mexeu em algo que não foi pedido? *(só registra)* | noul |
 | `p_<id>`: suas perguntas de `questions.stop` | qualquer |

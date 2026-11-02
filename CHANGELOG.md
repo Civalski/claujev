@@ -1,5 +1,42 @@
 # Changelog
 
+## 2.5.0 — 2026-11-02
+
+Tuned against 18 days of real use (7,643 logged events, each matched back to the command or request it
+judged, then the old and new questions replayed on the same cases).
+
+### Added
+- **Website** at <https://civalski.github.io/claujev/> (English and Portuguese), with an interactive
+  demo of real Jev answers, the terminal recording and [patch notes](https://civalski.github.io/claujev/patch-notes.html).
+  Served by GitHub Pages from `docs/`; nothing in it ships with the plugin.
+
+### Changed
+- **Final check sees Claude's final reply.** Jev now reads what Claude tells the user it did (up to
+  3,000 characters, secrets removed), the previous request as context, and the turn's commands with
+  the ones that have effects in more detail and the end of the turn kept. On 40 past turns that had
+  been flagged, the "may not be complete" alert went from 24 to 4; on 40 clean turns, from 10 to 0.
+  The ones still flagged were turns that really stopped midway.
+- **Credentials: exposure, not use.** The question now asks whether a command *shows, copies or sends*
+  a credential. Loading an `.env` so a local script can run no longer counts. On 100 past commands
+  flagged before, 6 still are; `cat .env`, `echo $KEY`, `gh auth token` and sending a key out still
+  score 0.81–0.99.
+- **Destructive commands:** local `git add`/`commit` and temporary files are described as easy to undo;
+  push, merge, deploys and migrations as not.
+- **Thresholds:** `incomplete` 0.30 / 0.50 (was 0.25 / 0.40), `credentials` 0.45 / 0.65 (was 0.50 / 0.70).
+
+### Fixed
+- **Read-only shortcut works on real commands.** 65% of commands start with `cd … &&`, which used to
+  send every one of them to Jev. Each part of a chain is now checked, so `cd repo && git status | head`
+  skips Jev (about 12% fewer calls, no alert lost). Redirection, substitution, `sed -i`, background `&`
+  and sensitive files (now including `credenciais`) still go to Jev.
+- **Read-only shortcut no longer waves through commands that only look like reads.** `git branch -D`,
+  `find -execdir`/`-ok`/`-fprint`, `rg --pre`, `uniq a b`, sed scripts other than `sed -n '10,20p'`,
+  `PATH=…` before a command, `echo $API_KEY`, `jq -n env` and files such as `.netrc`, `.pgpass` or
+  `gh`'s `hosts.yml` now go to Jev.
+- **Triage ignores system messages.** `<task-notification>` and other messages Claude Code injects are
+  no longer triaged as requests, and they no longer replace the request the final check compares against.
+- **Conversation replies are less "ambiguous".** Triage now gets the previous request as context.
+
 ## 2.4.3 — 2026-10-20
 
 ### Fixed

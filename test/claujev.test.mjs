@@ -69,6 +69,26 @@ test('isReadOnly: the shortcut only applies to plain reads', () => {
   assert.equal(m.isReadOnly('echo $(whoami)'), false);
 });
 
+test('isReadOnly: chains of plain reads skip Jev, anything else in the chain does not', () => {
+  for (const c of ['cd repo && git status | head', 'S=/tmp/x; cd $S && ls', 'grep -rn foo src | wc -l', 'sed -n 1,20p a.ts', 'gh pr view 3 --json state']) assert.equal(m.isReadOnly(c), true, c);
+  for (const c of ['cd repo && rm -rf build', 'X=1 rm -rf build', 'cat a > b', 'cat <<EOF', 'sed -i s/a/b/ f', 'ls & rm x', 'cat credenciais.ps1', 'cd repo && git push', 'gh pr merge 3', 'ls\nrm x']) assert.equal(m.isReadOnly(c), false, c);
+});
+
+test('isReadOnly: reads that can write, run commands or print secrets still go to Jev', () => {
+  for (const c of ['tail -f app.log', 'ls -d */', 'cut -d, -f1 a.csv', 'grep -c x a | sort | uniq -c', 'git branch -a', "sed -n '10,20p' a.ts"]) assert.equal(m.isReadOnly(c), true, c);
+  for (const c of [
+    'git branch -D feature', 'git branch --delete feature', 'find . -execdir rm {} +', 'find . -fprint out', 'rg --pre=sh x',
+    'uniq a b', 'sed -n w out f', 'sed -n --in-place 1p f', 'PATH=/tmp/x; ls', 'echo $SUPABASE_SERVICE_ROLE_KEY',
+    'echo $env:OPENAI_API_KEY', 'cat ~/.netrc', 'cat ~/.config/gh/hosts.yml', 'jq -n env', 'cat /proc/self/environ',
+  ]) assert.equal(m.isReadOnly(c), false, c);
+});
+
+test('isSystemMessage: messages Claude Code injects are not triaged', () => {
+  for (const c of ['<task-notification> <task-id>b1</task-id>', '<local-command-stdout>ok</local-command-stdout>', 'claude --resume']) assert.ok(m.isSystemMessage(c), c);
+  for (const c of ['fix the login bug', 'use <div> instead of <span> here', 'claude code is slow today', '<pasted_content id="1"> price table, fix the totals', '<div> should be a <span>']) assert.ok(!m.isSystemMessage(c), c);
+  for (const c of ['<command-name>/effort</command-name>', '<bash-input> ls</bash-input>', '<system-reminder>x</system-reminder>']) assert.ok(m.isSystemMessage(c), c);
+});
+
 test('loadConfig: defaults < global < project, rules are added up', () => {
   mkdirSync(process.env.CLAUJEV_HOME, { recursive: true });
   writeFileSync(join(process.env.CLAUJEV_HOME, 'config.json'), JSON.stringify({ hooks: { bash: 'enforce' }, rules: ['global'] }));
@@ -186,6 +206,45 @@ test('turnCommands: reads only the commands of the current turn', () => {
   assert.deepEqual(m.turnCommands(join(home, 'missing.jsonl')), []);
 });
 
+test('turnInfo: commands and the last thing Claude told the user, in this turn only', () => {
+  const tr = join(home, 'transcript-reply.jsonl');
+  const line = (o) => JSON.stringify(o);
+  const text = (t) => line({ type: 'assistant', message: { content: [{ type: 'text', text: t }] } });
+  writeFileSync(tr, [
+    line({ type: 'user', message: { content: 'create the card' } }),
+    text('Creating it now.'),
+    line({ type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Bash', input: { command: 'gh issue create' } }] } }),
+    text('Created card #214.'),
+  ].join('\n'));
+  assert.deepEqual(m.turnInfo(tr), { commands: ['gh issue create'], reply: 'Created card #214.' });
+  writeFileSync(tr, [
+    line({ type: 'user', message: { content: 'first' } }),
+    text('Old answer.'),
+    line({ type: 'user', message: { content: 'push it' } }),
+    line({ type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Bash', input: { command: 'git push' } }] } }),
+  ].join('\n'));
+  assert.equal(m.turnInfo(tr).reply, '', 'a reply from an earlier turn is never used');
+  assert.deepEqual(m.turnInfo(join(home, 'missing.jsonl')), { commands: [], reply: '' });
+});
+
+test('buildStopState: final reply, previous request and the commands that matter', () => {
+  const t = m.TEXT.en.stop;
+  const noise = Array.from({ length: 200 }, (_, i) => `cat file${i}.txt ${'x'.repeat(200)}`);
+  const state = m.buildStopState(t, {
+    prompt: 'ok, go ahead', previous: 'create a card for the cancel reason',
+    commands: [...noise, `gh issue create --title "Cancel reason" --body "${'y'.repeat(300)}"`],
+    reply: `Created card #214. token=abcdef1234567890 ${'z'.repeat(5000)}`,
+  });
+  assert.match(state, /create a card for the cancel reason/);
+  assert.match(state, /Final reply of the agent/);
+  assert.match(state, /Created card #214/);
+  assert.ok(!state.includes('abcdef1234567890'), 'secrets in the reply are removed');
+  assert.ok(state.includes('y'.repeat(300)), 'a command with effects keeps its detail');
+  assert.ok(!state.includes('file0.txt'), 'a long turn keeps its end, not its start');
+  assert.ok(!state.includes('x'.repeat(150)), 'plain commands are shortened');
+  assert.ok(!state.includes('z'.repeat(3100)), 'the reply is capped');
+});
+
 test('EFFECTFUL: commands that change the world wake the Stop check', () => {
   for (const c of ['git push origin main', 'gh release create v2', 'npm publish', 'git commit -m x', 'curl -X POST https://api']) assert.ok(m.EFFECTFUL.test(c), c);
   for (const c of ['git status', 'ls -la', 'npm test', 'gh release view v1']) assert.ok(!m.EFFECTFUL.test(c), c);
@@ -236,6 +295,13 @@ test('when Jev cannot answer, a destructive command still asks; a normal one pas
   assert.equal(out.hookSpecificOutput.permissionDecision, 'ask');
   assert.match(out.hookSpecificOutput.permissionDecisionReason, /could not check/);
   assert.equal(run('npm install'), '', 'without an answer from Jev, an ordinary command is not held');
+});
+
+test('triage skips system messages without calling Jev', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'claujev-sys-'));
+  const out = runHook('prompt', { session_id: 'sys', cwd: home, prompt: '<task-notification> <task-id>b1</task-id> <status>completed</status></task-notification>' }, { CLAUJEV_HOME: dir });
+  assert.equal(out, '');
+  assert.ok(!existsSync(join(dir, 'logs')), 'nothing was sent, so nothing failed for lack of a key');
 });
 
 test('a hook without a key never breaks the session: no output, error in the log', () => {

@@ -168,10 +168,10 @@ Os limites padrão (`low` / `high`):
 | --- | --- | --- |
 | pedido ambíguo | 0.50 | 0.70 |
 | edição viola regra | 0.50 | 0.85 |
-| pedido incompleto (1 − completude) | 0.25 | 0.40 |
+| pedido incompleto (1 − completude) | 0.30 | 0.50 |
 | trabalho inacabado | 0.50 | 0.85 |
 | comando destrutivo | 0.50 | 0.85 |
-| comando com credenciais | 0.50 | 0.70 |
+| comando com credenciais | 0.45 | 0.65 |
 | subagente simples | 0.50 | 0.80 |
 | relatório falso do subagente | 0.50 | 0.80 |
 

@@ -31,10 +31,10 @@ const DEFAULTS = {
   thresholds: {
     ambiguous: { low: 0.5, high: 0.7 },
     rule: { low: 0.5, high: 0.85 },
-    incomplete: { low: 0.25, high: 0.4 }, // 1 - completeness score
+    incomplete: { low: 0.3, high: 0.5 }, // 1 - completeness score
     unfinished: { low: 0.5, high: 0.85 },
     sideEffects: { low: 0.5, high: 0.85 },
-    credentials: { low: 0.5, high: 0.7 },
+    credentials: { low: 0.45, high: 0.65 },
     simpleTask: { low: 0.5, high: 0.8 },
     falseClaims: { low: 0.5, high: 0.8 },
   },
@@ -64,6 +64,7 @@ const TEXT = {
     prompt: {
       state: 'User request to the coding agent:',
       followUp: '[next user message]:',
+      previous: 'Previous user request, for context only:',
       taskType: {
         instructions: 'What kind of work does this request to a coding agent require?',
         criteria: {
@@ -107,11 +108,13 @@ const TEXT = {
       request: 'User request:',
       files: 'Files edited in this turn:',
       changes: 'Changes made by the agent in this turn:',
+      previous: 'Previous user request, for context only:',
       commands: 'Commands run by the agent in this turn (they are part of the work, e.g. publishing, releases, deploys):',
+      reply: 'Final reply of the agent to the user:',
       newFile: '+++ new file:', outsideGit: '+++ current content (outside git):',
       verify: (cmd, exit) => `Automatic check result (\`${cmd}\`): exit code ${exit}`,
       completeness: {
-        instructions: 'Considering both the file changes and the commands run, how much of what the user asked has been done?',
+        instructions: 'Considering the file changes, the commands run and the final reply together, how much of what the user asked has been done? Work done through commands (cards, PRs, merges, deploys, queries) counts as done. If the reply states clearly what is still missing and why (e.g. blocked by permissions, waiting for the user), judge what could be done in this turn.',
         criteria: ['Not done', 'Barely done; central parts missing', 'Partly done', 'Almost all done; details missing', 'Fully done'],
       },
       unfinished: {
@@ -131,15 +134,15 @@ const TEXT = {
     bash: {
       state: (tool) => `Command the agent wants to run (${tool}):`,
       sideEffects: {
-        instructions: 'Is this command destructive or hard to undo (deleting files, overwriting data, git push --force or reset --hard, publishing or deploying, changing a database, sending data to an external service)?',
+        instructions: 'Is this command destructive or hard to undo (deleting files, overwriting data, git push, merge, push --force or reset --hard, publishing or deploying, applying a migration or writing to a remote database, sending data to an external service)? Local git add/commit, creating branches, installing dependencies and writing to temporary folders are easy to undo.',
         criteria: { true: 'May cause damage or a change that is hard to revert', false: 'Only reads information or makes a local change that is easy to undo' },
       },
       credentials: {
-        instructions: 'Does this command read, print, copy or send credentials, keys, tokens or passwords?',
-        criteria: { true: 'Touches credentials', false: 'Does not involve credentials' },
+        instructions: 'Does this command expose credentials, keys, tokens or passwords: print them on screen, copy them to another file or place, or send them to a service other than the one they belong to? Loading an .env or a config file so that a local script or tool can use it is NOT exposure.',
+        criteria: { true: 'Shows, copies or sends a credential somewhere it does not belong', false: 'Does not involve credentials, or only lets a local tool use them without showing them' },
       },
       destructive: (p) => `destructive effect (p=${p})`,
-      creds: (p) => `credential access (p=${p})`,
+      creds: (p) => `credential exposure (p=${p})`,
       ask: (reasons) => `[Jev] Command flagged: ${reasons}`,
       fallback: '[Jev] Jev could not check this command in time, and it looks destructive (local check): confirm it yourself.',
     },
@@ -189,6 +192,7 @@ const TEXT = {
     prompt: {
       state: 'Pedido do usuário ao agente de programação:',
       followUp: '[mensagem seguinte do usuário]:',
+      previous: 'Pedido anterior do usuário, só para contexto:',
       taskType: {
         instructions: 'Que tipo de trabalho este pedido feito a um agente de programação exige?',
         criteria: {
@@ -232,11 +236,13 @@ const TEXT = {
       request: 'Pedido do usuário:',
       files: 'Arquivos editados neste turno:',
       changes: 'Alterações feitas pelo agente neste turno:',
+      previous: 'Pedido anterior do usuário, só para contexto:',
       commands: 'Comandos executados pelo agente neste turno (fazem parte do trabalho, ex.: publicação, release, deploy):',
+      reply: 'Resposta final do agente ao usuário:',
       newFile: '+++ arquivo novo:', outsideGit: '+++ conteúdo atual (fora do git):',
       verify: (cmd, exit) => `Resultado da verificação automática (\`${cmd}\`): código de saída ${exit}`,
       completeness: {
-        instructions: 'Considerando as alterações em arquivos e os comandos executados, o quanto do que o usuário pediu foi feito?',
+        instructions: 'Considerando juntos as alterações em arquivos, os comandos executados e a resposta final, o quanto do que o usuário pediu foi feito? Trabalho feito por comandos (cards, PRs, merges, deploys, consultas) conta como feito. Se a resposta diz com clareza o que ainda falta e por quê (ex.: bloqueado por permissão, esperando o usuário), julgue o que dava para fazer neste turno.',
         criteria: ['Não atendem ao pedido', 'Atendem pouco; partes centrais faltando', 'Atendem parcialmente', 'Atendem quase tudo; faltam detalhes', 'Atendem completamente'],
       },
       unfinished: {
@@ -256,15 +262,15 @@ const TEXT = {
     bash: {
       state: (tool) => `Comando que o agente quer executar (${tool}):`,
       sideEffects: {
-        instructions: 'Este comando tem efeito destrutivo ou difícil de desfazer (apagar arquivos, sobrescrever dados, git push --force ou reset --hard, publicar ou fazer deploy, alterar banco de dados, enviar dados para serviço externo)?',
+        instructions: 'Este comando tem efeito destrutivo ou difícil de desfazer (apagar arquivos, sobrescrever dados, git push, merge, push --force ou reset --hard, publicar ou fazer deploy, aplicar migration ou escrever em banco remoto, enviar dados para serviço externo)? git add/commit locais, criar branch, instalar dependências e escrever em pastas temporárias são fáceis de desfazer.',
         criteria: { true: 'Pode causar dano ou mudança difícil de reverter', false: 'Só lê informação ou faz mudança local fácil de desfazer' },
       },
       credentials: {
-        instructions: 'Este comando lê, exibe, copia ou envia credenciais, chaves, tokens ou senhas?',
-        criteria: { true: 'Mexe com credenciais', false: 'Não envolve credenciais' },
+        instructions: 'Este comando expõe credenciais, chaves, tokens ou senhas: mostra na tela, copia para outro arquivo ou lugar, ou envia para um serviço que não é o dono dela? Carregar um .env ou arquivo de configuração para um script ou ferramenta local usar NÃO é exposição.',
+        criteria: { true: 'Mostra, copia ou envia uma credencial para onde ela não pertence', false: 'Não envolve credenciais, ou só deixa uma ferramenta local usá-las sem mostrar' },
       },
       destructive: (p) => `efeito destrutivo (p=${p})`,
-      creds: (p) => `acesso a credenciais (p=${p})`,
+      creds: (p) => `exposição de credenciais (p=${p})`,
       ask: (reasons) => `[Jev] Comando sinalizado: ${reasons}`,
       fallback: '[Jev] O Jev não conseguiu checar este comando a tempo, e ele parece destrutivo (checagem local): confirme você mesmo.',
     },
@@ -550,6 +556,11 @@ function onSession(input, cfg) {
 
 // ---------- hook: user request (UserPromptSubmit) ----------
 
+// Messages Claude Code injects as if the user typed them. A closed list: <pasted_content> and anything
+// else the user starts a message with are real requests.
+const SYSTEM_TAGS = /^<(task-notification|local-command-(stdout|stderr|caveat)|command-(name|message|args)|bash-(input|stdout|stderr)|system-reminder)\b/i;
+const isSystemMessage = (text) => SYSTEM_TAGS.test(text || '') || /^claude\s+--?\w/.test(text || '');
+
 async function onPrompt(input, cfg, mode) {
   const t = T(cfg).prompt;
   const sid = input.session_id;
@@ -560,7 +571,11 @@ async function onPrompt(input, cfg, mode) {
   if (prompt.length < 40 && prev.prompt) prompt = `${prev.prompt}\n\n${t.followUp} ${prompt}`;
   // Commit at the start of the turn: Stop compares against it, including what gets committed during the turn.
   const base = input.cwd ? gitTry(input.cwd, ['rev-parse', 'HEAD']) : null;
-  const st = { prompt: clip(prompt, 6000), edits: 0, files: [], base, explicitEffort: EXPLICIT_EFFORT.test(raw), turnStart: new Date().toISOString() };
+  // System messages (background task results, local command output) are not user requests: the turn
+  // state is kept as it was, so Stop still compares against the real request.
+  if (isSystemMessage(raw)) return;
+  const previous = prompt === raw ? tail(prev.prompt || '', 1500) : '';
+  const st = { prompt: clip(prompt, 6000), previous, edits: 0, files: [], base, explicitEffort: EXPLICIT_EFFORT.test(raw), turnStart: new Date().toISOString() };
   saveState(sid, st);
   if (mode === 'off' || raw.startsWith('/') || raw.length < 15) return;
 
@@ -578,7 +593,7 @@ async function onPrompt(input, cfg, mode) {
     };
   }
 
-  const r = await askJev(cfg, `${t.state}\n${redact(clip(prompt, 6000))}`, questions);
+  const r = await askJev(cfg, `${previous ? `${t.previous}\n${redact(previous)}\n\n` : ''}${t.state}\n${redact(clip(prompt, 6000))}`, questions);
   const a = r.answers || {};
   const scope = a.scope ? normScore(a.scope) : null;
   const ambiguousBand = band(a.ambiguous?.noul, cfg.thresholds.ambiguous);
@@ -694,8 +709,15 @@ function turnChanges(cwd, st, max, t) {
 }
 
 // Tool calls of a transcript (JSONL). With sinceLastPrompt, only those after the last real user message.
-function transcriptActions(path, { sinceLastPrompt = false } = {}) {
+function transcriptActions(path, opts) {
+  return readTranscript(path, opts).actions;
+}
+
+// One pass over a transcript (JSONL): the tool calls and the last text Claude wrote. With
+// sinceLastPrompt, only what came after the last real user message (the current turn).
+function readTranscript(path, { sinceLastPrompt = false } = {}) {
   const actions = [];
+  let lastText = '';
   try {
     for (const line of readFileSync(path, 'utf8').split('\n')) {
       if (!line.trim()) continue;
@@ -704,9 +726,13 @@ function transcriptActions(path, { sinceLastPrompt = false } = {}) {
       // A user message that is not a tool result starts a new turn.
       if (sinceLastPrompt && entry?.type === 'user' && !entry.isMeta) {
         const isToolResult = Array.isArray(content) && content.some((c) => c?.type === 'tool_result');
-        if (!isToolResult) { actions.length = 0; continue; }
+        if (!isToolResult) { actions.length = 0; lastText = ''; continue; }
       }
       if (!Array.isArray(content)) continue;
+      if (entry?.type === 'assistant') {
+        const text = content.filter((c) => c?.type === 'text').map((c) => c.text).join('\n').trim();
+        if (text) lastText = text;
+      }
       for (const c of content) {
         if (c?.type !== 'tool_use') continue;
         const i = c.input || {};
@@ -715,16 +741,38 @@ function transcriptActions(path, { sinceLastPrompt = false } = {}) {
       }
     }
   } catch { /* transcript unavailable */ }
-  return actions;
+  return { actions, lastText };
 }
 
 // Commands with effects worth checking at Stop even when no file was edited.
 const EFFECTFUL = /\b(git\s+(commit|push|tag|merge|rebase|reset|revert)|gh\s+\w+\s+(create|edit|merge|delete|close|upload)|npm\s+(publish|version)|docker\s+(push|build|run)|kubectl\s+(apply|delete)|terraform\s+apply|vercel|wrangler\s+deploy|deploy|curl\s[^|]*-X\s*(POST|PUT|PATCH|DELETE))\b/i;
 
-function turnCommands(path) {
-  return transcriptActions(path, { sinceLastPrompt: true })
-    .filter((a) => a.tool === 'Bash' || a.tool === 'PowerShell')
-    .map((a) => a.target);
+// The current turn: the shell commands Claude ran and the last thing it told the user.
+function turnInfo(path) {
+  const { actions, lastText } = readTranscript(path, { sinceLastPrompt: true });
+  return { commands: actions.filter((a) => a.tool === 'Bash' || a.tool === 'PowerShell').map((a) => a.target), reply: lastText };
+}
+const turnCommands = (path) => turnInfo(path).commands;
+
+// Commands of the turn for Jev: the ones with effects in more detail, the rest short; when the
+// list is too long, the end of the turn is kept (that is where the work gets finished).
+function formatCommands(commands, max = 6000) {
+  const lines = commands.map((c) => `$ ${clip(c.replace(/\s+/g, ' '), EFFECTFUL.test(c) ? 600 : 120)}`);
+  return tail(lines.join('\n'), max);
+}
+
+// The state Jev reads at Stop. Pure, so it can be tested.
+function buildStopState(t, { context = '', prompt = '', previous = '', files = [], changes = '', commands = [], reply = '', verify = null, verifyCmd = '' }) {
+  return [
+    context,
+    previous && `${t.previous}\n${redact(previous)}`,
+    `${t.request}\n${redact(prompt)}`,
+    files.length && `${t.files}\n${files.join('\n')}`,
+    changes.trim() && `${t.changes}\n${redact(changes)}`,
+    commands.length && `${t.commands}\n${redact(formatCommands(commands))}`,
+    verify && `${t.verify(verifyCmd, verify.exit)}\n${redact(verify.output)}`,
+    reply.trim() && `${t.reply}\n${redact(clip(reply.trim(), 3000))}`,
+  ].filter(Boolean).join('\n\n');
 }
 
 function runVerify(cwd, cfg) {
@@ -743,7 +791,8 @@ async function onStop(input, cfg, mode) {
   if (mode === 'off' || input.stop_hook_active) return; // avoids an endless loop
   const t = T(cfg).stop;
   const st = loadState(input.session_id);
-  const commands = input.transcript_path ? turnCommands(input.transcript_path) : [];
+  const turn = input.transcript_path ? turnInfo(input.transcript_path) : { commands: [], reply: '' };
+  const commands = turn.commands;
   const effectful = commands.some((c) => EFFECTFUL.test(c));
   if (!st.edits && !effectful) return; // nothing was changed in this turn
   saveState(input.session_id, { ...st, edits: 0 });
@@ -752,14 +801,11 @@ async function onStop(input, cfg, mode) {
   if (!changes.trim() && !effectful) { log({ hook: 'stop', mode, project: basename(input.cwd || ''), skipped: t.skipped }); return; }
   const verify = st.edits ? runVerify(input.cwd, cfg) : null;
 
-  const state = [
-    projectContext(input.cwd, cfg),
-    `${t.request}\n${redact(st.prompt)}`,
-    st.files?.length && `${t.files}\n${st.files.join('\n')}`,
-    changes.trim() && `${t.changes}\n${redact(changes)}`,
-    commands.length && `${t.commands}\n${redact(clip(commands.map((c) => `$ ${clip(c, 400)}`).join('\n'), 6000))}`,
-    verify && `${t.verify(cfg.verify, verify.exit)}\n${redact(verify.output)}`,
-  ].filter(Boolean).join('\n\n');
+  const reply = String(input.last_assistant_message || turn.reply || '');
+  const state = buildStopState(t, {
+    context: projectContext(input.cwd, cfg), prompt: st.prompt, previous: st.previous, files: st.files || [],
+    changes, commands, reply, verify, verifyCmd: cfg.verify,
+  });
 
   const r = await askJev(cfg, state, {
     completeness: { type: 'score', instructions: t.completeness.instructions, criteria: t.completeness.criteria },
@@ -787,7 +833,7 @@ async function onStop(input, cfg, mode) {
   const acted = mode === 'enforce' && problems.length > 0;
   log({
     ...baseLog('stop', mode, input, r), contentHash: hash(changes + commands.join('\n')), files: st.files?.length || 0, commands: commands.length, base: st.base?.slice(0, 7),
-    verify: verify && { exit: verify.exit, ms: verify.ms },
+    verify: verify && { exit: verify.exit, ms: verify.ms }, reply: reply.length,
     answers: { completeness: round(completeness), unfinished: a.unfinished?.noul, out_of_scope: a.out_of_scope?.noul, ...Object.fromEntries(extra.map((x) => [x.id, x.value ?? x.choice])) },
     problems, uncertain, acted,
   });
@@ -798,10 +844,19 @@ async function onStop(input, cfg, mode) {
 
 // Plainly read-only commands pass without calling Jev. Any chaining, redirection or
 // substitution disqualifies the shortcut (it could hide another command).
-const READ_ONLY = /^\s*(ls|dir|pwd|cat|type|head|tail|wc|echo|which|where|grep|rg|find|tree|node\s+(-v|--version)|npm\s+(ls|view|-v|--version)|git\s+(status|diff|log|show|branch|remote\s+-v|rev-parse|ls-files|blame)|Get-ChildItem|Get-Content|Select-String|Test-Path|Get-Location)\b/i;
-const SHELL_META = /[;&|<>`\n]|\$\(|\$\{|-delete\b|-exec\b|--output\b|-o\s/;
-const SENSITIVE = /\.env|secret|credential|\.ssh|\.pem|\.key\b|token|passw|senha|\.npmrc|\.gitconfig\.local/i;
-const isReadOnly = (cmd) => READ_ONLY.test(cmd) && !SHELL_META.test(cmd) && !SENSITIVE.test(cmd);
+// A command is split on &&, ||, ; and |, and every segment must be a plain read. `cd` and simple
+// variable assignments count as reads, so `cd repo && git status | head` skips Jev too.
+const READ_ONLY = new RegExp([
+  /^\s*(cd|ls|dir|pwd|cat|type|head|tail|wc|echo|printf|which|where|grep|rg|find|tree|sort|cut|tr|file|stat|du|df|diff|basename|dirname|realpath|true|node\s+(-v|--version)|npm\s+(ls|view|-v|--version)|git\s+(status|diff|log|show|branch(?!.*\s(-[dDmMcCfu]\b|--(delete|move|copy|force|set-upstream|unset-upstream|edit-description)))|remote\s+-v|rev-parse|ls-files|blame|worktree\s+list)|gh\s+(pr|issue|run|repo)\s+(view|list|diff|checks)|Get-ChildItem|Get-Content|Select-String|Test-Path|Get-Location)(\s|$)/.source,
+  /^\s*uniq(\s+-[\w-]+)*\s*$/.source, // `uniq a b` would write b: flags only
+  /^\s*sed\s+-n\s+['"]?[\d,$]+p['"]?(\s+[^\s-]\S*)*\s*$/.source, // sed -n '10,20p' file (sed scripts can write and run commands)
+  /^\s*(?!(PATH|IFS|ENV|BASH_ENV|CDPATH|PROMPT_COMMAND|NODE_OPTIONS|LD_\w+|GIT_\w+|PYTHON\w*)=)[A-Za-z_]\w*=\S*\s*$/.source, // X=value alone
+].join('|'), 'i');
+// Anything that could hide another command, run one or write somewhere disqualifies the shortcut.
+const SHELL_META = /[<>`\n]|\$\(|\$\{|\s-(delete|exec\w*|ok\w*|fprint\w*|fls)\b|--output\b|-o\s|--pre\b/;
+const SENSITIVE = /\.env|\benv\b|environ|secret|credential|credenc|\.ssh|\.pem|\.key\b|token|passw|senha|\.npmrc|\.netrc|\.pgpass|\.gnupg|\.git-credentials|\.gitconfig\.local|hosts\.yml|\.kube\/config|\.docker\/config|\$(env:)?\w*(key|token|secret|pass|pwd|auth)/i;
+const isReadOnly = (cmd) => !SHELL_META.test(cmd) && !SENSITIVE.test(cmd) && !/(^|[^&|])&([^&]|$)/.test(cmd) &&
+  cmd.split(/&&|\|\||;|\|/).map((s) => s.trim()).filter(Boolean).every((s) => READ_ONLY.test(s));
 // Safety net when Jev cannot answer (timeout, network, no key): plainly destructive commands still ask.
 const LOCAL_DANGER = /\bgit\s+push\b[^|;&]*(--force|-f\b|--force-with-lease|\+\w)|\bgit\s+(reset\s+--hard|clean\s+-\w*f|branch\s+-D|filter-branch)|\brm\s+-\w*[rf]|\b(drop|truncate)\s+(table|database|schema)\b|\bdelete\s+from\b|\bmkfs\b|\bdd\s+if=|\bchmod\s+-R\s+777|\bnpm\s+publish\b|\bterraform\s+destroy\b|\bkubectl\s+delete\b/i;
 
@@ -946,7 +1001,7 @@ function report(cfg) {
 const HANDLERS = { prompt: onPrompt, edit: onEdit, stop: onStop, bash: onBash, agent: onAgent, subagent: onSubagent, session: onSession };
 
 // Pure functions exported for the tests.
-export { DEFAULTS, TEXT, redact, hasLiteralSecret, LOCAL_DANGER, band, normScore, loadConfig, isReadOnly, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, EFFECTFUL, EXPLICIT_EFFORT };
+export { DEFAULTS, TEXT, redact, hasLiteralSecret, LOCAL_DANGER, band, normScore, loadConfig, isReadOnly, isSystemMessage, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, turnInfo, formatCommands, buildStopState, EFFECTFUL, EXPLICIT_EFFORT };
 
 // Runs only when called directly (node claujev.mjs ...), not when imported by the tests.
 const isMain = (() => {

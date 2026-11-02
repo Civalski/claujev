@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <b>English</b> · <a href="README.pt-BR.md">Português</a>
+  <b>English</b> · <a href="README.pt-BR.md">Português</a> · <a href="https://civalski.github.io/claujev/">Website</a> · <a href="https://civalski.github.io/claujev/patch-notes.html">Patch notes</a>
 </p>
 
 ---
@@ -109,7 +109,8 @@ request that asks for effort itself (*"ultrathink"*) is never overridden.
 
 ## Privacy
 
-Sent to `api.typesafe.ai`: the request, commands, edited snippets, the turn's diff and commands, after
+Sent to `api.typesafe.ai`: the request (and the previous one, as context), commands, edited snippets,
+the turn's diff and commands, and Claude's final reply of the turn (up to 3,000 characters), after
 removing keys and tokens. Kept locally in `~/.claude/claujev/`: logs with answers and a content
 **hash**, never the content. The API key lives in your system's secure storage.
 

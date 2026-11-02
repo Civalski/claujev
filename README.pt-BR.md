@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> · <b>Português</b>
+  <a href="README.md">English</a> · <b>Português</b> · <a href="https://civalski.github.io/claujev/">Site</a> · <a href="https://civalski.github.io/claujev/patch-notes.html">Notas de versão</a>
 </p>
 
 ---
@@ -111,8 +111,9 @@ pedido que já pede esforço (*"ultrathink"*, *"pense bem"*) nunca é sobrescrit
 
 ## Privacidade
 
-Vai para `api.typesafe.ai`: o pedido, os comandos, os trechos editados, o diff e os comandos do turno,
-depois de remover chaves e tokens. Fica na sua máquina, em `~/.claude/claujev/`: logs com as respostas
+Vai para `api.typesafe.ai`: o pedido (e o anterior, como contexto), os comandos, os trechos editados,
+o diff e os comandos do turno e a resposta final do Claude no turno (até 3.000 caracteres), depois de
+remover chaves e tokens. Fica na sua máquina, em `~/.claude/claujev/`: logs com as respostas
 e um **hash** do conteúdo, nunca o conteúdo. A chave fica no cofre seguro do sistema.
 
 ## Saiba mais
