@@ -54,7 +54,7 @@
         <ul class="facts">
           <li><span lang="pt">~400 ms por checagem</span><span lang="en">~400 ms per check</span></li>
           <li><span lang="pt">Zero dependências</span><span lang="en">Zero dependencies</span></li>
-          <li><span lang="pt">Código aberto, MIT</span><span lang="en">Open source, MIT</span></li>
+          <li><span lang="pt">100% gratuito e de código aberto</span><span lang="en">100% free and open source</span></li>
         </ul>
       </div>
 
@@ -64,10 +64,10 @@
           <span>modo enforce</span>
         </div>
         <div class="cases" role="tablist" aria-label="Exemplos / Examples">
-          <button class="case" role="tab" aria-controls="verdict"><span class="who">bash</span><span class="what">cat .env</span></button>
-          <button class="case" role="tab" aria-controls="verdict"><span class="who">bash</span><span class="what">set -a; . app.env; node sync.mjs</span></button>
+          <button class="case" role="tab" aria-controls="verdict"><span class="who">bash</span><span class="what">git push --force-with-lease origin main</span></button>
           <button class="case" role="tab" aria-controls="verdict"><span class="who">bash</span><span class="what">cd api &amp;&amp; git log --oneline | head</span></button>
           <button class="case" role="tab" aria-controls="verdict"><span class="who">stop</span><span class="what"><span lang="pt">"Fiz a função; o teste ainda não foi escrito."</span><span lang="en">"Wrote the function; the test isn't written yet."</span></span></button>
+          <button class="case" role="tab" aria-controls="verdict"><span class="who">stop</span><span class="what"><span lang="pt">"Função e teste prontos; os testes passam."</span><span lang="en">"Function and test done; tests pass."</span></span></button>
         </div>
         <div class="verdict" id="verdict" role="tabpanel" aria-live="polite">
           <p class="q"><span lang="pt">Pergunta ao Jev</span><span lang="en">Question to Jev</span></p>
@@ -77,7 +77,7 @@
           <div class="reading"><span class="p" id="p"></span><span class="band" id="band"></span></div>
           <p class="action" id="action"></p>
         </div>
-        <p class="source"><span lang="pt">Respostas reais do Jev, medidas na versão 2.5.</span><span lang="en">Real Jev answers, measured on version 2.5.</span></p>
+        <p class="source"><span lang="pt">Probabilidades reais do Jev, de uma sessão gravada e dos testes da versão 2.5. Textos encurtados.</span><span lang="en">Real Jev probabilities, from a recorded session and the version 2.5 tests. Texts shortened.</span></p>
       </div>
     </div>
   </div>
@@ -115,8 +115,8 @@
         <li>
           <p class="hook">PreToolUse</p>
           <h3><span lang="pt">O Claude roda um comando</span><span lang="en">Claude runs a command</span></h3>
-          <p lang="pt"><strong>Guarda.</strong> Destrutivo ou expõe credenciais? Você confirma antes. Comandos só de leitura nem chamam o Jev.</p>
-          <p lang="en"><strong>Guard.</strong> Destructive, or exposes credentials? You confirm first. Read-only commands don't even call Jev.</p>
+          <p lang="pt"><strong>Guarda.</strong> Push forçado, <code>reset --hard</code>, migration, deploy? Você confirma antes. Comandos só de leitura nem chamam o Jev.</p>
+          <p lang="en"><strong>Guard.</strong> A force push, <code>reset --hard</code>, a migration, a deploy? You confirm first. Read-only commands don't even call Jev.</p>
         </li>
         <li>
           <p class="hook">PostToolUse</p>
@@ -141,21 +141,21 @@
       <h2><span lang="pt">Sinal, não sentença</span><span lang="en">A signal, not a verdict</span></h2>
       <p class="intro" lang="pt">Cada resposta do Jev é uma probabilidade, e cada pergunta tem dois limiares que a dividem em três faixas. Só a faixa alta age.</p>
       <p class="intro" lang="en">Every Jev answer is a probability, and every question has two thresholds that split it into three bands. Only the high band acts.</p>
-      <div class="diagram" role="img" aria-label="0 a 0,45: baixa; 0,45 a 0,65: incerta; acima de 0,65: alta / 0 to 0.45: low; 0.45 to 0.65: uncertain; above 0.65: high">
+      <div class="diagram" style="--lo:30%;--hi:50%" role="img" aria-label="0 a 0,30: baixa; 0,30 a 0,50: incerta; acima de 0,50: alta / 0 to 0.30: low; 0.30 to 0.50: uncertain; above 0.50: high">
         <div class="zones">
           <span class="z-low"><span lang="pt">Baixa</span><span lang="en">Low</span></span>
           <span class="z-mid"><span lang="pt">Incerta</span><span lang="en">Uncertain</span></span>
           <span class="z-high"><span lang="pt">Alta</span><span lang="en">High</span></span>
         </div>
-        <div class="meter"><span class="tick" style="left:45%"></span><span class="tick" style="left:65%"></span></div>
-        <div class="scale"><span>0</span><span class="t" style="left:45%"><span lang="pt">0,45</span><span lang="en">0.45</span></span><span class="t" style="left:65%"><span lang="pt">0,65</span><span lang="en">0.65</span></span><span>1</span></div>
+        <div class="meter"><span class="tick" style="left:30%"></span><span class="tick" style="left:50%"></span></div>
+        <div class="scale"><span>0</span><span class="t" style="left:30%"><span lang="pt">0,30</span><span lang="en">0.30</span></span><span class="t" style="left:50%"><span lang="pt">0,50</span><span lang="en">0.50</span></span><span>1</span></div>
         <div class="notes">
           <p class="n-low" lang="pt">Nada acontece. O Claude segue normalmente.</p><p class="n-low" lang="en">Nothing happens. Claude carries on.</p>
           <p class="n-mid" lang="pt">Só vai para o log.</p><p class="n-mid" lang="en">Logged only.</p>
           <p class="n-high" lang="pt">Age, e só no modo <code>enforce</code>: dica, confirmação ou volta ao trabalho.</p><p class="n-high" lang="en">Acts, only in <code>enforce</code>: a hint, a confirmation, or back to work.</p>
         </div>
-        <p class="caption" lang="pt">Limiares da pergunta "expõe credenciais?". Cada pergunta tem os seus, e você pode ajustar todos.</p>
-        <p class="caption" lang="en">Thresholds for "exposes credentials?". Each question has its own, and you can tune them all.</p>
+        <p class="caption" lang="pt">Limiares da conferência final ("quanto ficou por fazer?"). Cada pergunta tem os seus, e você pode ajustar todos.</p>
+        <p class="caption" lang="en">Thresholds for the final check ("how much is left to do?"). Each question has its own, and you can tune them all.</p>
       </div>
       <ul class="promises">
         <li lang="pt"><strong>Começa só observando.</strong><span>Todo hook vem em <code>observe</code>: registra e não interfere. Leia o relatório e ligue o <code>enforce</code> onde fizer sentido.</span></li>
@@ -181,10 +181,10 @@
           <p lang="en">Out of 40 turns that used to be held. The 4 left were truly unfinished. Jev now reads Claude's final reply.</p>
         </div>
         <div class="measure">
-          <div class="ba"><span class="before">100</span><span class="after">6</span></div>
-          <h3><span lang="pt">alertas de credenciais</span><span lang="en">credential alerts</span></h3>
-          <p lang="pt">Carregar um <code>.env</code> para rodar um script deixou de ser alerta. Mostrar, copiar ou enviar a chave continua sendo.</p>
-          <p lang="en">Loading a <code>.env</code> to run a script no longer alerts. Printing, copying or sending the key still does.</p>
+          <div class="ba"><span class="before">10</span><span class="after">0</span></div>
+          <h3><span lang="pt">alarmes falsos em turnos completos</span><span lang="en">false alarms on finished turns</span></h3>
+          <p lang="pt">Em 40 turnos em que o trabalho estava mesmo pronto, o Jev não segurou nenhum.</p>
+          <p lang="en">On 40 turns where the work really was done, Jev held none.</p>
         </div>
         <div class="measure">
           <div class="ba"><span class="after">12%</span></div>
@@ -193,8 +193,8 @@
           <p lang="en">Read-only chains like <code>cd x &amp;&amp; git log | head</code> go straight through. No past alert was lost.</p>
         </div>
       </div>
-      <p class="fine" lang="pt">E custa pouco: seis dias de uso diário saíram por US$ 0,07 em chamadas ao Jev. Esforço <code>low</code> em perguntas simples e subagentes num modelo menor ainda economizam tokens do Claude. <a href="patch-notes.html">Veja tudo o que mudou na 2.5</a>.</p>
-      <p class="fine" lang="en">And it's cheap: six days of daily use cost US$0.07 in Jev calls. <code>low</code> effort on simple questions and subagents on a smaller model also save Claude tokens. <a href="patch-notes.html">See everything new in 2.5</a>.</p>
+      <p class="fine" lang="pt">O ClauJev é gratuito. O único custo é a API do Jev, cobrada pela TypeSafe AI, e é pequeno: seis dias de uso diário saíram por US$ 0,07. Esforço <code>low</code> em perguntas simples e subagentes num modelo menor ainda economizam tokens do Claude. <a href="patch-notes.html">Veja tudo o que mudou na 2.5</a>.</p>
+      <p class="fine" lang="en">ClauJev is free. The only cost is the Jev API, billed by TypeSafe AI, and it's small: six days of daily use cost US$0.07. <code>low</code> effort on simple questions and subagents on a smaller model also save Claude tokens. <a href="patch-notes.html">See everything new in 2.5</a>.</p>
     </div>
   </section>
 
@@ -221,8 +221,8 @@
   <section class="section" id="instalar">
     <div class="wrap">
       <h2><span lang="pt">Instalar</span><span lang="en">Install</span></h2>
-      <p class="intro" lang="pt">Você precisa do Claude Code e de uma chave da <a href="https://typesafe.ai">TypeSafe AI</a>.</p>
-      <p class="intro" lang="en">You need Claude Code and a <a href="https://typesafe.ai">TypeSafe AI</a> key.</p>
+      <p class="intro" lang="pt">O ClauJev é 100% gratuito. Você precisa do Claude Code e de uma chave da <a href="https://typesafe.ai">TypeSafe AI</a>, que cobra o uso da API do Jev.</p>
+      <p class="intro" lang="en">ClauJev is 100% free. You need Claude Code and a <a href="https://typesafe.ai">TypeSafe AI</a> key; TypeSafe AI bills Jev API usage.</p>
       <ol class="steps">
         <li><div><h3><span lang="pt">Instale o plugin no Claude Code</span><span lang="en">Install the plugin in Claude Code</span></h3><pre><code>/plugin install claujev --marketplace Civalski/claujev</code></pre></div></li>
         <li><div><h3><span lang="pt">Cole a chave da TypeSafe AI</span><span lang="en">Paste your TypeSafe AI key</span></h3><p lang="pt">É a única coisa que a instalação pede. Depois, reinicie o Claude Code.</p><p lang="en">It's the only thing the install asks for. Then restart Claude Code.</p></div></li>
@@ -238,6 +238,28 @@
       </div>
     </div>
   </section>
+
+  <section class="section" id="contribua">
+    <div class="wrap">
+      <h2><span lang="pt">Contribua</span><span lang="en">Contribute</span></h2>
+      <p class="intro" lang="pt">O ClauJev é gratuito, de código aberto e melhora com quem usa. Toda contribuição é bem-vinda, de um relato de alarme falso a uma pergunta nova para o Jev.</p>
+      <p class="intro" lang="en">ClauJev is free, open source, and gets better with the people who use it. Every contribution is welcome, from a false-alarm report to a new question for Jev.</p>
+      <div class="contribute">
+        <div>
+          <h3><span lang="pt">Abra uma issue</span><span lang="en">Open an issue</span></h3>
+          <p lang="pt">Achou um bug, o Jev errou um caso ou você tem uma ideia? Conte o que aconteceu e o que esperava.</p>
+          <p lang="en">Found a bug, saw Jev get a case wrong, or have an idea? Tell us what happened and what you expected.</p>
+          <a class="btn primary" href="https://github.com/Civalski/claujev/issues/new"><span lang="pt">Abrir uma issue</span><span lang="en">Open an issue</span></a>
+        </div>
+        <div>
+          <h3><span lang="pt">Envie um PR</span><span lang="en">Send a PR</span></h3>
+          <p lang="pt">Faça um fork, mude o que quiser e abra um pull request. <code>npm test</code> roda os testes, e o núcleo é um arquivo só, sem dependências.</p>
+          <p lang="en">Fork it, change what you like and open a pull request. <code>npm test</code> runs the tests, and the core is a single file with no dependencies.</p>
+          <a class="btn" href="https://github.com/Civalski/claujev/pulls"><span lang="pt">Ver pull requests</span><span lang="en">See pull requests</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <footer>
@@ -246,6 +268,7 @@
     <p lang="en">Community project, not affiliated with TypeSafe AI or Anthropic. Made by <a href="https://github.com/Civalski">Alisson Civalski</a>, MIT license.</p>
     <nav>
       <a href="patch-notes.html"><span lang="pt">Notas de versão</span><span lang="en">Patch notes</span></a>
+      <a href="#contribua"><span lang="pt">Contribua</span><span lang="en">Contribute</span></a>
       <a href="https://github.com/Civalski/claujev">GitHub</a>
       <a href="https://github.com/Civalski/claujev/blob/main/LICENSE"><span lang="pt">Licença</span><span lang="en">License</span></a>
     </nav>
@@ -257,18 +280,18 @@
 (function () {
   // Real cases from the 2.5 end-to-end run against the Jev API.
   var CASES = [
-    { p: 0.84, lo: 0.45, hi: 0.65,
-      q: { pt: 'Este comando expõe credenciais?', en: 'Does this command expose credentials?' },
-      act: { pt: 'Pede sua confirmação antes de rodar.', en: 'Asks for your confirmation before it runs.' } },
-    { p: 0.06, lo: 0.45, hi: 0.65,
-      q: { pt: 'Este comando expõe credenciais?', en: 'Does this command expose credentials?' },
-      act: { pt: 'Segue normal: carregar a chave para um script local não é expor.', en: 'Carries on: loading a key for a local script is not exposing it.' } },
+    { p: 0.92, lo: 0.5, hi: 0.85,
+      q: { pt: 'Este comando tem efeito destrutivo ou difícil de desfazer?', en: 'Does this command have a destructive or hard-to-undo effect?' },
+      act: { pt: 'O Claude Code para e pede sua confirmação antes do push.', en: 'Claude Code stops and asks for your confirmation before the push.' } },
     { p: null,
       q: { pt: 'Nenhuma: todos os trechos são só de leitura.', en: 'None: every part is read-only.' },
       act: { pt: 'Roda na hora, sem chamada ao Jev.', en: 'Runs right away, no Jev call.' } },
     { p: 0.96, lo: 0.5, hi: 0.85,
       q: { pt: 'O turno terminou com trabalho por fazer?', en: 'Did the turn end with work left to do?' },
-      act: { pt: 'O Claude volta e termina antes de dizer "pronto".', en: 'Claude goes back and finishes before saying "done".' } }
+      act: { pt: 'O Claude volta e termina antes de dizer "pronto".', en: 'Claude goes back and finishes before saying "done".' } },
+    { p: 0.002, lo: 0.3, hi: 0.5,
+      q: { pt: 'Quanto do pedido ficou por fazer?', en: 'How much of the request is left to do?' },
+      act: { pt: 'Segue: a resposta chega até você sem interrupção.', en: 'Carries on: the reply reaches you uninterrupted.' } }
   ];
   var BAND = { low: { pt: 'baixa', en: 'low' }, mid: { pt: 'incerta', en: 'uncertain' }, high: { pt: 'alta', en: 'high' }, none: { pt: 'sem chamada', en: 'no call' } };
   var $ = function (id) { return document.getElementById(id); };
@@ -299,7 +322,7 @@
     meter.style.setProperty('--p', c.p * 100 + '%');
     $('tlo').style.left = c.lo * 100 + '%';
     $('thi').style.left = c.hi * 100 + '%';
-    $('lim').textContent = (lang === 'pt' ? 'limiares ' : 'thresholds ') + fmt(c.lo) + ' / ' + fmt(c.hi);
+    $('lim').textContent = (lang === 'pt' ? 'limiares ' : 'thresholds ') + fmt(c.lo.toFixed(2)) + ' / ' + fmt(c.hi.toFixed(2));
     $('p').textContent = fmt(c.p.toFixed(2));
     var k = c.p >= c.hi ? 'high' : c.p >= c.lo ? 'mid' : 'low';
     b.className = 'band ' + k;
