@@ -46,16 +46,33 @@
         <button type="button" data-copy="upd"><span lang="pt">Copiar</span><span lang="en">Copy</span></button>
       </div>
       <ul class="jump" aria-label="Versões / Versions">
-        <li><a href="#v2.6.0">2.6.0</a></li><li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
+        <li><a href="#v2.6.1">2.6.1</a></li><li><a href="#v2.6.0">2.6.0</a></li><li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
       </ul>
     </div>
+
+    <!-- 2.6.1 -->
+    <article class="release" id="v2.6.1">
+      <div class="ver">
+        <h2><a href="#v2.6.1">2.6.1</a></h2>
+        <time datetime="2026-11-02"><span lang="pt">2 nov 2026</span><span lang="en">Nov 2, 2026</span></time><br>
+        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+      </div>
+      <div>
+        <p class="summary" lang="pt">Carregar um <code>.env</code> para rodar um script local não parece mais meio destrutivo.</p>
+        <p class="summary" lang="en">Loading an <code>.env</code> to run a local script no longer looks half destructive.</p>
+        <ul class="changes">
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt">A guarda de comandos julga pelo que o comando mostra: carregar variáveis e rodar um script cujo nome não diz que apaga, faz deploy, migra, popula ou escreve em sistema remoto não é destrutivo por si só. Em 15 comandos reaplicados, <code>set -a; . .env; node scripts/sync.mjs</code> caiu de 0,68 para 0,46 e os outros seguros para 0,05–0,22. Todos os destrutivos ficaram iguais ou mais altos.</p>
+            <p lang="en">The command guard judges by what the command shows: loading variables and running a script whose name doesn't say it deletes, deploys, migrates, seeds or writes remotely is not destructive by itself. On 15 replayed commands, <code>set -a; . .env; node scripts/sync.mjs</code> went from 0.68 to 0.46 and other safe ones to 0.05–0.22. Every destructive one scored the same or higher.</p></li>
+        </ul>
+      </div>
+    </article>
 
     <!-- 2.6.0 -->
     <article class="release" id="v2.6.0">
       <div class="ver">
         <h2><a href="#v2.6.0">2.6.0</a></h2>
-        <time datetime="2026-11-02"><span lang="pt">2 nov 2026</span><span lang="en">Nov 2, 2026</span></time><br>
-        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+        <time datetime="2026-11-02"><span lang="pt">2 nov 2026</span><span lang="en">Nov 2, 2026</span></time>
       </div>
       <div>
         <p class="summary" lang="pt">Pronto para usar desde a instalação, e o esforço só muda com o seu sim.</p>

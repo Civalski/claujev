@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.6.1 — 2026-11-02
+
+### Fixed
+- **Loading an `.env` to run a local script is no longer half-flagged as destructive.** The command guard
+  now judges by what the command shows: loading variables and running a script whose name does not say
+  it deletes, deploys, migrates, seeds or writes remotely is not destructive by itself. On 15 replayed
+  commands, `set -a; . .env; node scripts/sync.mjs` went from 0.68 to 0.46 and other safe ones to
+  0.05–0.22, while every destructive one scored the same or higher (migration script 0.89 → 0.92,
+  deploy 0.93 → 0.95, `git push` 0.87 → 0.90).
+
 ## 2.6.0 (mod 2.2.0) — 2026-11-02
 
 ### Changed

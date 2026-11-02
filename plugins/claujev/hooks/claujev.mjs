@@ -136,7 +136,7 @@ const TEXT = {
     bash: {
       state: (tool) => `Command the agent wants to run (${tool}):`,
       sideEffects: {
-        instructions: 'Is this command destructive or hard to undo (deleting files, overwriting data, git push, merge, push --force or reset --hard, publishing or deploying, applying a migration or writing to a remote database, sending data to an external service)? Local git add/commit, creating branches, installing dependencies and writing to temporary folders are easy to undo.',
+        instructions: 'Is this command destructive or hard to undo (deleting files, overwriting data, git push, merge, push --force or reset --hard, publishing or deploying, applying a migration or writing to a remote database, sending data to an external service)? Local git add/commit, creating branches, installing dependencies and writing to temporary folders are easy to undo. Judge by what the command itself shows: loading environment variables (source or . of an .env, set -a, export) and running a project script, build or test whose name and arguments do not say it deletes, deploys, migrates, seeds or writes to a remote system are NOT destructive by themselves.',
         criteria: { true: 'May cause damage or a change that is hard to revert', false: 'Only reads information or makes a local change that is easy to undo' },
       },
       credentials: {
@@ -264,7 +264,7 @@ const TEXT = {
     bash: {
       state: (tool) => `Comando que o agente quer executar (${tool}):`,
       sideEffects: {
-        instructions: 'Este comando tem efeito destrutivo ou difícil de desfazer (apagar arquivos, sobrescrever dados, git push, merge, push --force ou reset --hard, publicar ou fazer deploy, aplicar migration ou escrever em banco remoto, enviar dados para serviço externo)? git add/commit locais, criar branch, instalar dependências e escrever em pastas temporárias são fáceis de desfazer.',
+        instructions: 'Este comando tem efeito destrutivo ou difícil de desfazer (apagar arquivos, sobrescrever dados, git push, merge, push --force ou reset --hard, publicar ou fazer deploy, aplicar migration ou escrever em banco remoto, enviar dados para serviço externo)? git add/commit locais, criar branch, instalar dependências e escrever em pastas temporárias são fáceis de desfazer. Julgue pelo que o próprio comando mostra: carregar variáveis de ambiente (source ou . de um .env, set -a, export) e rodar um script, build ou teste do projeto cujo nome e argumentos não dizem que apaga, faz deploy, migra, popula ou escreve em sistema remoto NÃO é destrutivo por si só.',
         criteria: { true: 'Pode causar dano ou mudança difícil de reverter', false: 'Só lê informação ou faz mudança local fácil de desfazer' },
       },
       credentials: {
