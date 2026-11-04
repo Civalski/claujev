@@ -27,6 +27,9 @@ const DEFAULTS = {
   // Opinionated defaults: act where a false alarm costs one sentence or one confirmation; only watch the
   // subagent routing, since moving a subagent to a smaller model unasked can cost quality.
   hooks: { prompt: 'enforce', edit: 'enforce', stop: 'enforce', bash: 'enforce', agent: 'observe', subagent: 'enforce' },
+  // Triage hints about the request's size ("question only", "small change", "large change"). Off by default:
+  // the model tells those apart by itself, and they showed up on 20 of 22 requests. "Ambiguous" and area hints stay.
+  sizeHints: false,
   // Model suggested for subagents with a simple task.
   routeModel: 'haiku',
   // Bands: value >= high => acts (in enforce); between low and high => "uncertain" (log only); below low => nothing.
@@ -152,6 +155,7 @@ const TEXT = {
       creds: (p) => `credential exposure (p=${p})`,
       ask: (reasons) => `[Jev] Command flagged: ${reasons}`,
       fallback: '[Jev] Jev could not check this command in time, and it looks destructive (local check): confirm it yourself.',
+      local: '[ClauJev] This command publishes, merges or rewrites history (local check, Jev not called): confirm it yourself.',
     },
     agent: {
       state: (type, desc) => `Task delegated to a subagent (${type}): ${desc}`,
@@ -179,6 +183,9 @@ const TEXT = {
     },
     report: {
       empty: 'No logs yet.', distribution: '\nDistribution per question (0..1):', recent: '\nLatest flagged events/errors:', effort: '\nSuggested effort:',
+      stopFollow: (n, helped, explained) => `Final check blocked ${n}x: Claude then changed something in ${helped}, only explained in ${explained} (likely false alarm)${n > helped + explained ? `, no record in ${n - helped - explained}` : ''}`,
+      effortAnswers: (a) => `Effort question: accepted ${a.use} · kept current ${a.keep} · dismissed ${a.dismissed}`,
+      bashLocal: (n) => `Commands confirmed by the local rule (Jev not called): ${n}`,
       cols: { hook: 'hook', calls: 'calls', errors: 'errors', flagged: 'flagged', uncertain: 'uncertain', acted: 'acted', latency: 'avg latency (ms)', tokens: 'input tokens', cost: 'cost US$', question: 'question', median: 'median' },
     },
     session: {
@@ -286,6 +293,7 @@ const TEXT = {
       creds: (p) => `exposição de credenciais (p=${p})`,
       ask: (reasons) => `[Jev] Comando sinalizado: ${reasons}`,
       fallback: '[Jev] O Jev não conseguiu checar este comando a tempo, e ele parece destrutivo (checagem local): confirme você mesmo.',
+      local: '[ClauJev] Este comando publica, faz merge ou reescreve o histórico (checagem local, sem chamar o Jev): confirme você mesmo.',
     },
     agent: {
       state: (type, desc) => `Tarefa delegada a um subagente (${type}): ${desc}`,
@@ -313,6 +321,9 @@ const TEXT = {
     },
     report: {
       empty: 'Sem logs ainda.', distribution: '\nDistribuição por pergunta (0..1):', recent: '\nÚltimos eventos sinalizados/erros:', effort: '\nEsforço sugerido:',
+      stopFollow: (n, helped, explained) => `Checagem final bloqueou ${n}x: depois o Claude mudou algo em ${helped}, só explicou em ${explained} (provável alarme falso)${n > helped + explained ? `, sem registro em ${n - helped - explained}` : ''}`,
+      effortAnswers: (a) => `Pergunta de esforço: aceitou ${a.use} · manteve o atual ${a.keep} · fechou ${a.dismissed}`,
+      bashLocal: (n) => `Comandos confirmados pela regra local (sem chamar o Jev): ${n}`,
       cols: { hook: 'hook', calls: 'chamadas', errors: 'erros', flagged: 'sinalizados', uncertain: 'incertos', acted: 'agiu', latency: 'latência média (ms)', tokens: 'tokens entrada', cost: 'custo US$', question: 'pergunta', median: 'mediana' },
     },
     session: {
@@ -641,7 +652,8 @@ async function onPrompt(input, cfg, mode) {
   const hints = [];
   // Size hints only make sense for work that changes code; a chat reply gets none.
   const codeTask = CODE_TASKS.includes(a.task_type?.choice);
-  if (a.task_type?.choice === 'question' && a.task_type.confidence >= 0.6) hints.push(t.hints.question);
+  if (!cfg.sizeHints) { /* size hints off */ }
+  else if (a.task_type?.choice === 'question' && a.task_type.confidence >= 0.6) hints.push(t.hints.question);
   else if (codeTask && scope != null && scope <= 0.5) hints.push(t.hints.small);
   else if (codeTask && scope != null && scope >= 0.85) hints.push(t.hints.large);
   if (ambiguousBand === 'high') hints.push(t.hints.ambiguous);
@@ -870,10 +882,41 @@ function runVerify(cwd, cfg) {
   }
 }
 
+// What Claude did after a given moment of the transcript: tool calls, and whether any of them changed
+// something (an edit, a shell command that writes files or has effects).
+function actionsSince(path, sinceIso) {
+  const since = Date.parse(sinceIso || '') || 0;
+  let tools = 0, changed = 0;
+  try {
+    for (const line of readFileSync(path, 'utf8').split('\n')) {
+      if (!line.trim()) continue;
+      let entry; try { entry = JSON.parse(line); } catch { continue; }
+      if (entry?.type !== 'assistant' || !(Date.parse(entry.timestamp || '') > since)) continue;
+      for (const c of entry.message?.content || []) {
+        if (c?.type !== 'tool_use') continue;
+        tools++;
+        const cmd = String(c.input?.command || '');
+        if (/^(Edit|Write|MultiEdit|NotebookEdit)$/.test(c.name) || FILE_WRITE.test(cmd) || EFFECTFUL.test(cmd)) changed++;
+      }
+    }
+  } catch { /* transcript unavailable */ }
+  return { tools, changed };
+}
+
 async function onStop(input, cfg, mode) {
-  if (mode === 'off' || input.stop_hook_active) return; // avoids an endless loop
+  if (mode === 'off') return;
   const t = T(cfg).stop;
   const st = loadState(input.session_id);
+  if (input.stop_hook_active) {
+    // Claude is finishing again right after a block: record whether it acted on the block (it changed
+    // something: the block helped) or only explained (likely a false alarm). Never asks Jev again.
+    if (st.blocked) {
+      const after = input.transcript_path ? actionsSince(input.transcript_path, st.blocked.ts) : { tools: 0, changed: 0 };
+      log({ hook: 'stop', mode, project: basename(input.cwd || ''), followUp: { ...after, problems: st.blocked.problems } });
+      saveState(input.session_id, { ...st, blocked: null });
+    }
+    return; // avoids an endless loop
+  }
   const turn = input.transcript_path ? turnInfo(input.transcript_path) : { commands: [], reply: '' };
   const commands = turn.commands;
   const effectful = commands.some((c) => EFFECTFUL.test(c));
@@ -925,7 +968,10 @@ async function onStop(input, cfg, mode) {
     answers: { completeness: round(completeness), unfinished: a.unfinished?.noul, out_of_scope: a.out_of_scope?.noul, ...Object.fromEntries(extra.map((x) => [x.id, x.value ?? x.choice])) },
     problems, uncertain, acted,
   });
-  if (acted) emit({ decision: 'block', reason: t.block(problems.join('; ')) });
+  if (acted) {
+    saveState(input.session_id, { ...loadState(input.session_id), blocked: { ts: new Date().toISOString(), problems: problems.length } });
+    emit({ decision: 'block', reason: t.block(problems.join('; ')) });
+  }
 }
 
 // ---------- hook: before a shell command (PreToolUse) ----------
@@ -948,12 +994,26 @@ const isReadOnly = (cmd) => !SHELL_META.test(cmd) && !SENSITIVE.test(cmd) && !/(
 // Safety net when Jev cannot answer (timeout, network, no key): plainly destructive commands still ask.
 const LOCAL_DANGER = /\bgit\s+push\b[^|;&]*(--force|-f\b|--force-with-lease|\+\w)|\bgit\s+(reset\s+--hard|clean\s+-\w*f|branch\s+-D|filter-branch)|\brm\s+-\w*[rf]|\b(drop|truncate)\s+(table|database|schema)\b|\bdelete\s+from\b|\bmkfs\b|\bdd\s+if=|\bchmod\s+-R\s+777|\bnpm\s+publish\b|\bterraform\s+destroy\b|\bkubectl\s+delete\b/i;
 
+// Commands that always ask, decided locally: a fixed rule catches them for free and never misses.
+// Jev is kept for what a rule cannot tell (a script whose name does not say what it does).
+// rm -rf is left to Jev on purpose: it is common in temporary folders, where it is harmless.
+// Shell commands are case-sensitive (branch -d is safe, -D is not); SQL keywords are not.
+const LOCAL_ASK_SHELL = /\bgit\s+push\b|\bgh\s+pr\s+merge\b|\bgit\s+(reset\s+--hard|branch\s+(-\w*D|--delete\s+--force)|filter-branch|clean\s+-\w*f)\b|\bnpm\s+publish\b|\bterraform\s+(apply|destroy)\b|\bkubectl\s+delete\b/;
+const LOCAL_ASK_SQL = /\b(drop|truncate)\s+(table|database|schema)\b/i;
+const LOCAL_ASK = { test: (cmd) => LOCAL_ASK_SHELL.test(cmd) || LOCAL_ASK_SQL.test(cmd) };
+
 async function onBash(input, cfg, mode) {
   if (mode === 'off') return;
   const t = T(cfg).bash;
   const cmd = input.tool_input?.command || '';
   if (!cmd.trim()) return;
   if (isReadOnly(cmd)) { log({ hook: 'bash', mode, project: basename(input.cwd || ''), skipped: 'read-only' }); return; }
+  if (LOCAL_ASK.test(cmd)) {
+    const acted = mode === 'enforce';
+    log({ hook: 'bash', mode, project: basename(input.cwd || ''), contentHash: hash(cmd), local: true, flagged: ['local'], acted });
+    if (acted) emit({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'ask', permissionDecisionReason: t.local } });
+    return;
+  }
   let r;
   try {
     r = await askJev(cfg, `${t.state(input.tool_name)}\n${redact(clip(cmd, 4000))}`, {
@@ -1077,6 +1137,20 @@ function report(cfg) {
   for (const e of entries) if (e.hook === 'prompt' && e.effort) efforts[e.effort] = (efforts[e.effort] || 0) + 1;
   if (Object.keys(efforts).length) console.log(`${t.effort} ${EFFORTS.filter((k) => efforts[k]).map((k) => `${k} ${efforts[k]}`).join(' · ')}`);
 
+  // Did the final check help? After a block, Claude either changed something or only explained.
+  const blocks = entries.filter((e) => e.hook === 'stop' && e.acted).length;
+  const follow = entries.filter((e) => e.hook === 'stop' && e.followUp);
+  if (blocks) {
+    const helped = follow.filter((e) => e.followUp.changed > 0).length;
+    console.log(t.stopFollow(blocks, helped, follow.length - helped));
+  }
+  // Effort question answers, written by the mod: accepted, kept the current one, or dismissed.
+  const answers = { use: 0, keep: 0, dismissed: 0 };
+  for (const e of entries) if (e.hook === 'effort' && e.answer in answers) answers[e.answer]++;
+  if (answers.use + answers.keep + answers.dismissed) console.log(t.effortAnswers(answers));
+  const local = entries.filter((e) => e.hook === 'bash' && e.local).length;
+  if (local) console.log(t.bashLocal(local));
+
   const recent = entries.filter((e) => e.error || e.flagged?.length || e.problems?.length || e.hints?.length).slice(-15);
   if (recent.length) {
     console.log(t.recent);
@@ -1089,7 +1163,7 @@ function report(cfg) {
 const HANDLERS = { prompt: onPrompt, edit: onEdit, stop: onStop, bash: onBash, agent: onAgent, subagent: onSubagent, session: onSession };
 
 // Pure functions exported for the tests.
-export { DEFAULTS, TEXT, redact, hasLiteralSecret, LOCAL_DANGER, band, normScore, loadConfig, isReadOnly, isSystemMessage, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, turnInfo, formatCommands, buildStopState, EFFECTFUL, EXPLICIT_EFFORT, FILE_WRITE, writeDirs, shellChanges, promptQuestions, promptState, askJev, loadState };
+export { DEFAULTS, TEXT, redact, hasLiteralSecret, LOCAL_DANGER, band, normScore, loadConfig, isReadOnly, isSystemMessage, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, turnInfo, formatCommands, buildStopState, EFFECTFUL, EXPLICIT_EFFORT, FILE_WRITE, LOCAL_ASK, writeDirs, shellChanges, promptQuestions, promptState, askJev, loadState };
 
 // Runs only when called directly (node claujev.mjs ...), not when imported by the tests.
 const isMain = (() => {

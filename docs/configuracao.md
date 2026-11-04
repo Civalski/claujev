@@ -124,6 +124,7 @@ completo está em [`examples/claujev.json`](../examples/claujev.json).
 | `hooks` | `enforce`, menos `agent`: `observe` | modo de cada hook |
 | `thresholds` | ver tabela acima | faixas `low`/`high` de cada pergunta |
 | `routeModel` | `"haiku"` | modelo usado em subagentes simples |
+| `sizeHints` | `false` | dicas de tamanho na triagem ("só pergunta", "mudança pequena/grande"); "ambíguo" e área continuam |
 | `rules` | 3 regras | regras checadas a cada edição |
 | `areas` | `{}` | áreas do projeto com dicas |
 | `context` / `contextChars` | `[]` / `4000` | arquivos de contexto e quanto ler de cada |

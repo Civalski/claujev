@@ -46,16 +46,36 @@
         <button type="button" data-copy="upd"><span lang="pt">Copiar</span><span lang="en">Copy</span></button>
       </div>
       <ul class="jump" aria-label="Versões / Versions">
-        <li><a href="#v2.7.0">2.7.0</a></li><li><a href="#v2.6.1">2.6.1</a></li><li><a href="#v2.6.0">2.6.0</a></li><li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
+        <li><a href="#v2.8.0">2.8.0</a></li><li><a href="#v2.7.0">2.7.0</a></li><li><a href="#v2.6.1">2.6.1</a></li><li><a href="#v2.6.0">2.6.0</a></li><li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
       </ul>
     </div>
+
+    <!-- 2.8.0 -->
+    <article class="release" id="v2.8.0">
+      <div class="ver">
+        <h2><a href="#v2.8.0">2.8.0</a></h2>
+        <time datetime="2026-11-04"><span lang="pt">4 nov 2026</span><span lang="en">Nov 4, 2026</span></time><br>
+        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+      </div>
+      <div>
+        <p class="summary" lang="pt">Menos chamadas onde uma regra basta, menos dicas, e duas medições para saber se o ClauJev ajuda.</p>
+        <p class="summary" lang="en">Fewer calls where a rule is enough, fewer hints, and two measurements to tell whether ClauJev helps.</p>
+        <ul class="changes">
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt"><code>git push</code>, <code>gh pr merge</code>, <code>branch -D</code>, <code>reset --hard</code>, <code>npm publish</code>, <code>DROP TABLE</code> e parecidos pedem confirmação por uma regra local, sem chamar o Jev: o mesmo resultado, sem custo e sem espera. As dicas de tamanho na triagem ficam desligadas por padrão (<code>sizeHints</code>).</p>
+            <p lang="en"><code>git push</code>, <code>gh pr merge</code>, <code>branch -D</code>, <code>reset --hard</code>, <code>npm publish</code>, <code>DROP TABLE</code> and the like ask for confirmation by a local rule, without calling Jev: the same outcome, at no cost or wait. Size hints in triage are off by default (<code>sizeHints</code>).</p></li>
+          <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">New</span></span>
+            <p lang="pt">O <code>report</code> mostra se a checagem final ajudou (depois de um bloqueio, o Claude mudou algo ou só explicou) e quantas sugestões de esforço você aceitou, manteve ou fechou.</p>
+            <p lang="en"><code>report</code> shows whether the final check helped (after a block, Claude changed something or only explained) and how many effort suggestions you accepted, kept or dismissed.</p></li>
+        </ul>
+      </div>
+    </article>
 
     <!-- 2.7.0 -->
     <article class="release" id="v2.7.0">
       <div class="ver">
         <h2><a href="#v2.7.0">2.7.0</a></h2>
-        <time datetime="2026-11-04"><span lang="pt">4 nov 2026</span><span lang="en">Nov 4, 2026</span></time><br>
-        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+        <time datetime="2026-11-04"><span lang="pt">4 nov 2026</span><span lang="en">Nov 4, 2026</span></time>
       </div>
       <div>
         <p class="summary" lang="pt">Edições feitas pelo shell voltam a ser checadas, e o esforço passa a pesar a investigação, não só o código.</p>

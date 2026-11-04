@@ -97,6 +97,26 @@ test('effort "ask" (default): asks first, and the chosen suggestion reaches the 
   expect(asked).toEqual(['Jev thinks this request is complex. Use high effort instead of medium?'])
 })
 
+test('effort "ask": each answer is recorded for the report, in a file of its own', async ($, on) => {
+  world(on, { effort: 'high' })
+  const writes: { path: string; text: string }[] = []
+  on('fs.write', (_, e) => { writes.push({ path: e.path, text: e.text }); return { value: undefined } })
+  answer(on, labels => labels[1]!)
+  expect(await step($, on, 'medium')).toBe('medium')
+  expect(writes.length).toBe(1)
+  expect(writes[0]!.path).toBe('/home/u/.claude/claujev/logs/effort-2026-10-20-s-1.jsonl')
+  expect(JSON.parse(writes[0]!.text)).toMatchObject({ hook: 'effort', suggested: 'high', current: 'medium', answer: 'keep' })
+})
+
+test('effort "ask": a dismissed question is recorded as dismissed', async ($, on) => {
+  world(on, { effort: 'low' })
+  const writes: string[] = []
+  on('fs.write', (_, e) => { writes.push(e.text); return { value: undefined } })
+  answer(on, () => null)
+  await step($, on, 'high')
+  expect(JSON.parse(writes[0]!).answer).toBe('dismissed')
+})
+
 test('effort "ask": "Keep" leaves the effort as it was', async ($, on) => {
   world(on, { effort: 'low' })
   answer(on, labels => labels[1]!)

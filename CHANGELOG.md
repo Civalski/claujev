@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.8.0 (mod 2.3.0) — 2026-11-04
+
+### Changed
+- **Publishing, merging and history rewrites ask locally, without calling Jev.** `git push`, `gh pr merge`,
+  `git branch -D`, `reset --hard`, `clean -f`, `npm publish`, `terraform apply/destroy`, `kubectl delete`
+  and `DROP/TRUNCATE` always ask for confirmation by a fixed rule: the same outcome Jev gave them
+  (p 0.87–0.96 in real use), at no cost or latency, and also without a key. Jev is kept for what a rule
+  cannot tell. `rm -rf` still goes to Jev, since it is common and harmless in temporary folders.
+- **Size hints in triage are off by default** (`sizeHints: false`). They showed up on 20 of 22 requests
+  and the model tells a question from a change by itself. The "ambiguous" and area hints stay.
+
+### Added
+- **Did the final check help?** After a block, the next Stop records whether Claude changed something
+  (the block helped) or only explained (likely a false alarm). `report` shows the count.
+- **Effort answers are measured.** The mod records each answer to the effort question (accepted, kept
+  the current one, dismissed) in `logs/effort-<day>-<session>.jsonl`, and `report` shows the totals.
+
 ## 2.7.0 — 2026-11-04
 
 ### Fixed

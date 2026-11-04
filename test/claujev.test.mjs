@@ -194,6 +194,56 @@ test('suggestEffort with depth: the larger of change size and investigation', ()
   assert.equal(m.suggestEffort({ taskType: 'bug', scope: 0.5, depth: 0.25, ambiguous: 0.9 }), 'medium', 'depth replaces the ambiguity bump');
 });
 
+test('LOCAL_ASK: publishing, merging and history rewrites ask without calling Jev', () => {
+  for (const c of ['git push -u origin HEAD', 'cd repo && git push -q origin --delete feat', 'gh pr merge 246 --squash', 'git branch -D old', 'git reset --hard HEAD~1', 'npm publish', 'psql -c "DROP TABLE users"'])
+    assert.ok(m.LOCAL_ASK.test(c), c);
+  for (const c of ['git commit -m x', 'git branch -d merged', 'rm -rf /tmp/scratch', 'npm install', 'gh pr view 246']) assert.ok(!m.LOCAL_ASK.test(c), c);
+  const dir = mkdtempSync(join(tmpdir(), 'claujev-local-'));
+  const out = JSON.parse(runHook('bash', { session_id: 'l', cwd: home, tool_name: 'Bash', tool_input: { command: 'git push origin main' } }, { CLAUJEV_HOME: dir }));
+  assert.equal(out.hookSpecificOutput.permissionDecision, 'ask', 'asks even with no key: Jev is not needed');
+  const day = new Date().toISOString().slice(0, 10);
+  assert.match(readFileSync(join(dir, 'logs', `${day}.jsonl`), 'utf8'), /"local":true/);
+});
+
+test('sizeHints: off by default, can be turned back on', () => {
+  assert.equal(m.DEFAULTS.sizeHints, false);
+});
+
+test('stop follow-up: after a block, records whether Claude changed something or only explained', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'claujev-follow-'));
+  const state = join(dir, 'state');
+  mkdirSync(state, { recursive: true });
+  const blockedAt = new Date(Date.now() - 60000).toISOString();
+  const tr = join(dir, 't.jsonl');
+  const at = (ms, content) => JSON.stringify({ type: 'assistant', timestamp: new Date(Date.parse(blockedAt) + ms).toISOString(), message: { content } });
+  const run = (lines) => {
+    writeFileSync(join(state, 'f.json'), JSON.stringify({ prompt: 'x', edits: 0, files: [], blocked: { ts: blockedAt, problems: 1 } }));
+    writeFileSync(tr, lines.join('\n'));
+    runHook('stop', { session_id: 'f', cwd: home, transcript_path: tr, stop_hook_active: true }, { CLAUJEV_HOME: dir });
+    const day = new Date().toISOString().slice(0, 10);
+    return JSON.parse(readFileSync(join(dir, 'logs', `${day}.jsonl`), 'utf8').trim().split('\n').pop()).followUp;
+  };
+  const before = JSON.stringify({ type: 'assistant', timestamp: new Date(Date.parse(blockedAt) - 5000).toISOString(), message: { content: [{ type: 'tool_use', name: 'Edit', input: {} }] } });
+  assert.deepEqual(run([before, at(1000, [{ type: 'text', text: 'All done, nothing missing.' }])]), { tools: 0, changed: 0, problems: 1 }, 'only explained');
+  assert.deepEqual(run([before, at(1000, [{ type: 'tool_use', name: 'Bash', input: { command: 'npm test' } }, { type: 'tool_use', name: 'Edit', input: {} }])]), { tools: 2, changed: 1, problems: 1 }, 'acted on the block');
+  assert.equal(JSON.parse(readFileSync(join(state, 'f.json'), 'utf8')).blocked, null, 'recorded once');
+});
+
+test('report: shows the stop follow-ups and the effort answers', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'claujev-report-'));
+  mkdirSync(join(dir, 'logs'), { recursive: true });
+  writeFileSync(join(dir, 'logs', '2026-11-04.jsonl'), [
+    { hook: 'stop', acted: true }, { hook: 'stop', followUp: { tools: 2, changed: 1 } },
+    { hook: 'stop', acted: true }, { hook: 'stop', followUp: { tools: 0, changed: 0 } },
+    { hook: 'bash', local: true, acted: true },
+  ].map((e) => JSON.stringify(e)).join('\n'));
+  writeFileSync(join(dir, 'logs', 'effort-2026-11-04-s1.jsonl'), [{ hook: 'effort', answer: 'use' }, { hook: 'effort', answer: 'keep' }, { hook: 'effort', answer: 'use' }].map((e) => JSON.stringify(e)).join('\n'));
+  const out = execFileSync('node', [SCRIPT, 'report'], { env: { ...process.env, CLAUJEV_HOME: dir }, encoding: 'utf8' });
+  assert.match(out, /blocked 2x: Claude then changed something in 1, only explained in 1/);
+  assert.match(out, /accepted 2 · kept current 1 · dismissed 0/);
+  assert.match(out, /local rule \(Jev not called\): 1/);
+});
+
 test('isSystemMessage: the usage-limit resume continues the previous request', () => {
   assert.ok(m.isSystemMessage('Your claude.ai usage limit has reset. Continue the task you were working on when the limit was reached; do not repeat work.'));
   assert.ok(!m.isSystemMessage('my usage limit has reset, continue'));
@@ -344,7 +394,7 @@ test('when Jev cannot answer, a destructive command still asks; a normal one pas
   const dir = mkdtempSync(join(tmpdir(), 'claujev-fallback-'));
   writeFileSync(join(dir, 'config.json'), JSON.stringify({ mode: 'enforce' }));
   const run = (command) => runHook('bash', { session_id: 'f', cwd: home, tool_name: 'Bash', tool_input: { command } }, { CLAUJEV_HOME: dir });
-  const out = JSON.parse(run('git push --force origin main'));
+  const out = JSON.parse(run('rm -rf build')); // not in LOCAL_ASK, so it goes to Jev and Jev fails
   assert.equal(out.hookSpecificOutput.permissionDecision, 'ask');
   assert.match(out.hookSpecificOutput.permissionDecisionReason, /could not check/);
   assert.equal(run('npm install'), '', 'without an answer from Jev, an ordinary command is not held');

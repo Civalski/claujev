@@ -122,6 +122,7 @@ is in [`examples/claujev.json`](../examples/claujev.json).
 | `hooks` | `enforce`, except `agent`: `observe` | mode per hook |
 | `thresholds` | see the table above | `low`/`high` bands per question |
 | `routeModel` | `"haiku"` | model for simple subagents |
+| `sizeHints` | `false` | size hints in triage ("question only", "small/large change"); "ambiguous" and area hints stay |
 | `rules` | 3 rules | rules checked on every edit |
 | `areas` | `{}` | project areas with hints |
 | `context` / `contextChars` | `[]` / `4000` | context files and how much to read of each |

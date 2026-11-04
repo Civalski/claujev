@@ -122,14 +122,36 @@ async function loadSettings($: EngineInterface, ctx: Ctx): Promise<void> {
 
 // Asks in Claude Code's own question dialog. A $ call: the wait does not count against the hook's budget.
 // Dismissed, or nobody to ask (claude -p): the current effort stays.
-export async function askEffort($: EngineInterface, t: Texts, suggested: Effort, current: Effort): Promise<Effort> {
+export type EffortAnswer = 'use' | 'keep' | 'dismissed'
+export async function askEffort($: EngineInterface, t: Texts, suggested: Effort, current: Effort): Promise<{ effort: Effort; answer: EffortAnswer }> {
   const up = LEVELS.indexOf(suggested) > LEVELS.indexOf(current)
   const use = t.use(suggested)
   try {
     const answer = await $.ui.ask(t.askQuestion(up, suggested, current), { header: t.askHeader, options: [use, t.keep(current)] })
-    return answer === use ? suggested : current
+    return answer === use ? { effort: suggested, answer: 'use' } : { effort: current, answer: 'keep' }
   } catch {
-    return current
+    return { effort: current, answer: 'dismissed' }
+  }
+}
+
+// Records the answer for `node claujev.mjs report`. $.fs has no append, so each session keeps its own
+// file (logs/effort-<day>-<session>.jsonl): no other writer can race it. A failed write is ignored.
+async function logAnswer($: EngineInterface, entry: { suggested: Effort; current: Effort; answer: EffortAnswer }): Promise<void> {
+  const dir = await dataDir($)
+  if (!dir) return
+  const now = new Date(await $.clock.now()).toISOString()
+  const sid = (await $.session.id()).replace(/[^\w-]/g, '')
+  const path = `${dir}/logs/effort-${now.slice(0, 10)}-${sid}.jsonl`
+  let before = ''
+  try {
+    before = await $.fs.read(path)
+  } catch {
+    // first answer of the day in this session
+  }
+  try {
+    await $.fs.write(path, `${before}${JSON.stringify({ ts: now, hook: 'effort', session: sid.slice(0, 8), ...entry })}\n`)
+  } catch {
+    // logging never gets in the way of the request
   }
 }
 
@@ -226,7 +248,8 @@ export const register: Register = on => {
       let d = suggestion ? { effort: clampEffort(suggestion, ctx.minEffort, ctx.maxEffort), applied: ctx.mode === 'on' } : null
       // "ask": only when Jev's suggestion differs from the effort in use, once per request.
       if (d && ctx.mode === 'ask' && isLevel(e.effort) && d.effort !== e.effort) {
-        const chosen = await askEffort($, ctx.t, d.effort, e.effort)
+        const { effort: chosen, answer } = await askEffort($, ctx.t, d.effort, e.effort)
+        await logAnswer($, { suggested: d.effort, current: e.effort, answer })
         d = { effort: chosen, applied: chosen !== e.effort }
       }
       decided.set(e.turnId, d)
