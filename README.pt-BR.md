@@ -100,11 +100,14 @@ flowchart TB
 ```mermaid
 flowchart LR
     P["pedido"] --> J{"triagem do Jev"}
-    J -->|"pergunta / trivial"| L["low"]
-    J -->|"mudança pequena"| M["medium"]
-    J -->|"mudança média"| H["high"]
-    J -->|"mudança grande<br/>ou bug ambíguo"| X["xhigh"]
+    J -->|"resposta direta / trivial"| L["low"]
+    J -->|"mudança pequena ou<br/>análise de alguns arquivos"| M["medium"]
+    J -->|"mudança média ou<br/>investigação difícil"| H["high"]
+    J -->|"mudança grande"| X["xhigh"]
 ```
+
+O Jev mede duas coisas: o tamanho da mudança de código e quanta investigação o pedido exige
+(revisar logs, achar um bug sem pista). Vale a maior. Uma pergunta usa só a investigação e para em `high`.
 
 O esforço **nunca muda sem o seu sim**. Com o `claujev-mod`, `ask` (padrão) abre a caixa de pergunta do
 Claude Code quando a sugestão do Jev é diferente do esforço em uso (*"O Jev acha este pedido simples.

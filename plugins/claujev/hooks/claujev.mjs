@@ -3,7 +3,7 @@
 // Copyright (c) 2026 Alisson Civalski — MIT License — https://github.com/Civalski/claujev
 // Usage: node claujev.mjs <prompt|edit|stop|bash|agent|subagent|session|selftest|report>
 // Hooks never break the session: any error is logged and Claude carries on.
-import { readFileSync, writeFileSync, mkdirSync, existsSync, appendFileSync, readdirSync, realpathSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, appendFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { join, basename, extname, resolve, relative, isAbsolute } from 'node:path';
 import { homedir } from 'node:os';
 import { createHash } from 'node:crypto';
@@ -82,6 +82,10 @@ const TEXT = {
         instructions: 'How large is the code change needed to fulfil the request likely to be?',
         criteria: ['No code change', 'Trivial: one or a few lines in one file', 'Small: contained in one file', 'Medium: a few related files', 'Large: several modules or an architecture change'],
       },
+      depth: {
+        instructions: 'Regardless of the size of any code change, how much investigation and reasoning does the request demand from the agent?',
+        criteria: ['A direct answer or a simple, obvious action', 'Look up or check one thing', 'Read and cross-check a few files, logs or sources', 'Investigate or debug across several places, or weigh alternatives', 'Deep analysis, design or debugging across the whole system'],
+      },
       ambiguous: {
         instructions: 'This is a message inside an ongoing conversation with a coding agent that already knows the history, the files and the project. References such as "this", "that project", "the model", or file and tool names mentioned earlier are normal and do NOT make the request ambiguous. Is the request still vague even for someone with that context, to the point of allowing very different results?',
         criteria: {
@@ -132,6 +136,7 @@ const TEXT = {
       verifyFailed: (cmd, exit) => `the check \`${cmd}\` failed (exit ${exit})`,
       block: (problems) => `[Jev] Before finishing: ${problems}. Check the original request against what was done. If everything is right, finish with a short explanation.`,
       skipped: 'no readable changes in the turn',
+      nothingChanged: 'no edits or commands with effects in the turn',
     },
     bash: {
       state: (tool) => `Command the agent wants to run (${tool}):`,
@@ -179,6 +184,7 @@ const TEXT = {
     session: {
       firstRun: (hasKey) => `[ClauJev] ClauJev (Jev hooks by TypeSafe AI) was just installed and this is its first session. Once, at a natural moment (after answering the user's current request if they asked for something), offer the guided setup: the /claujev:configure skill asks a few basic preferences (language, mode, which features to keep) and applies them.${hasKey ? '' : ' The TypeSafe AI key is not set yet, so ClauJev is idle until the user runs /plugin configure claujev@claujev. Never ask for the key in the chat.'}`,
       noKey: '[ClauJev] The TypeSafe AI key is not set, so ClauJev is idle. Mention it once to the user: run /plugin configure claujev@claujev (or /claujev:configure for the guided setup). Never ask for the key in the chat.',
+      editTools: '[ClauJev] To change files, use the Edit/Write tools instead of sed, python, heredocs or redirections in the shell: ClauJev reviews the edits made through those tools.',
     },
     usage: 'Usage: node claujev.mjs <prompt|edit|stop|bash|agent|subagent|session|selftest|report>',
   },
@@ -209,6 +215,10 @@ const TEXT = {
       scope: {
         instructions: 'Qual o tamanho provável da mudança de código necessária para atender o pedido?',
         criteria: ['Nenhuma mudança de código', 'Trivial: uma ou poucas linhas em um arquivo', 'Pequena: concentrada em um arquivo', 'Média: alguns arquivos relacionados', 'Grande: vários módulos ou mudança de arquitetura'],
+      },
+      depth: {
+        instructions: 'Independente do tamanho de qualquer mudança de código, quanta investigação e raciocínio o pedido exige do agente?',
+        criteria: ['Resposta direta ou uma ação simples e óbvia', 'Consultar ou conferir uma coisa', 'Ler e cruzar alguns arquivos, logs ou fontes', 'Investigar ou depurar em vários lugares, ou pesar alternativas', 'Análise profunda, desenho ou depuração do sistema inteiro'],
       },
       ambiguous: {
         instructions: 'Esta é uma mensagem dentro de uma conversa em andamento com um agente de programação que já conhece o histórico, os arquivos e o projeto. Referências como "isso", "esse projeto", "o modelo", nomes de arquivos ou ferramentas citados antes são normais e NÃO tornam o pedido ambíguo. O pedido continua vago mesmo para quem tem esse contexto, a ponto de admitir resultados bem diferentes?',
@@ -260,6 +270,7 @@ const TEXT = {
       verifyFailed: (cmd, exit) => `a verificação \`${cmd}\` falhou (saída ${exit})`,
       block: (problems) => `[Jev] Antes de encerrar: ${problems}. Confira o pedido original contra o que foi feito. Se estiver tudo certo, encerre explicando brevemente.`,
       skipped: 'sem mudanças legíveis no turno',
+      nothingChanged: 'nenhuma edição nem comando com efeito no turno',
     },
     bash: {
       state: (tool) => `Comando que o agente quer executar (${tool}):`,
@@ -307,6 +318,7 @@ const TEXT = {
     session: {
       firstRun: (hasKey) => `[ClauJev] O ClauJev (hooks do Jev, da TypeSafe AI) acabou de ser instalado e esta é a primeira sessão dele. Uma vez, num momento natural (depois de responder o pedido atual do usuário, se houver um), ofereça a configuração guiada: a skill /claujev:configure pergunta algumas preferências básicas (idioma, modo, quais recursos manter) e as aplica.${hasKey ? '' : ' A chave da TypeSafe AI ainda não foi definida, então o ClauJev fica parado até o usuário rodar /plugin configure claujev@claujev. Nunca peça a chave no chat.'}`,
       noKey: '[ClauJev] A chave da TypeSafe AI não está definida, então o ClauJev está parado. Avise o usuário uma vez: rodar /plugin configure claujev@claujev (ou /claujev:configure para a configuração guiada). Nunca peça a chave no chat.',
+      editTools: '[ClauJev] Para alterar arquivos, use as ferramentas Edit/Write em vez de sed, python, heredoc ou redirecionamento no shell: o ClauJev revisa as edições feitas por essas ferramentas.',
     },
     usage: 'Uso: node claujev.mjs <prompt|edit|stop|bash|agent|subagent|session|selftest|report>',
   },
@@ -527,10 +539,24 @@ const EFFORTS = ['low', 'medium', 'high', 'xhigh'];
 const EXPLICIT_EFFORT = /\b(ultrathink|think (harder|hard|deeply)|pense (bem|muito|com calma)|effort|esfor[cç]o)\b/i;
 
 // Maps the triage answers to an effort level. Never "max": that stays a human choice.
-function suggestEffort({ taskType, taskConf, scope, ambiguous }) {
-  if (taskType === 'question' && (taskConf ?? 0) >= 0.6) return 'low';
+// The level is the larger of two sizes: the code change (scope) and the investigation and reasoning
+// needed (depth). A question uses depth only and stops at high. Jev's depth answers gather in the
+// middle of the scale, hence its own cut points (fitted on 40 real requests, 2026-11-04).
+const SCOPE_CUTS = [0.3, 0.6, 0.85];
+const DEPTH_CUTS = [0.45, 0.8, 0.95];
+const level = (v, cuts) => (v <= cuts[0] ? 0 : v <= cuts[1] ? 1 : v <= cuts[2] ? 2 : 3);
+function suggestEffort({ taskType, taskConf, scope, depth, ambiguous }) {
+  const question = taskType === 'question' && (taskConf ?? 0) >= 0.6;
+  if (typeof depth === 'number') {
+    let i = level(depth, DEPTH_CUTS);
+    if (question) return EFFORTS[Math.min(i, 2)];
+    if (typeof scope === 'number') i = Math.max(i, level(scope, SCOPE_CUTS));
+    return EFFORTS[i];
+  }
+  // Without depth (older answers): the size of the change alone.
+  if (question) return 'low';
   if (typeof scope !== 'number') return null;
-  let i = scope <= 0.3 ? 0 : scope <= 0.6 ? 1 : scope <= 0.85 ? 2 : 3;
+  let i = level(scope, SCOPE_CUTS);
   // An ambiguous bug needs more investigation than its size suggests.
   if (taskType === 'bug' && (ambiguous ?? 0) >= 0.7) i = Math.min(i + 1, 3);
   return EFFORTS[i];
@@ -541,19 +567,22 @@ function suggestEffort({ taskType, taskConf, scope, ambiguous }) {
 // afterwards it only speaks up when the key is missing (ClauJev is idle without it).
 
 function onSession(input, cfg) {
-  if (input.source && input.source !== 'startup') return;
   const t = T(cfg).session;
-  const marker = join(HERE, 'onboarding.json');
   const hasKey = !!apiKey();
-  let message = null;
-  if (!existsSync(marker)) {
-    mkdirSync(HERE, { recursive: true });
-    writeFileSync(marker, JSON.stringify({ offered: new Date().toISOString() }));
-    message = t.firstRun(hasKey);
-  } else if (!hasKey) {
-    message = t.noKey;
+  const messages = [];
+  if (!input.source || input.source === 'startup') {
+    const marker = join(HERE, 'onboarding.json');
+    if (!existsSync(marker)) {
+      mkdirSync(HERE, { recursive: true });
+      writeFileSync(marker, JSON.stringify({ offered: new Date().toISOString() }));
+      messages.push(t.firstRun(hasKey));
+    } else if (!hasKey) {
+      messages.push(t.noKey);
+    }
   }
-  if (message) emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: message } });
+  // Edits made through the shell skip the rule review: also repeated after /clear and compaction.
+  if (hasKey && (cfg.hooks.edit !== 'off' || cfg.hooks.stop !== 'off')) messages.push(t.editTools);
+  if (messages.length) emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: messages.join('\n\n') } });
 }
 
 // ---------- hook: user request (UserPromptSubmit) ----------
@@ -561,7 +590,30 @@ function onSession(input, cfg) {
 // Messages Claude Code injects as if the user typed them. A closed list: <pasted_content> and anything
 // else the user starts a message with are real requests.
 const SYSTEM_TAGS = /^<(task-notification|local-command-(stdout|stderr|caveat)|command-(name|message|args)|bash-(input|stdout|stderr)|system-reminder)\b/i;
-const isSystemMessage = (text) => SYSTEM_TAGS.test(text || '') || /^claude\s+--?\w/.test(text || '');
+const isSystemMessage = (text) => SYSTEM_TAGS.test(text || '') || /^claude\s+--?\w/.test(text || '') ||
+  /^Your claude\.ai usage limit has reset\b/i.test(text || ''); // resumes the previous request
+
+// The triage questions. Separate from the hook so the same questions can be replayed on real cases.
+function promptQuestions(t, cfg) {
+  const questions = {
+    task_type: { type: 'choice', instructions: t.taskType.instructions, criteria: t.taskType.criteria },
+    scope: { type: 'score', instructions: t.scope.instructions, criteria: t.scope.criteria },
+    depth: { type: 'score', instructions: t.depth.instructions, criteria: t.depth.criteria },
+    ambiguous: { type: 'noul', instructions: t.ambiguous.instructions, criteria: t.ambiguous.criteria },
+  };
+  const areas = Object.entries(cfg.areas || {});
+  if (areas.length) {
+    questions.area = {
+      type: 'choice',
+      instructions: t.area,
+      criteria: { ...Object.fromEntries(areas.map(([k, a]) => [k, a.description || null])), none: t.areaNone },
+    };
+  }
+  return questions;
+}
+
+const promptState = (t, prompt, previous) => `${previous ? `${t.previous}\n${redact(previous)}\n\n` : ''}${t.state}\n${redact(clip(prompt, 6000))}`;
+const CODE_TASKS = ['bug', 'feature', 'refactor', 'config'];
 
 async function onPrompt(input, cfg, mode) {
   const t = T(cfg).prompt;
@@ -581,39 +633,28 @@ async function onPrompt(input, cfg, mode) {
   saveState(sid, st);
   if (mode === 'off' || raw.startsWith('/') || raw.length < 15) return;
 
-  const questions = {
-    task_type: { type: 'choice', instructions: t.taskType.instructions, criteria: t.taskType.criteria },
-    scope: { type: 'score', instructions: t.scope.instructions, criteria: t.scope.criteria },
-    ambiguous: { type: 'noul', instructions: t.ambiguous.instructions, criteria: t.ambiguous.criteria },
-  };
-  const areas = Object.entries(cfg.areas || {});
-  if (areas.length) {
-    questions.area = {
-      type: 'choice',
-      instructions: t.area,
-      criteria: { ...Object.fromEntries(areas.map(([k, a]) => [k, a.description || null])), none: t.areaNone },
-    };
-  }
-
-  const r = await askJev(cfg, `${previous ? `${t.previous}\n${redact(previous)}\n\n` : ''}${t.state}\n${redact(clip(prompt, 6000))}`, questions);
+  const r = await askJev(cfg, promptState(t, prompt, previous), promptQuestions(t, cfg));
   const a = r.answers || {};
   const scope = a.scope ? normScore(a.scope) : null;
+  const depth = a.depth ? normScore(a.depth) : null;
   const ambiguousBand = band(a.ambiguous?.noul, cfg.thresholds.ambiguous);
   const hints = [];
+  // Size hints only make sense for work that changes code; a chat reply gets none.
+  const codeTask = CODE_TASKS.includes(a.task_type?.choice);
   if (a.task_type?.choice === 'question' && a.task_type.confidence >= 0.6) hints.push(t.hints.question);
-  else if (scope != null && scope <= 0.5) hints.push(t.hints.small);
-  else if (scope != null && scope >= 0.85) hints.push(t.hints.large);
+  else if (codeTask && scope != null && scope <= 0.5) hints.push(t.hints.small);
+  else if (codeTask && scope != null && scope >= 0.85) hints.push(t.hints.large);
   if (ambiguousBand === 'high') hints.push(t.hints.ambiguous);
   const area = a.area?.choice && cfg.areas[a.area.choice];
   if (area?.hint && a.area.confidence >= 0.5) hints.push(area.hint);
 
-  const effort = suggestEffort({ taskType: a.task_type?.choice, taskConf: a.task_type?.confidence, scope, ambiguous: a.ambiguous?.noul });
+  const effort = suggestEffort({ taskType: a.task_type?.choice, taskConf: a.task_type?.confidence, scope, depth, ambiguous: a.ambiguous?.noul });
   saveState(sid, { ...st, effort });
 
   const acted = mode === 'enforce' && hints.length > 0;
   log({
     ...baseLog('prompt', mode, input, r), contentHash: hash(prompt),
-    answers: { task_type: a.task_type?.choice, task_conf: round(a.task_type?.confidence), scope: round(scope), ambiguous: a.ambiguous?.noul, area: a.area?.choice },
+    answers: { task_type: a.task_type?.choice, task_conf: round(a.task_type?.confidence), scope: round(scope), depth: round(depth), ambiguous: a.ambiguous?.noul, area: a.area?.choice },
     effort, explicitEffort: st.explicitEffort,
     uncertain: ambiguousBand === 'uncertain' ? ['ambiguous'] : [],
     hints, acted,
@@ -749,6 +790,46 @@ function readTranscript(path, { sinceLastPrompt = false } = {}) {
 // Commands with effects worth checking at Stop even when no file was edited.
 const EFFECTFUL = /\b(git\s+(commit|push|tag|merge|rebase|reset|revert)|gh\s+\w+\s+(create|edit|merge|delete|close|upload)|npm\s+(publish|version)|docker\s+(push|build|run)|kubectl\s+(apply|delete)|terraform\s+apply|vercel|wrangler\s+deploy|deploy|curl\s[^|]*-X\s*(POST|PUT|PATCH|DELETE))\b/i;
 
+// Shell commands that write files (redirection, sed -i, python open(..., 'w'), heredoc into a file...).
+// Such edits never reach the edit hook, so Stop reads them from git. A false positive only costs a
+// git diff that comes back empty.
+const FILE_WRITE = /(^|[^\d&|<>])>>?\s*(?!&|\/dev\/null\b)[\w~./$"'{-]|\btee\s|\bsed\s+(-\S*\s+)*-[a-zA-Z]*i|\bperl\s+-[a-zA-Z]*i|\bopen\([^)]*['"][wax]b?\+?['"]|\.write_(text|bytes)\(|\bwriteFileSync\(|\b(cp|mv|patch|install)\s|\bgit\s+(apply|restore|checkout\s+--)\b/;
+
+// Folders the writing commands run in: the session folder and any `cd` inside them.
+function writeDirs(cwd, commands) {
+  const dirs = new Set(cwd ? [cwd] : []);
+  for (const c of commands) {
+    for (const m of c.matchAll(/(?:^|[;&|(]\s*)cd\s+("[^"]+"|'[^']+'|[^\s;&|)]+)/g)) {
+      const d = m[1].replace(/^["']|["']$/g, '').replace(/^~(?=\/|$)/, homedir());
+      dirs.add(resolve(cwd || '.', d));
+    }
+  }
+  return [...dirs];
+}
+
+// What the shell changed in each repository since the start of the turn: the diff of tracked files
+// (files the edit hook already saw are left out) and new untracked files written during the turn.
+function shellChanges(cwd, commands, st, max, t) {
+  const since = Date.parse(st.turnStart || '') || 0;
+  const cwdTop = cwd ? gitTry(cwd, ['rev-parse', '--show-toplevel']) : null;
+  const tops = [...new Set(writeDirs(cwd, commands).map((d) => gitTry(d, ['rev-parse', '--show-toplevel'])).filter(Boolean))];
+  const parts = [];
+  for (const top of tops) {
+    const base = (top === cwdTop && st.base) || (st.turnStart && gitTry(top, ['rev-list', '-1', `--before=${st.turnStart}`, 'HEAD'])) || 'HEAD';
+    const seen = (st.files || []).map((f) => relative(top, resolve(cwd || '.', f))).filter((r) => r && !r.startsWith('..') && !isAbsolute(r));
+    const diff = gitTry(top, ['diff', '--no-color', base, '--', '.', ...seen.map((r) => `:(exclude)${r}`)]);
+    if (diff) parts.push(`# ${basename(top)}\n${diff}`);
+    const untracked = (gitTry(top, ['ls-files', '--others', '--exclude-standard']) || '').split('\n').filter(Boolean);
+    for (const f of untracked.filter((f) => !seen.includes(f)).slice(0, 50)) {
+      try {
+        const p = join(top, f);
+        if (statSync(p).mtimeMs >= since) parts.push(`${t.newFile} ${basename(top)}/${f}\n${clip(readFileSync(p, 'utf8'), 6000)}`);
+      } catch { /* removed or unreadable */ }
+    }
+  }
+  return clip(parts.join('\n\n'), max);
+}
+
 // The current turn: the shell commands Claude ran and the last thing it told the user.
 function turnInfo(path) {
   const { actions, lastText } = readTranscript(path, { sinceLastPrompt: true });
@@ -796,12 +877,17 @@ async function onStop(input, cfg, mode) {
   const turn = input.transcript_path ? turnInfo(input.transcript_path) : { commands: [], reply: '' };
   const commands = turn.commands;
   const effectful = commands.some((c) => EFFECTFUL.test(c));
-  if (!st.edits && !effectful) return; // nothing was changed in this turn
+  const writers = commands.filter((c) => FILE_WRITE.test(c));
+  const project = basename(input.cwd || '');
+  if (!st.edits && !effectful && !writers.length) { log({ hook: 'stop', mode, project, skipped: t.nothingChanged }); return; }
   saveState(input.session_id, { ...st, edits: 0 });
 
-  const changes = st.edits ? turnChanges(input.cwd, st, cfg.maxDiffChars, t) : '';
-  if (!changes.trim() && !effectful) { log({ hook: 'stop', mode, project: basename(input.cwd || ''), skipped: t.skipped }); return; }
-  const verify = st.edits ? runVerify(input.cwd, cfg) : null;
+  const changes = [
+    st.edits ? turnChanges(input.cwd, st, cfg.maxDiffChars, t) : '',
+    writers.length ? shellChanges(input.cwd, writers, st, cfg.maxDiffChars, t) : '',
+  ].filter((c) => c.trim()).join('\n\n').slice(0, cfg.maxDiffChars);
+  if (!changes.trim() && !effectful) { log({ hook: 'stop', mode, project, skipped: t.skipped }); return; }
+  const verify = st.edits || changes.trim() ? runVerify(input.cwd, cfg) : null;
 
   const reply = String(input.last_assistant_message || turn.reply || '');
   const state = buildStopState(t, {
@@ -1003,7 +1089,7 @@ function report(cfg) {
 const HANDLERS = { prompt: onPrompt, edit: onEdit, stop: onStop, bash: onBash, agent: onAgent, subagent: onSubagent, session: onSession };
 
 // Pure functions exported for the tests.
-export { DEFAULTS, TEXT, redact, hasLiteralSecret, LOCAL_DANGER, band, normScore, loadConfig, isReadOnly, isSystemMessage, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, turnInfo, formatCommands, buildStopState, EFFECTFUL, EXPLICIT_EFFORT };
+export { DEFAULTS, TEXT, redact, hasLiteralSecret, LOCAL_DANGER, band, normScore, loadConfig, isReadOnly, isSystemMessage, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, turnInfo, formatCommands, buildStopState, EFFECTFUL, EXPLICIT_EFFORT, FILE_WRITE, writeDirs, shellChanges, promptQuestions, promptState, askJev, loadState };
 
 // Runs only when called directly (node claujev.mjs ...), not when imported by the tests.
 const isMain = (() => {

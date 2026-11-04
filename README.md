@@ -98,11 +98,14 @@ flowchart TB
 ```mermaid
 flowchart LR
     P["request"] --> J{"Jev triage"}
-    J -->|"question / trivial"| L["low"]
-    J -->|"small change"| M["medium"]
-    J -->|"medium change"| H["high"]
-    J -->|"large change<br/>or ambiguous bug"| X["xhigh"]
+    J -->|"direct answer / trivial"| L["low"]
+    J -->|"small change or<br/>reading a few files"| M["medium"]
+    J -->|"medium change or<br/>hard investigation"| H["high"]
+    J -->|"large change"| X["xhigh"]
 ```
+
+Jev rates two things: the size of the code change and how much investigation the request needs
+(reviewing logs, finding a bug with no lead). The larger one wins. A question uses investigation only and stops at `high`.
 
 The effort **is never changed without your yes**. With `claujev-mod`, `ask` (default) opens Claude Code's
 question dialog when Jev's suggestion differs from the effort in use (*"Jev thinks this request is

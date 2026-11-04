@@ -184,6 +184,58 @@ test('suggestEffort: request size and type become an effort level', () => {
   assert.equal(m.suggestEffort({ taskType: 'feature' }), null, 'no scope, no suggestion');
 });
 
+test('suggestEffort with depth: the larger of change size and investigation', () => {
+  assert.equal(m.suggestEffort({ taskType: 'question', taskConf: 0.9, scope: 0, depth: 0 }), 'low', 'a direct question stays cheap');
+  assert.equal(m.suggestEffort({ taskType: 'question', taskConf: 0.9, scope: 0, depth: 0.62 }), 'medium', 'reviewing logs is not a one-line answer');
+  assert.equal(m.suggestEffort({ taskType: 'question', taskConf: 0.9, scope: 1, depth: 1 }), 'high', 'a question stops at high');
+  assert.equal(m.suggestEffort({ taskType: 'feature', scope: 0, depth: 0.25 }), 'low', 'opening a card about a big feature is small');
+  assert.equal(m.suggestEffort({ taskType: 'bug', scope: 0.25, depth: 0.85 }), 'high', 'a one-line fix that needs hard debugging');
+  assert.equal(m.suggestEffort({ taskType: 'feature', scope: 1, depth: 0.25 }), 'xhigh', 'a large change, even if obvious');
+  assert.equal(m.suggestEffort({ taskType: 'bug', scope: 0.5, depth: 0.25, ambiguous: 0.9 }), 'medium', 'depth replaces the ambiguity bump');
+});
+
+test('isSystemMessage: the usage-limit resume continues the previous request', () => {
+  assert.ok(m.isSystemMessage('Your claude.ai usage limit has reset. Continue the task you were working on when the limit was reached; do not repeat work.'));
+  assert.ok(!m.isSystemMessage('my usage limit has reset, continue'));
+});
+
+test('FILE_WRITE: shell commands that write files wake the Stop check', () => {
+  const writes = [
+    "python3 - <<'EOF'\np='docs/a.md'; s=open(p).read()\nopen(p,'w').write(s)\nEOF",
+    "cat > src/app.ts <<'EOF'\nexport {}\nEOF",
+    'echo x >> notes.txt', "sed -i 's/a/b/' file.js", "sed -n -i.bak 's/a/b/' f", 'perl -pi -e s/a/b/ f',
+    'printf x | tee out.txt', 'cp a.txt b.txt', 'git apply fix.patch', "node -e \"require('fs').writeFileSync('x','y')\"",
+    "python3 -c \"import pathlib; pathlib.Path('x').write_text('y')\"",
+  ];
+  for (const c of writes) assert.ok(m.FILE_WRITE.test(c), c);
+  const reads = ['git status 2>&1 | tail -5', 'ls -la > /dev/null', 'npm test 2>/dev/null', "sed -n '1,20p' file.js", 'grep -rn foo src', 'git log --oneline -5', 'cat a.txt | head'];
+  for (const c of reads) assert.ok(!m.FILE_WRITE.test(c), c);
+});
+
+test('writeDirs and shellChanges: what the shell changed in each repo during the turn', () => {
+  const repo = mkdtempSync(join(tmpdir(), 'claujev-shell-'));
+  const other = mkdtempSync(join(tmpdir(), 'claujev-shell-other-'));
+  const g = (cwd, ...a) => execFileSync('git', a, { cwd, stdio: 'ignore' });
+  for (const r of [repo, other]) {
+    g(r, 'init', '-q'); g(r, 'config', 'user.email', 't@t'); g(r, 'config', 'user.name', 't');
+    writeFileSync(join(r, 'a.txt'), 'one\n'); g(r, 'add', '.'); g(r, 'commit', '-qm', 'init');
+  }
+  const base = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim();
+  const st = { base, turnStart: new Date(Date.now() - 1000).toISOString(), files: [] };
+  writeFileSync(join(repo, 'a.txt'), 'one\ntwo\n');
+  writeFileSync(join(repo, 'new.txt'), 'created by the shell\n');
+  writeFileSync(join(other, 'a.txt'), 'changed elsewhere\n');
+  const cmds = ["python3 -c \"open('a.txt','w')\"", `cd ${other}; echo x > a.txt`];
+  assert.deepEqual(m.writeDirs(repo, cmds).sort(), [repo, other].sort());
+  const t = m.TEXT.en.stop;
+  const out = m.shellChanges(repo, cmds, st, 20000, t);
+  assert.match(out, /\+two/, 'tracked change since the start of the turn');
+  assert.match(out, /created by the shell/, 'new file written in the turn');
+  assert.match(out, /\+changed elsewhere/, 'a repo the command cd-ed into');
+  const seen = m.shellChanges(repo, cmds.slice(0, 1), { ...st, files: [join(repo, 'a.txt')] }, 20000, t);
+  assert.doesNotMatch(seen, /\+two/, 'files the edit hook already saw are not repeated');
+});
+
 test('EXPLICIT_EFFORT: spots requests that ask for effort themselves', () => {
   assert.ok(m.EXPLICIT_EFFORT.test('ultrathink: why is this slow?'));
   assert.ok(m.EXPLICIT_EFFORT.test('pense bem antes de mudar'));
@@ -327,9 +379,15 @@ test('first session: offers the guided setup once, then only reminds about a mis
   assert.equal(first.hookSpecificOutput.hookEventName, 'SessionStart');
   assert.match(first.hookSpecificOutput.additionalContext, /\/claujev:configure/);
   assert.doesNotMatch(first.hookSpecificOutput.additionalContext, /not set/, 'with a key, no key warning');
-  assert.equal(run({ TYPESAFE_API_KEY: 'k' }), '', 'second session with a key: silent');
+  const second = JSON.parse(run({ TYPESAFE_API_KEY: 'k' })).hookSpecificOutput.additionalContext;
+  assert.doesNotMatch(second, /\/claujev:configure/, 'the setup is offered only once');
+  assert.match(second, /Edit\/Write/, 'with a key: asks for edits through the tools the review sees');
   assert.match(JSON.parse(run({})).hookSpecificOutput.additionalContext, /key is not set/, 'without a key: reminder');
-  assert.equal(runHook('session', { session_id: 's', cwd: home, source: 'resume' }, { CLAUJEV_HOME: dir }), '', 'resume/compact: silent');
+  assert.doesNotMatch(JSON.parse(run({})).hookSpecificOutput.additionalContext, /Edit\/Write/, 'without a key ClauJev is idle: no edit advice');
+  assert.equal(runHook('session', { session_id: 's', cwd: home, source: 'resume' }, { CLAUJEV_HOME: dir }), '', 'resume without a key: silent');
+  const compact = JSON.parse(runHook('session', { session_id: 's', cwd: home, source: 'compact' }, { CLAUJEV_HOME: dir, TYPESAFE_API_KEY: 'k' }));
+  assert.match(compact.hookSpecificOutput.additionalContext, /Edit\/Write/, 'after compaction the edit advice comes back');
+  assert.equal(run({ TYPESAFE_API_KEY: 'k', CLAUDE_PLUGIN_OPTION_RULE_REVIEW: 'off', CLAUDE_PLUGIN_OPTION_FINAL_CHECK: 'off' }), '', 'review and final check off: no edit advice');
   const pt = mkdtempSync(join(tmpdir(), 'claujev-session-'));
   assert.match(runHook('session', { session_id: 's', cwd: home, source: 'startup' }, { CLAUJEV_HOME: pt, CLAUDE_PLUGIN_OPTION_LANG: 'pt' }), /configuração guiada/);
 });

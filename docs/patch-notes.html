@@ -46,16 +46,39 @@
         <button type="button" data-copy="upd"><span lang="pt">Copiar</span><span lang="en">Copy</span></button>
       </div>
       <ul class="jump" aria-label="Versões / Versions">
-        <li><a href="#v2.6.1">2.6.1</a></li><li><a href="#v2.6.0">2.6.0</a></li><li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
+        <li><a href="#v2.7.0">2.7.0</a></li><li><a href="#v2.6.1">2.6.1</a></li><li><a href="#v2.6.0">2.6.0</a></li><li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
       </ul>
     </div>
+
+    <!-- 2.7.0 -->
+    <article class="release" id="v2.7.0">
+      <div class="ver">
+        <h2><a href="#v2.7.0">2.7.0</a></h2>
+        <time datetime="2026-11-04"><span lang="pt">4 nov 2026</span><span lang="en">Nov 4, 2026</span></time><br>
+        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+      </div>
+      <div>
+        <p class="summary" lang="pt">Edições feitas pelo shell voltam a ser checadas, e o esforço passa a pesar a investigação, não só o código.</p>
+        <p class="summary" lang="en">Edits made through the shell are checked again, and effort now weighs investigation, not just code.</p>
+        <ul class="changes">
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt">No modo automático, o Claude Code edita arquivos com <code>sed</code>, <code>python</code> ou heredoc no Bash, e essas edições não passavam pela revisão de regras. Em dois dias foram 117 chamadas de Bash e 1 de Edit. Agora cada sessão pede edições por Edit/Write e, se um comando do shell escrever arquivos mesmo assim, a checagem final lê do git o que mudou no turno.</p>
+            <p lang="en">In auto mode Claude Code edits files with <code>sed</code>, <code>python</code> or heredocs in Bash, and those edits skipped the rule review. In two days there were 117 Bash calls and 1 Edit. Now each session asks for edits through Edit/Write, and when a shell command still writes files, the final check reads what changed in the turn from git.</p></li>
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt">A dica "a mudança parece pequena" não aparece mais em respostas de conversa, e o aviso de limite de uso resetado não é triado como pedido novo.</p>
+            <p lang="en">The "the change looks small" hint no longer shows up on chat replies, and the usage-limit resume message is no longer triaged as a new request.</p></li>
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt">O esforço considera também quanta investigação o pedido exige. Revisar logs ou testes instáveis não sai mais <code>low</code> só porque não mexe em código. Em 40 pedidos reais, a sugestão acertou 35, contra 25 antes.</p>
+            <p lang="en">Effort also weighs how much investigation the request needs. Reviewing logs or flaky tests no longer gets <code>low</code> just because no code changes. On 40 real requests, the suggestion was right in 35, against 25 before.</p></li>
+        </ul>
+      </div>
+    </article>
 
     <!-- 2.6.1 -->
     <article class="release" id="v2.6.1">
       <div class="ver">
         <h2><a href="#v2.6.1">2.6.1</a></h2>
-        <time datetime="2026-11-02"><span lang="pt">2 nov 2026</span><span lang="en">Nov 2, 2026</span></time><br>
-        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+        <time datetime="2026-11-02"><span lang="pt">2 nov 2026</span><span lang="en">Nov 2, 2026</span></time>
       </div>
       <div>
         <p class="summary" lang="pt">Carregar um <code>.env</code> para rodar um script local não parece mais meio destrutivo.</p>

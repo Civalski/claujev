@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.7.0 — 2026-11-04
+
+### Fixed
+- **Edits made through the shell are checked again.** Claude Code's auto mode lets the model edit files
+  with `sed`, `python` or heredocs in Bash, which never reach the edit hook: in the first two days of 2.6.1
+  there were 117 Bash calls and 1 Edit, so the rule review ran 0 times and the final check 2 times in 22
+  turns. Now each session asks Claude to edit through Edit/Write, and when a shell command still writes
+  files, the final check reads what changed from git (the turn's diff and new files, also in a repo the
+  command `cd`-ed into).
+- **No "the change looks small" hint on chat replies.** Size hints now go only to bug, feature, refactor
+  and config requests, not to an answer like "yes, it works on the laptop keyboard".
+- **The usage-limit resume message is no longer triaged as a new request**: it keeps the effort of the
+  request it resumes.
+
+### Changed
+- **Effort also weighs how much investigation the request needs.** A new triage question (`depth`) sits
+  next to the size of the code change, and the larger one wins. Reviewing logs or flaky tests no longer
+  gets `low` just because no code changes, and a question stops at `high`. On 40 real requests, the
+  suggestion matched the expected effort in 35 against 25 before.
+- Final-check turns skipped because nothing changed are now logged, so `report` shows them.
+
 ## 2.6.1 — 2026-11-02
 
 ### Fixed
