@@ -209,6 +209,21 @@ p { margin: 0 0 12px; }
 .privacy ul { margin: 0; padding-left: 1.1em; color: var(--ink-soft); }
 .privacy li { margin-bottom: 6px; }
 
+/* What exists vs what ClauJev adds */
+.vs { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: var(--sheet); }
+.vs-head, .vs-row { display: grid; grid-template-columns: 11em 1fr 1fr; gap: 0 28px; padding: 20px 28px; }
+.vs-head { font: .78rem var(--mono); text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); padding-top: 16px; padding-bottom: 16px; }
+.vs-row { border-top: 1px solid var(--rule); }
+.vs-row h3 { font-size: 1rem; margin: 0; }
+.vs-row p { margin: 0; color: var(--ink-soft); }
+.vs-row p strong { color: var(--jev); font-weight: 600; }
+.turn .tag { display: inline-block; font: .72rem var(--mono); text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--rule); color: var(--ink-soft); margin: 0 0 10px; }
+.turn .tag.new { border-color: var(--jev); color: var(--jev); }
+@media (max-width: 720px) {
+  .vs-head { display: none; }
+  .vs-row { grid-template-columns: 1fr; gap: 8px; padding: 20px; }
+}
+
 /* Install steps */
 .steps { margin: 0; padding: 0; list-style: none; counter-reset: s; max-width: 46em; }
 .steps li { counter-increment: s; display: grid; grid-template-columns: 40px 1fr; gap: 16px; padding: 0 0 26px; }

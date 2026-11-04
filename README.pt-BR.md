@@ -14,34 +14,39 @@
 
 ---
 
-**ClauJev** liga o [Jev](https://typesafe.ai), o modelo de julgamento rápido da TypeSafe AI, ao
-Claude Code. Enquanto o Claude trabalha, o Jev responde perguntas curtas e objetivas, como *"este
-comando é destrutivo?"* ou *"o pedido foi atendido por completo?"*, e o ClauJev transforma as
-respostas em ação:
+**O Claude diz "pronto". O Jev confere o diff.** O ClauJev é um plugin do Claude Code que põe um
+segundo modelo, de outra empresa, para conferir o trabalho do Claude: o [Jev](https://typesafe.ai), o
+modelo de julgamento da TypeSafe AI. Antes da resposta chegar a você, o Jev compara o diff real do git
+com o que o Claude diz ter feito. Se algo ficou pela metade, o Claude volta e termina.
 
-- ✅ **Conferência final**: segura o "pronto!" quando o trabalho parece incompleto ou os testes falham,
-  inclusive o que o Claude editou pelo shell. É o ponto central: um segundo modelo, independente do
-  Claude, conferindo o que ele diz que fez.
-- 🎚️ **Sugestão de esforço**: `low` numa pergunta rápida, `high` numa investigação, `xhigh` numa mudança
-  grande. Pergunta antes de mudar.
-- 🛑 **Guarda de comandos**: push, merge, `reset --hard` e publicação pedem confirmação por uma regra
-  local, sem custo. O Jev julga o que regra nenhuma pega: scripts, migrations, credenciais expostas.
-- 🔍 **Revisão por regras**: confere cada edição contra regras que você escreve em português comum.
-- 🧭 **Triagem**: avisa o Claude quando o pedido está vago demais e passa a dica da área do projeto.
-- 🪄 **Roteamento** e 🕵️ **detector de relatório falso** para subagentes.
+O que é novo:
 
-<p align="center"><img src="docs/demo.gif" alt="O ClauJev segurando um git push --force para confirmação no Claude Code" width="100%"></p>
+- ✅ **Conferência final por um modelo independente**: não é o Claude julgando o Claude. Ele lê o diff do
+  turno (inclusive o que foi editado pelo shell), os comandos e a resposta final, e segura o "pronto!"
+  quando o trabalho parece inacabado ou os testes falham.
+- 🎚️ **Esforço por pedido**: o Jev estima o tamanho e a profundidade de cada pedido e *pergunta* se você
+  quer `low`, `high` ou `xhigh` antes de o Claude começar. A decisão é sua.
+- 📊 **Ele se mede**: o `report` mostra quantas vezes a conferência final fez o Claude corrigir algo de
+  verdade e quantas sugestões de esforço você aceitou. Se não pegar nada, você vê isso também.
 
-Cerca de **400 ms** por checagem. Seis dias de uso diário custaram ao autor **US$ 0,07**.
+| | O que já existe | O que o ClauJev acrescenta |
+| --- | --- | --- |
+| Quem confere | O hook `prompt` do Claude Code chama outro Claude (Haiku/Sonnet) | Um modelo de outra empresa, feito só para julgar |
+| O que ele lê | O transcript: o que o Claude *diz* que fez, dezenas de milhares de tokens | O diff real do git contra a resposta final, num resumo curto (~400 ms) |
+| O que ele responde | Sim ou não | Uma probabilidade com dois limiares ajustáveis; a faixa incerta só vai para o log |
+| Esforço | `/effort` na mão, ou escolhido sozinho por palavras-chave | Sugerido a cada pedido, com sua confirmação |
+| Vale a pena? | Não dá para saber | O `report` mede |
 
-**Também pode economizar tokens do Claude.** O Jev custa frações de centavo e afasta o Claude dos
-hábitos caros: esforço `low` (menos raciocínio) em perguntas simples e tarefas simples de subagente num
-modelo menor e mais barato. A conferência final ainda pega trabalho inacabado antes de você precisar
-pedir de novo. O que uma regra fixa resolve (confirmar um `git push`) fica com a regra, sem chamar o Jev.
+**O que não é novo**, e não é motivo para instalar: bloquear `push`, `rm -rf` e afins já é coberto pelas
+permissões do Claude Code e por plugins como o
+[safety-net](https://github.com/kenryu42/claude-code-safety-net); regras por padrão de texto nas edições,
+pelo hookify. O ClauJev traz o básico também (guarda local para push, merge, `reset --hard` e publicação,
+e revisão por regras em português comum) para você não ficar descoberto, além de 🧭 aviso de pedido vago
+e 🪄 roteamento de subagentes com 🕵️ detector de relatório falso.
 
-O `node plugins/claujev/hooks/claujev.mjs report` mostra se ele está valendo a pena para você: quantas
-vezes a conferência final bloqueou e o Claude de fato corrigiu algo, e quantas sugestões de esforço você
-aceitou.
+Cerca de **400 ms** por checagem. Seis dias de uso diário custaram ao autor **US$ 0,07**. Também pode
+economizar tokens do Claude: esforço `low` em perguntas simples e tarefas simples de subagente num modelo
+menor. Veja no [site](https://civalski.github.io/claujev/) os números reais de 18 dias de uso.
 
 > [!NOTE]
 > Projeto da comunidade, sem vínculo oficial com a TypeSafe AI nem com a Anthropic. Você precisa de

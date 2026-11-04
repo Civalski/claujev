@@ -14,33 +14,39 @@
 
 ---
 
-**ClauJev** plugs [Jev](https://typesafe.ai), TypeSafe AI's fast judgment model, into Claude Code.
-While Claude works, Jev answers short, typed questions such as *"is this command destructive?"* or
-*"was the request fully done?"*, and ClauJev turns the answers into action:
+**Claude says "done". Jev checks the diff.** ClauJev is a Claude Code plugin that puts a second model,
+from another company, on Claude's work: [Jev](https://typesafe.ai), TypeSafe AI's judgment model. Before
+the reply reaches you, Jev compares the real git diff with what Claude says it did. If something is half
+done, Claude goes back and finishes.
 
-- ✅ **Final check**: stops "done!" when the work looks incomplete or your tests fail, including what
-  Claude edited through the shell. This is the core: a second model, independent from Claude, checking
-  what it says it did.
-- 🎚️ **Effort suggestion**: `low` for a quick question, `high` for an investigation, `xhigh` for a large
-  change. It asks before changing anything.
-- 🛑 **Command guard**: push, merge, `reset --hard` and publishing ask for confirmation by a local rule, at
-  no cost. Jev judges what no rule can: scripts, migrations, exposed credentials.
-- 🔍 **Rule review**: checks every edit against rules you write in plain language.
-- 🧭 **Triage**: warns Claude when a request is too vague and passes on your project area's hint.
-- 🪄 **Subagent routing** and 🕵️ **false-claim detector** for subagents.
+What's new:
 
-<p align="center"><img src="docs/demo.gif" alt="ClauJev holding a git push --force for confirmation in Claude Code" width="100%"></p>
+- ✅ **Final check by an independent model**: not Claude grading Claude. It reads the turn's diff (shell
+  edits included), the commands and the final reply, and stops "done!" when the work looks unfinished or
+  your tests fail.
+- 🎚️ **Effort per request**: Jev estimates the size and depth of each request and *asks* whether you want
+  `low`, `high` or `xhigh` before Claude starts. You decide.
+- 📊 **It measures itself**: `report` shows how many times the final check made Claude actually fix
+  something and how many effort suggestions you accepted. If it catches nothing, you'll see that too.
 
-About **400 ms** per check. Six days of daily use cost the author **US$ 0.07**.
+| | What already exists | What ClauJev adds |
+| --- | --- | --- |
+| Who checks | Claude Code's `prompt` hook calls another Claude (Haiku/Sonnet) | A model from another company, built only to judge |
+| What it reads | The transcript: what Claude *says* it did, tens of thousands of tokens | The real git diff against the final reply, in a short summary (~400 ms) |
+| What it answers | Yes or no | A probability with two tunable thresholds; the uncertain band is only logged |
+| Effort | `/effort` by hand, or picked automatically from keywords | Suggested per request, with your confirmation |
+| Is it worth it? | No way to know | `report` measures it |
 
-**It can also save Claude tokens.** Jev costs a fraction of a cent, and it steers Claude away from the
-expensive habits: `low` effort (less thinking) on simple questions and simple subagent tasks on a
-smaller, cheaper model. The final check also catches unfinished work before you have to ask again.
-What a fixed rule can settle (confirming a `git push`) stays with the rule, without calling Jev.
+**What isn't new**, and isn't the reason to install it: blocking `push`, `rm -rf` and the like is already
+covered by Claude Code's permissions and plugins such as
+[safety-net](https://github.com/kenryu42/claude-code-safety-net); pattern rules on edits, by hookify.
+ClauJev ships the basics too (a local guard for push, merge, `reset --hard` and publishing, and rule
+review in plain language) so you're not left exposed, plus 🧭 a vague-request warning and 🪄 subagent
+routing with a 🕵️ false-claim detector.
 
-`node plugins/claujev/hooks/claujev.mjs report` shows whether it pays off for you: how many times the
-final check blocked and Claude then actually fixed something, and how many effort suggestions you
-accepted.
+About **400 ms** per check. Six days of daily use cost the author **US$ 0.07**. It can also save Claude
+tokens: `low` effort on simple questions and simple subagent tasks on a smaller model. See the
+[website](https://civalski.github.io/claujev/) for real numbers from 18 days of use.
 
 > [!NOTE]
 > Community project, not affiliated with TypeSafe AI or Anthropic. You need a

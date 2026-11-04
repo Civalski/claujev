@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ClauJev</title>
 <script>(function(){var l;try{l=localStorage.getItem('claujev-lang')}catch(e){}if(l!=='pt'&&l!=='en')l=/^pt/i.test(navigator.language||'')?'pt':'en';var d=document.documentElement;d.setAttribute('data-lang',l);d.lang=l==='pt'?'pt-BR':'en'})()</script>
-<meta name="description" content="Plugin do Claude Code que usa o Jev (TypeSafe AI) para conferir pedidos, comandos, edições e o fim de cada turno. Claude Code plugin that uses Jev to check requests, commands, edits and the end of every turn.">
+<meta name="description" content="Plugin do Claude Code que põe um modelo de outra empresa, o Jev (TypeSafe AI), para conferir o diff antes do Claude dizer pronto. Claude Code plugin where an independent model, Jev, checks the diff before Claude says done.">
 <link rel="canonical" href="https://civalski.github.io/claujev/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://civalski.github.io/claujev/">
 <meta property="og:title" content="ClauJev">
-<meta property="og:description" content="O Claude Code faz o trabalho. O Jev confere.">
+<meta property="og:description" content="O Claude diz pronto. O Jev, de outra empresa, confere o diff.">
 <meta property="og:image" content="https://civalski.github.io/claujev/social-preview.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#f2f4f8" media="(prefers-color-scheme: light)">
@@ -25,6 +25,7 @@
   <header class="top">
     <a class="mark" href="./" aria-label="ClauJev"><i aria-hidden="true"><b></b><b></b></i>ClauJev</a>
     <nav>
+      <a class="opt" href="#novo"><span lang="pt">O que é novo</span><span lang="en">What's new</span></a>
       <a class="opt" href="#como"><span lang="pt">Como funciona</span><span lang="en">How it works</span></a>
       <a class="opt" href="patch-notes.html"><span lang="pt">Notas de versão</span><span lang="en">Patch notes</span></a>
       <a class="opt" href="#instalar"><span lang="pt">Instalar</span><span lang="en">Install</span></a>
@@ -42,30 +43,28 @@
     <div class="hero">
       <div>
         <h1>
-          <span lang="pt"><span class="line c">O Claude Code faz o trabalho.</span><span class="line j">O Jev confere.</span></span>
-          <span lang="en"><span class="line c">Claude Code does the work.</span><span class="line j">Jev checks it.</span></span>
+          <span lang="pt"><span class="line c">O Claude diz "pronto".</span><span class="line j">O Jev confere o diff.</span></span>
+          <span lang="en"><span class="line c">Claude says "done".</span><span class="line j">Jev checks the diff.</span></span>
         </h1>
-        <p class="lede" lang="pt">ClauJev é um plugin do Claude Code. Em cada passo do Claude, ele faz perguntas curtas ao Jev, o modelo de julgamento da TypeSafe AI, e avisa quando um comando é perigoso, um pedido está vago ou o trabalho ficou pela metade.</p>
-        <p class="lede" lang="en">ClauJev is a Claude Code plugin. At each step Claude takes, it asks Jev, TypeSafe AI's judgment model, a few short questions, and speaks up when a command is risky, a request is vague or the work is half done.</p>
+        <p class="lede" lang="pt">ClauJev é um plugin do Claude Code que põe um segundo modelo, de outra empresa, para conferir o trabalho do Claude. Antes da resposta chegar a você, o Jev, da TypeSafe AI, compara o diff do git com o que o Claude diz ter feito. Se algo ficou pela metade, o Claude volta e termina.</p>
+        <p class="lede" lang="en">ClauJev is a Claude Code plugin that puts a second model, from another company, on Claude's work. Before the reply reaches you, Jev, from TypeSafe AI, compares the git diff with what Claude says it did. If something is half done, Claude goes back and finishes.</p>
         <div class="install">
           <code id="cmd"><span>/plugin install claujev</span> <span>--marketplace Civalski/claujev</span></code>
           <button type="button" data-copy="cmd"><span lang="pt">Copiar</span><span lang="en">Copy</span></button>
         </div>
         <ul class="facts">
+          <li><span lang="pt">Juiz independente, não o próprio Claude</span><span lang="en">An independent judge, not Claude itself</span></li>
           <li><span lang="pt">~400 ms por checagem</span><span lang="en">~400 ms per check</span></li>
-          <li><span lang="pt">Zero dependências</span><span lang="en">Zero dependencies</span></li>
           <li><span lang="pt">100% gratuito e de código aberto</span><span lang="en">100% free and open source</span></li>
         </ul>
       </div>
 
       <div class="console">
         <div class="console-head">
-          <strong><span lang="pt">Escolha o que o Claude fez</span><span lang="en">Pick what Claude did</span></strong>
+          <strong><span lang="pt">Escolha como o Claude terminou</span><span lang="en">Pick how Claude finished</span></strong>
           <span>modo enforce</span>
         </div>
         <div class="cases" role="tablist" aria-label="Exemplos / Examples">
-          <button class="case" role="tab" aria-controls="verdict"><span class="who">bash</span><span class="what">git push --force-with-lease origin main</span></button>
-          <button class="case" role="tab" aria-controls="verdict"><span class="who">bash</span><span class="what">cd api &amp;&amp; git log --oneline | head</span></button>
           <button class="case" role="tab" aria-controls="verdict"><span class="who">stop</span><span class="what"><span lang="pt">"Fiz a função; o teste ainda não foi escrito."</span><span lang="en">"Wrote the function; the test isn't written yet."</span></span></button>
           <button class="case" role="tab" aria-controls="verdict"><span class="who">stop</span><span class="what"><span lang="pt">"Função e teste prontos; os testes passam."</span><span lang="en">"Function and test done; tests pass."</span></span></button>
         </div>
@@ -77,56 +76,90 @@
           <div class="reading"><span class="p" id="p"></span><span class="band" id="band"></span></div>
           <p class="action" id="action"></p>
         </div>
-        <p class="source"><span lang="pt">Probabilidades reais do Jev, de uma sessão gravada e dos testes da versão 2.5; o push segue a regra local da 2.8. Textos encurtados.</span><span lang="en">Real Jev probabilities, from a recorded session and the version 2.5 tests; the push follows the 2.8 local rule. Texts shortened.</span></p>
+        <p class="source"><span lang="pt">Probabilidades reais do Jev, dos testes da versão 2.5. Textos encurtados.</span><span lang="en">Real Jev probabilities, from the version 2.5 tests. Texts shortened.</span></p>
       </div>
     </div>
   </div>
 
-  <section class="section">
-    <div class="wrap demo">
-      <div>
-        <h2><span lang="pt">Na prática</span><span lang="en">In practice</span></h2>
-        <p class="intro" lang="pt">O Claude tinha permissão para qualquer comando git. Mesmo assim, antes do push forçado sobre o <code>main</code>, o Jev marcou efeito destrutivo e o Claude Code parou para perguntar.</p>
-        <p class="intro" lang="en">Claude was allowed to run any git command. Still, before the force push over <code>main</code>, Jev flagged a destructive effect and Claude Code stopped to ask.</p>
-        <p class="flag">[Jev] Command flagged: destructive effect (p=0.92)</p>
+  <section class="section" id="novo">
+    <div class="wrap">
+      <h2><span lang="pt">O que já existe e o que é novo</span><span lang="en">What already exists, and what's new</span></h2>
+      <p class="intro" lang="pt">O Claude Code já tem hooks, permissões e plugins de segurança. O ClauJev não refaz isso. Ele entra onde essas ferramentas param: saber se o trabalho foi mesmo feito, sem perguntar ao próprio Claude.</p>
+      <p class="intro" lang="en">Claude Code already has hooks, permissions and safety plugins. ClauJev doesn't redo them. It steps in where they stop: knowing whether the work was really done, without asking Claude itself.</p>
+      <div class="vs">
+        <div class="vs-head"><span></span><span lang="pt">O que já existe</span><span lang="en">What exists</span><span lang="pt">O que o ClauJev acrescenta</span><span lang="en">What ClauJev adds</span></div>
+        <div class="vs-row">
+          <h3><span lang="pt">Quem confere</span><span lang="en">Who checks</span></h3>
+          <p lang="pt">O hook <code>prompt</code> do Claude Code chama outro Claude (Haiku ou Sonnet). É o Claude julgando o Claude.</p>
+          <p lang="en">Claude Code's <code>prompt</code> hook calls another Claude (Haiku or Sonnet). It's Claude grading Claude.</p>
+          <p lang="pt"><strong>Um modelo de outra empresa</strong>, feito só para julgar. Ele não tem os mesmos pontos cegos do Claude.</p>
+          <p lang="en"><strong>A model from another company</strong>, built only to judge. It doesn't share Claude's blind spots.</p>
+        </div>
+        <div class="vs-row">
+          <h3><span lang="pt">O que ele lê</span><span lang="en">What it reads</span></h3>
+          <p lang="pt">O transcript, ou seja, o que o Claude <em>diz</em> que fez. Dezenas de milhares de tokens por chamada.</p>
+          <p lang="en">The transcript, that is, what Claude <em>says</em> it did. Tens of thousands of tokens per call.</p>
+          <p lang="pt"><strong>O diff real do git</strong>, inclusive o que foi editado pelo shell, contra a resposta final. Um resumo curto: ~400 ms por checagem.</p>
+          <p lang="en"><strong>The real git diff</strong>, shell edits included, against the final reply. A short summary: ~400 ms per check.</p>
+        </div>
+        <div class="vs-row">
+          <h3><span lang="pt">O que ele responde</span><span lang="en">What it answers</span></h3>
+          <p lang="pt">Sim ou não. Um engano bloqueia o turno.</p>
+          <p lang="en">Yes or no. A mistake blocks the turn.</p>
+          <p lang="pt"><strong>Uma probabilidade</strong> com dois limiares ajustáveis. Na faixa incerta, só vai para o log.</p>
+          <p lang="en"><strong>A probability</strong> with two tunable thresholds. In the uncertain band, it's only logged.</p>
+        </div>
+        <div class="vs-row">
+          <h3><span lang="pt">Esforço do Claude</span><span lang="en">Claude's effort</span></h3>
+          <p lang="pt">Você ajusta o <code>/effort</code> na mão, ou uma extensão escolhe sozinha pelas palavras do pedido.</p>
+          <p lang="en">You set <code>/effort</code> by hand, or an extension picks it alone from the request's words.</p>
+          <p lang="pt"><strong>O Jev estima tamanho e profundidade</strong> de cada pedido e pergunta se você quer mudar o esforço antes de começar. A decisão é sua.</p>
+          <p lang="en"><strong>Jev estimates the size and depth</strong> of each request and asks whether you want to change the effort before it starts. You decide.</p>
+        </div>
+        <div class="vs-row">
+          <h3><span lang="pt">Vale a pena?</span><span lang="en">Is it worth it?</span></h3>
+          <p lang="pt">Você não tem como saber.</p>
+          <p lang="en">You have no way to know.</p>
+          <p lang="pt"><strong>O <code>report</code> mede</strong> quantas vezes a conferência fez o Claude mudar algo e quantas sugestões de esforço você aceitou. Se não pegar nada, ele mostra isso também.</p>
+          <p lang="en"><strong><code>report</code> measures</strong> how often the check made Claude change something and how many effort suggestions you accepted. If it catches nothing, it shows that too.</p>
+        </div>
       </div>
-      <figure>
-        <video controls preload="none" playsinline poster="assets/demo-poster.jpg" width="1300" height="720">
-          <source src="assets/demo.mp4" type="video/mp4">
-        </video>
-        <figcaption lang="pt">Gravação real de uma sessão do Claude Code com o ClauJev, sem cortes (35 s).</figcaption>
-        <figcaption lang="en">Unedited recording of a Claude Code session with ClauJev (35 s).</figcaption>
-      </figure>
+      <p class="aside" lang="pt"><strong>O que não é novo.</strong> Para bloquear <code>push</code>, <code>rm -rf</code> e afins, as permissões do Claude Code e plugins como o <a href="https://github.com/kenryu42/claude-code-safety-net">safety-net</a> já resolvem. Para regras por padrão de texto, há o hookify. O ClauJev traz uma guarda local simples para você não ficar descoberto, mas não é por ela que vale instalá-lo.</p>
+      <p class="aside" lang="en"><strong>What isn't new.</strong> To block <code>push</code>, <code>rm -rf</code> and the like, Claude Code's permissions and plugins such as <a href="https://github.com/kenryu42/claude-code-safety-net">safety-net</a> already do the job. For pattern-based rules there's hookify. ClauJev ships a simple local guard so you're not left exposed, but it isn't the reason to install it.</p>
     </div>
   </section>
 
   <section class="section" id="como">
     <div class="wrap">
-      <h2><span lang="pt">Um turno do Claude, quatro pontos de checagem</span><span lang="en">One Claude turn, four checkpoints</span></h2>
-      <p class="intro" lang="pt">O ClauJev escuta os hooks do Claude Code. Em cada um, monta um resumo pequeno do momento, pergunta ao Jev e devolve ao Claude uma ação ou nada.</p>
-      <p class="intro" lang="en">ClauJev listens to Claude Code's hooks. At each one it builds a small summary of the moment, asks Jev, and hands Claude an action or nothing.</p>
+      <h2><span lang="pt">Onde o Jev entra no turno</span><span lang="en">Where Jev steps into a turn</span></h2>
+      <p class="intro" lang="pt">O ClauJev escuta os hooks do Claude Code. Em cada um, monta um resumo pequeno do momento, pergunta ao Jev e devolve ao Claude uma ação ou nada. O começo e o fim do turno são o que ele traz de novo; o meio é o básico.</p>
+      <p class="intro" lang="en">ClauJev listens to Claude Code's hooks. At each one it builds a small summary of the moment, asks Jev, and hands Claude an action or nothing. The start and end of the turn are what it brings that's new; the middle is the basics.</p>
       <ol class="turn">
         <li>
           <p class="hook">UserPromptSubmit</p>
           <h3><span lang="pt">Você pede</span><span lang="en">You ask</span></h3>
+          <p class="tag new"><span lang="pt">novo</span><span lang="en">new</span></p>
           <p lang="pt"><strong>Triagem.</strong> Qual o tamanho da mudança e quanta investigação o pedido exige? Com o mod, o ClauJev pergunta se você quer mudar o esforço, de <code>low</code> a <code>xhigh</code>, antes de começar. Se o pedido estiver vago demais, o Claude é avisado.</p>
           <p lang="en"><strong>Triage.</strong> How big is the change, and how much investigation does it need? With the mod, ClauJev asks whether you want to change the effort, <code>low</code> to <code>xhigh</code>, before it starts. If the request is too vague, Claude is warned.</p>
         </li>
         <li>
           <p class="hook">PreToolUse</p>
           <h3><span lang="pt">O Claude roda um comando</span><span lang="en">Claude runs a command</span></h3>
-          <p lang="pt"><strong>Guarda.</strong> Push, merge e <code>reset --hard</code> pedem confirmação por uma regra local, sem custo. O Jev julga o que regra nenhuma pega: um script que migra, um deploy, uma credencial exposta. Comandos só de leitura passam direto.</p>
-          <p lang="en"><strong>Guard.</strong> Push, merge and <code>reset --hard</code> ask for confirmation by a local rule, at no cost. Jev judges what no rule can: a script that migrates, a deploy, an exposed credential. Read-only commands go straight through.</p>
+          <p class="tag"><span lang="pt">básico</span><span lang="en">basics</span></p>
+          <p lang="pt"><strong>Guarda.</strong> Push, merge e <code>reset --hard</code> pedem confirmação por uma regra local, como em qualquer plugin de segurança. O Jev só entra no que regra não pega: um script que migra o banco, um deploy, uma credencial no comando.</p>
+          <p lang="en"><strong>Guard.</strong> Push, merge and <code>reset --hard</code> ask for confirmation by a local rule, like any safety plugin. Jev only steps in where no rule can: a script that migrates the database, a deploy, a credential in the command.</p>
         </li>
         <li>
           <p class="hook">PostToolUse</p>
           <h3><span lang="pt">O Claude edita</span><span lang="en">Claude edits</span></h3>
-          <p lang="pt"><strong>Regras.</strong> Cada edição é conferida contra regras que você escreve em texto comum, como "não usar any".</p>
-          <p lang="en"><strong>Rules.</strong> Each edit is checked against rules you write in plain words, like "never use any".</p>
+          <p class="tag"><span lang="pt">básico</span><span lang="en">basics</span></p>
+          <p lang="pt"><strong>Regras.</strong> Cada edição é conferida contra regras que você escreve em texto comum. Como quem lê é um modelo, vale até para regras de sentido, como "erro de API sempre tratado".</p>
+          <p lang="en"><strong>Rules.</strong> Each edit is checked against rules you write in plain words. Since a model reads them, even rules about meaning work, like "API errors are always handled".</p>
         </li>
         <li>
           <p class="hook">Stop</p>
           <h3><span lang="pt">O Claude diz "pronto"</span><span lang="en">Claude says "done"</span></h3>
+          <p class="tag new"><span lang="pt">novo</span><span lang="en">new</span></p>
           <p lang="pt"><strong>Conferência final.</strong> Um segundo modelo, independente do Claude, lê o diff (inclusive o que foi editado pelo shell), os comandos e a resposta. Se algo ficou pela metade, o Claude volta antes de você pedir.</p>
           <p lang="en"><strong>Final check.</strong> A second model, independent from Claude, reads the diff (shell edits included), the commands and the reply. If something is half done, Claude goes back before you ask.</p>
         </li>
@@ -280,12 +313,6 @@
 (function () {
   // Real cases from the 2.5 end-to-end run against the Jev API.
   var CASES = [
-    { p: null, kind: 'local',
-      q: { pt: 'Nenhuma: uma regra local já sabe que push pede confirmação.', en: 'None: a local rule already knows a push needs confirmation.' },
-      act: { pt: 'O Claude Code para e pede sua confirmação antes do push, sem chamar o Jev.', en: 'Claude Code stops and asks for your confirmation before the push, without calling Jev.' } },
-    { p: null,
-      q: { pt: 'Nenhuma: todos os trechos são só de leitura.', en: 'None: every part is read-only.' },
-      act: { pt: 'Roda na hora, sem chamada ao Jev.', en: 'Runs right away, no Jev call.' } },
     { p: 0.96, lo: 0.5, hi: 0.85,
       q: { pt: 'O turno terminou com trabalho por fazer?', en: 'Did the turn end with work left to do?' },
       act: { pt: 'O Claude volta e termina antes de dizer "pronto".', en: 'Claude goes back and finishes before saying "done".' } },
