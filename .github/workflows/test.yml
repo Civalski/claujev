@@ -1,11 +1,15 @@
 name: test
-on: [push, pull_request]
+# Roda no runner self-hosted da maquina Linux do autor, nunca em runner hospedado.
+# Repositorio publico: sem gatilho de pull_request, para PR de fork nao rodar codigo
+# na maquina. Antes de aceitar um PR, rode `npm test` localmente.
+on:
+  push:
+  workflow_dispatch:
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: [self-hosted, claujev]
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
         node: [20, 22]
     steps:
       - uses: actions/checkout@v4
