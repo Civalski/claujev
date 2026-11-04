@@ -32,7 +32,7 @@ O que é novo:
 | | O que já existe | O que o ClauJev acrescenta |
 | --- | --- | --- |
 | Quem confere | O hook `prompt` do Claude Code chama outro Claude (Haiku/Sonnet) | Um modelo de outra empresa, feito só para julgar |
-| O que ele lê | O transcript: o que o Claude *diz* que fez, dezenas de milhares de tokens | O diff real do git contra a resposta final, num resumo curto (~400 ms) |
+| O que ele lê | O transcript: o que o Claude *diz* que fez, dezenas de milhares de tokens | O diff real do git contra a resposta final, num resumo curto (310 ms de mediana) |
 | O que ele responde | Sim ou não | Uma probabilidade com dois limiares ajustáveis; a faixa incerta só vai para o log |
 | Esforço | `/effort` na mão, ou escolhido sozinho por palavras-chave | Sugerido a cada pedido, com sua confirmação |
 | Vale a pena? | Não dá para saber | O `report` mede |
@@ -44,9 +44,10 @@ pelo hookify. O ClauJev traz o básico também (guarda local para push, merge, `
 e revisão por regras em português comum) para você não ficar descoberto, além de 🧭 aviso de pedido vago
 e 🪄 roteamento de subagentes com 🕵️ detector de relatório falso.
 
-Cerca de **400 ms** por checagem. Seis dias de uso diário custaram ao autor **US$ 0,07**. Também pode
+Medido em **8.257 eventos reais** de 96 sessões: **7.612** perguntas respondidas pelo Jev, **310 ms** de
+mediana (90% abaixo de 495 ms). Seis dias de uso diário custaram ao autor **US$ 0,07**. Também pode
 economizar tokens do Claude: esforço `low` em perguntas simples e tarefas simples de subagente num modelo
-menor. Veja no [site](https://civalski.github.io/claujev/) os números reais de 18 dias de uso.
+menor. Veja no [site](https://civalski.github.io/claujev/) os números de antes e depois.
 
 > [!NOTE]
 > Projeto da comunidade, sem vínculo oficial com a TypeSafe AI nem com a Anthropic. Você precisa de
@@ -92,7 +93,7 @@ o diff), faz ao Jev as perguntas certas e devolve ao Claude uma ação ou nada.
 flowchart TB
     U(["👤 Você"]) -->|pedido| CC["🤖 Claude Code"]
     CC -->|"evento (hook)"| CJ["⚙️ claujev.mjs<br/>um arquivo · zero dependências"]
-    CJ <-->|"perguntas ⇄ probabilidades<br/>~400 ms · segredos removidos"| JEV[("🧠 Jev · TypeSafe AI")]
+    CJ <-->|"perguntas ⇄ probabilidades<br/>310 ms de mediana · segredos removidos"| JEV[("🧠 Jev · TypeSafe AI")]
     CJ --> R{"o que devolver<br/>ao Claude Code?"}
     R -->|"prompt"| A1["🎚️ esforço + aviso se vago"]
     R -->|"bash"| A2["✋ pedir sua confirmação"]
@@ -144,7 +145,7 @@ e um **hash** do conteúdo, nunca o conteúdo. A chave fica no cofre seguro do s
 <details>
 <summary><b>Perguntas frequentes</b></summary>
 
-**Deixa o Claude mais lento?** Cerca de 400 ms por checagem; comandos só de leitura nem chamam o Jev.
+**Deixa o Claude mais lento?** 310 ms por checagem na mediana (90% abaixo de 495 ms); comandos só de leitura nem chamam o Jev.
 
 **E se o Jev errar?** As ações são reversíveis por desenho, os limites são altos de propósito, e a
 faixa incerta nunca age. Quer mais silêncio? `/claujev:configure` põe tudo em `observe` (só anota).

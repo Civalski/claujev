@@ -54,7 +54,7 @@
         </div>
         <ul class="facts">
           <li><span lang="pt">Juiz independente, não o próprio Claude</span><span lang="en">An independent judge, not Claude itself</span></li>
-          <li><span lang="pt">~400 ms por checagem</span><span lang="en">~400 ms per check</span></li>
+          <li><span lang="pt">310 ms por checagem (mediana)</span><span lang="en">310 ms per check (median)</span></li>
           <li><span lang="pt">100% gratuito e de código aberto</span><span lang="en">100% free and open source</span></li>
         </ul>
       </div>
@@ -99,8 +99,8 @@
           <h3><span lang="pt">O que ele lê</span><span lang="en">What it reads</span></h3>
           <p lang="pt">O transcript, ou seja, o que o Claude <em>diz</em> que fez. Dezenas de milhares de tokens por chamada.</p>
           <p lang="en">The transcript, that is, what Claude <em>says</em> it did. Tens of thousands of tokens per call.</p>
-          <p lang="pt"><strong>O diff real do git</strong>, inclusive o que foi editado pelo shell, contra a resposta final. Um resumo curto: ~400 ms por checagem.</p>
-          <p lang="en"><strong>The real git diff</strong>, shell edits included, against the final reply. A short summary: ~400 ms per check.</p>
+          <p lang="pt"><strong>O diff real do git</strong>, inclusive o que foi editado pelo shell, contra a resposta final. Um resumo curto: 310 ms de mediana por checagem.</p>
+          <p lang="en"><strong>The real git diff</strong>, shell edits included, against the final reply. A short summary: 310 ms median per check.</p>
         </div>
         <div class="vs-row">
           <h3><span lang="pt">O que ele responde</span><span lang="en">What it answers</span></h3>
@@ -203,9 +203,9 @@
 
   <section class="section measured">
     <div class="wrap">
-      <h2><span lang="pt">Ajustado com 18 dias de uso real</span><span lang="en">Tuned on 18 days of real use</span></h2>
-      <p class="intro" lang="pt">Para a versão 2.5, cruzamos 7.643 eventos dos logs com as sessões que os geraram e reaplicamos as perguntas antigas e as novas nos mesmos casos.</p>
-      <p class="intro" lang="en">For version 2.5 we matched 7,643 logged events to the sessions behind them and replayed the old and new questions on the same cases.</p>
+      <h2><span lang="pt">Ajustado com 8.257 eventos reais</span><span lang="en">Tuned on 8,257 real events</span></h2>
+      <p class="intro" lang="pt">Os logs somam 8.257 eventos de 96 sessões do Claude Code: 7.612 perguntas respondidas pelo Jev, com mediana de 310 ms. Cada ajuste é feito reaplicando as perguntas antigas e as novas sobre esses casos reais e medindo a diferença.</p>
+      <p class="intro" lang="en">The logs hold 8,257 events from 96 Claude Code sessions: 7,612 questions answered by Jev, at a 310 ms median. Every tuning step replays the old and new questions on these real cases and measures the difference.</p>
       <div class="measures">
         <div class="measure">
           <div class="ba"><span class="before">24</span><span class="after">4</span></div>
