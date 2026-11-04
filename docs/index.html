@@ -77,7 +77,7 @@
           <div class="reading"><span class="p" id="p"></span><span class="band" id="band"></span></div>
           <p class="action" id="action"></p>
         </div>
-        <p class="source"><span lang="pt">Probabilidades reais do Jev, de uma sessão gravada e dos testes da versão 2.5. Textos encurtados.</span><span lang="en">Real Jev probabilities, from a recorded session and the version 2.5 tests. Texts shortened.</span></p>
+        <p class="source"><span lang="pt">Probabilidades reais do Jev, de uma sessão gravada e dos testes da versão 2.5; o push segue a regra local da 2.8. Textos encurtados.</span><span lang="en">Real Jev probabilities, from a recorded session and the version 2.5 tests; the push follows the 2.8 local rule. Texts shortened.</span></p>
       </div>
     </div>
   </div>
@@ -109,14 +109,14 @@
         <li>
           <p class="hook">UserPromptSubmit</p>
           <h3><span lang="pt">Você pede</span><span lang="en">You ask</span></h3>
-          <p lang="pt"><strong>Triagem.</strong> É pergunta, mudança pequena, grande ou vago demais? O Claude recebe a dica, e com o mod, o ClauJev pergunta se você quer mudar o esforço, de <code>low</code> a <code>xhigh</code>, antes de começar.</p>
-          <p lang="en"><strong>Triage.</strong> A question, a small change, a big one, or too vague? Claude gets the hint, and with the mod, ClauJev asks whether you want to change the effort, <code>low</code> to <code>xhigh</code>, before it starts.</p>
+          <p lang="pt"><strong>Triagem.</strong> Qual o tamanho da mudança e quanta investigação o pedido exige? Com o mod, o ClauJev pergunta se você quer mudar o esforço, de <code>low</code> a <code>xhigh</code>, antes de começar. Se o pedido estiver vago demais, o Claude é avisado.</p>
+          <p lang="en"><strong>Triage.</strong> How big is the change, and how much investigation does it need? With the mod, ClauJev asks whether you want to change the effort, <code>low</code> to <code>xhigh</code>, before it starts. If the request is too vague, Claude is warned.</p>
         </li>
         <li>
           <p class="hook">PreToolUse</p>
           <h3><span lang="pt">O Claude roda um comando</span><span lang="en">Claude runs a command</span></h3>
-          <p lang="pt"><strong>Guarda.</strong> Push forçado, <code>reset --hard</code>, migration, deploy? Você confirma antes. Comandos só de leitura nem chamam o Jev.</p>
-          <p lang="en"><strong>Guard.</strong> A force push, <code>reset --hard</code>, a migration, a deploy? You confirm first. Read-only commands don't even call Jev.</p>
+          <p lang="pt"><strong>Guarda.</strong> Push, merge e <code>reset --hard</code> pedem confirmação por uma regra local, sem custo. O Jev julga o que regra nenhuma pega: um script que migra, um deploy, uma credencial exposta. Comandos só de leitura passam direto.</p>
+          <p lang="en"><strong>Guard.</strong> Push, merge and <code>reset --hard</code> ask for confirmation by a local rule, at no cost. Jev judges what no rule can: a script that migrates, a deploy, an exposed credential. Read-only commands go straight through.</p>
         </li>
         <li>
           <p class="hook">PostToolUse</p>
@@ -127,8 +127,8 @@
         <li>
           <p class="hook">Stop</p>
           <h3><span lang="pt">O Claude diz "pronto"</span><span lang="en">Claude says "done"</span></h3>
-          <p lang="pt"><strong>Conferência final.</strong> O Jev lê o diff, os comandos e a resposta. Se algo ficou pela metade, o Claude volta antes de você pedir.</p>
-          <p lang="en"><strong>Final check.</strong> Jev reads the diff, the commands and the reply. If something is half done, Claude goes back before you ask.</p>
+          <p lang="pt"><strong>Conferência final.</strong> Um segundo modelo, independente do Claude, lê o diff (inclusive o que foi editado pelo shell), os comandos e a resposta. Se algo ficou pela metade, o Claude volta antes de você pedir.</p>
+          <p lang="en"><strong>Final check.</strong> A second model, independent from Claude, reads the diff (shell edits included), the commands and the reply. If something is half done, Claude goes back before you ask.</p>
         </li>
       </ol>
       <p class="aside" lang="pt"><strong>Subagentes também.</strong> Tarefas simples vão para um modelo menor e mais barato, e um relatório de subagente que diz ter feito algo que não fez é apontado.</p>
@@ -193,8 +193,8 @@
           <p lang="en">Read-only chains like <code>cd x &amp;&amp; git log | head</code> go straight through. No past alert was lost.</p>
         </div>
       </div>
-      <p class="fine" lang="pt">O ClauJev é gratuito. O único custo é a API do Jev, cobrada pela TypeSafe AI, e é pequeno: seis dias de uso diário saíram por US$ 0,07. Esforço <code>low</code> em perguntas simples e subagentes num modelo menor ainda economizam tokens do Claude. <a href="patch-notes.html">Veja tudo o que mudou na 2.5</a>.</p>
-      <p class="fine" lang="en">ClauJev is free. The only cost is the Jev API, billed by TypeSafe AI, and it's small: six days of daily use cost US$0.07. <code>low</code> effort on simple questions and subagents on a smaller model also save Claude tokens. <a href="patch-notes.html">See everything new in 2.5</a>.</p>
+      <p class="fine" lang="pt">O ClauJev é gratuito. O único custo é a API do Jev, cobrada pela TypeSafe AI, e é pequeno: seis dias de uso diário saíram por US$ 0,07. Esforço <code>low</code> em perguntas simples e subagentes num modelo menor ainda economizam tokens do Claude. O <code>report</code> mostra quantas vezes a conferência final pegou algo de verdade e quantas sugestões de esforço você aceitou. <a href="patch-notes.html">Veja o que mudou na 2.8</a>.</p>
+      <p class="fine" lang="en">ClauJev is free. The only cost is the Jev API, billed by TypeSafe AI, and it's small: six days of daily use cost US$0.07. <code>low</code> effort on simple questions and subagents on a smaller model also save Claude tokens. <code>report</code> shows how often the final check caught something real and how many effort suggestions you accepted. <a href="patch-notes.html">See what changed in 2.8</a>.</p>
     </div>
   </section>
 
@@ -280,9 +280,9 @@
 (function () {
   // Real cases from the 2.5 end-to-end run against the Jev API.
   var CASES = [
-    { p: 0.92, lo: 0.5, hi: 0.85,
-      q: { pt: 'Este comando tem efeito destrutivo ou difícil de desfazer?', en: 'Does this command have a destructive or hard-to-undo effect?' },
-      act: { pt: 'O Claude Code para e pede sua confirmação antes do push.', en: 'Claude Code stops and asks for your confirmation before the push.' } },
+    { p: null, kind: 'local',
+      q: { pt: 'Nenhuma: uma regra local já sabe que push pede confirmação.', en: 'None: a local rule already knows a push needs confirmation.' },
+      act: { pt: 'O Claude Code para e pede sua confirmação antes do push, sem chamar o Jev.', en: 'Claude Code stops and asks for your confirmation before the push, without calling Jev.' } },
     { p: null,
       q: { pt: 'Nenhuma: todos os trechos são só de leitura.', en: 'None: every part is read-only.' },
       act: { pt: 'Roda na hora, sem chamada ao Jev.', en: 'Runs right away, no Jev call.' } },
@@ -293,7 +293,7 @@
       q: { pt: 'Quanto do pedido ficou por fazer?', en: 'How much of the request is left to do?' },
       act: { pt: 'Segue: a resposta chega até você sem interrupção.', en: 'Carries on: the reply reaches you uninterrupted.' } }
   ];
-  var BAND = { low: { pt: 'baixa', en: 'low' }, mid: { pt: 'incerta', en: 'uncertain' }, high: { pt: 'alta', en: 'high' }, none: { pt: 'sem chamada', en: 'no call' } };
+  var BAND = { low: { pt: 'baixa', en: 'low' }, mid: { pt: 'incerta', en: 'uncertain' }, high: { pt: 'alta', en: 'high' }, none: { pt: 'sem chamada', en: 'no call' }, local: { pt: 'regra local', en: 'local rule' } };
   var $ = function (id) { return document.getElementById(id); };
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.case'));
   var current = 0;
@@ -313,7 +313,7 @@
       $('p').textContent = '—';
       $('lim').textContent = '';
       b.className = 'band none';
-      b.textContent = BAND.none[lang];
+      b.textContent = BAND[c.kind || 'none'][lang];
       return;
     }
     meter.classList.remove('off');

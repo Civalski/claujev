@@ -29,7 +29,7 @@ in `~/.claude/claujev/config.json`. The same keys can be written by hand:
 
 | Key | Feature |
 | --- | --- |
-| `triage` | hints + effort suggestion |
+| `triage` | effort suggestion, vague-request warning and area hint |
 | `command_guard` | confirmation before risky commands |
 | `rule_review` | every edit against your rules |
 | `final_check` | completeness check before Claude finishes |

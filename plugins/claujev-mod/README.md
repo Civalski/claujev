@@ -11,7 +11,9 @@ version with mods.
   `minEffort` … `maxEffort`. `effort: ask` (default) asks in Claude Code's question dialog when it differs
   from the effort in use, and applies it to the request's model calls only on a yes (Esc keeps the
   current one); `observe` only shows it; `on` applies it without asking; `off` does nothing. It never
-  touches subagents or a request that asks for effort itself ("ultrathink").
+  touches subagents or a request that asks for effort itself ("ultrathink"). Each answer (accepted, kept,
+  dismissed) is recorded in `~/.claude/claujev/logs/effort-<day>-<session>.jsonl`, so `report` shows how
+  often the suggestion is taken.
 - **Status line:** `Jev ✓42 ⚑3 · effort high` — checks and actions of the day, and the effort.
 - **Toasts** when Jev acts (command held, final check blocked).
 - **`/claujev`:** today's calls, actions, cost and effort suggestions.

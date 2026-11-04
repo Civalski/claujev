@@ -18,11 +18,15 @@
 While Claude works, Jev answers short, typed questions such as *"is this command destructive?"* or
 *"was the request fully done?"*, and ClauJev turns the answers into action:
 
-- 🧭 **Triage**: tells Claude whether a request is a question, a small change, a big one, or too vague.
-- 🎚️ **Effort suggestion**: `low` for a quick question, `xhigh` for a tangled bug. It asks before changing anything.
-- 🛑 **Command guard**: asks for your confirmation before destructive or credential-touching commands.
+- ✅ **Final check**: stops "done!" when the work looks incomplete or your tests fail, including what
+  Claude edited through the shell. This is the core: a second model, independent from Claude, checking
+  what it says it did.
+- 🎚️ **Effort suggestion**: `low` for a quick question, `high` for an investigation, `xhigh` for a large
+  change. It asks before changing anything.
+- 🛑 **Command guard**: push, merge, `reset --hard` and publishing ask for confirmation by a local rule, at
+  no cost. Jev judges what no rule can: scripts, migrations, exposed credentials.
 - 🔍 **Rule review**: checks every edit against rules you write in plain language.
-- ✅ **Final check**: stops "done!" when the work looks incomplete or your tests fail.
+- 🧭 **Triage**: warns Claude when a request is too vague and passes on your project area's hint.
 - 🪄 **Subagent routing** and 🕵️ **false-claim detector** for subagents.
 
 <p align="center"><img src="docs/demo.gif" alt="ClauJev holding a git push --force for confirmation in Claude Code" width="100%"></p>
@@ -30,10 +34,13 @@ While Claude works, Jev answers short, typed questions such as *"is this command
 About **400 ms** per check. Six days of daily use cost the author **US$ 0.07**.
 
 **It can also save Claude tokens.** Jev costs a fraction of a cent, and it steers Claude away from the
-expensive habits: `low` effort (less thinking) on simple questions, "go straight to the file" instead
-of exploring the whole repository for a one-line change, no edits when you only asked a question, and
-simple subagent tasks on a smaller, cheaper model. The final check also catches unfinished work before
-you have to ask again.
+expensive habits: `low` effort (less thinking) on simple questions and simple subagent tasks on a
+smaller, cheaper model. The final check also catches unfinished work before you have to ask again.
+What a fixed rule can settle (confirming a `git push`) stays with the rule, without calling Jev.
+
+`node plugins/claujev/hooks/claujev.mjs report` shows whether it pays off for you: how many times the
+final check blocked and Claude then actually fixed something, and how many effort suggestions you
+accepted.
 
 > [!NOTE]
 > Community project, not affiliated with TypeSafe AI or Anthropic. You need a
@@ -80,7 +87,7 @@ flowchart TB
     CC -->|"hook event"| CJ["⚙️ claujev.mjs<br/>one file · zero deps"]
     CJ <-->|"questions ⇄ probabilities<br/>~400 ms · secrets redacted"| JEV[("🧠 Jev · TypeSafe AI")]
     CJ --> R{"what goes back<br/>to Claude Code?"}
-    R -->|"prompt"| A1["💬 hint + effort"]
+    R -->|"prompt"| A1["🎚️ effort + vague warning"]
     R -->|"bash"| A2["✋ ask for your confirmation"]
     R -->|"edit · stop · subagent"| A3["🔁 review before continuing"]
     R -->|"agent"| A4["🪄 smaller model"]

@@ -30,7 +30,7 @@ Rode `/claujev:configure`: o Claude pergunta, em português, quais recursos mant
 
 | Chave | Recurso |
 | --- | --- |
-| `triage` | dicas + sugestão de esforço |
+| `triage` | sugestão de esforço, aviso de pedido vago e dica de área |
 | `command_guard` | confirmação antes de comandos arriscados |
 | `rule_review` | cada edição contra as suas regras |
 | `final_check` | conferência antes de o Claude encerrar |

@@ -35,23 +35,28 @@ injeta (`<task-notification>`, `<local-command-…>` etc.) não são enviados.
 | --- | --- | --- |
 | `task_type`: que tipo de trabalho o pedido exige? | choice | question · bug · feature · refactor · config · other |
 | `scope`: qual o tamanho provável da mudança? | score | nenhuma · trivial · pequena · média · grande |
+| `depth`: independente de código, quanta investigação e raciocínio o pedido exige? | score | resposta direta · conferir uma coisa · cruzar algumas fontes · investigar vários lugares · análise profunda |
 | `ambiguous`: o pedido continua vago mesmo para quem tem o histórico? | noul | — |
 | `area`: a que área do projeto o pedido se refere? *(só se houver `areas`)* | choice | suas áreas + none |
 
-**Dicas possíveis:** só pergunta (confiança ≥ 0,6) → não editar; escopo ≤ 0,5 → ir direto,
-sem subagentes; escopo ≥ 0,85 → planejar antes; ambíguo alto → perguntar antes; `hint` da área
-(confiança ≥ 0,5).
+**Dicas:** ambíguo alto → perguntar antes; `hint` da área (confiança ≥ 0,5). Com `sizeHints: true`
+(desligado por padrão), também: só pergunta (confiança ≥ 0,6) → não editar; tarefa de código com
+escopo ≤ 0,5 → ir direto, sem subagentes; escopo ≥ 0,85 → planejar antes.
 
-**Sugestão de esforço** (gravada no estado da sessão e aplicada pelo `claujev-mod`, se instalado):
-pergunta (confiança ≥ 0,6) → `low`; tamanho ≤ 0,3 → `low`; ≤ 0,6 → `medium`; ≤ 0,85 → `high`; maior →
-`xhigh`. Bug com ambiguidade ≥ 0,7 sobe um nível, até `xhigh`. Um pedido com "ultrathink", "pense bem"
-ou parecido fica marcado como `explicitEffort`, e o mod não mexe nele.
+**Sugestão de esforço** (gravada no estado da sessão e aplicada pelo `claujev-mod`, se instalado): vale
+o maior de dois níveis. Tamanho: ≤ 0,3 → `low`, ≤ 0,6 → `medium`, ≤ 0,85 → `high`, maior → `xhigh`.
+Profundidade: ≤ 0,45 → `low`, ≤ 0,8 → `medium`, ≤ 0,95 → `high`, maior → `xhigh`. Uma pergunta
+(confiança ≥ 0,6) usa só a profundidade e para em `high`. Um pedido com "ultrathink", "pense bem" ou
+parecido fica marcado como `explicitEffort`, e o mod não mexe nele. O mod grava cada resposta à
+pergunta de esforço em `logs/effort-<dia>-<sessão>.jsonl`.
 
 ## `bash` · PreToolUse (Bash, PowerShell)
 
 **Estado:** o comando (até 4.000 caracteres). Comandos de leitura pura não são enviados, inclusive
 encadeados como `cd repo && git status | head` quando todas as partes são leitura (sem
-redirecionamento, substituição ou arquivo sensível).
+redirecionamento, substituição ou arquivo sensível). O que uma regra fixa resolve pede confirmação sem
+chamar o Jev: `git push`, `gh pr merge`, `git branch -D`, `reset --hard`, `clean -f`, `filter-branch`,
+`npm publish`, `terraform apply/destroy`, `kubectl delete`, `DROP`/`TRUNCATE` (registrado com `local: true`).
 
 | Pergunta | Tipo |
 | --- | --- |
@@ -101,7 +106,14 @@ relatório final dele. Só é chamado se o subagente editou algo ou rodou comand
 do início do turno (até 30.000 caracteres), os comandos que o Claude rodou no turno (lidos do
 transcript; os com efeito mais detalhados, e o fim do turno quando a lista é longa), o resultado do
 `verify` e a resposta final do Claude (até 3.000 caracteres). É chamado quando o turno teve edição ou um comando com efeito
-(`git commit`/`push`/`tag`, `gh … create`, `npm publish`, deploy, `curl -X POST` etc.).
+(`git commit`/`push`/`tag`, `gh … create`, `npm publish`, deploy, `curl -X POST` etc.). Um comando do
+shell que escreve arquivo (`sed -i`, `python … open('w')`, `cat > … <<EOF`, redirecionamento) também
+conta: o diff e os arquivos novos do turno são lidos do git, inclusive num repositório em que o comando
+entrou com `cd`. Turnos sem mudança ficam registrados como pulados.
+
+**Depois de um bloqueio:** o Stop seguinte registra `followUp` (chamadas de ferramenta depois do
+bloqueio e quantas mudaram algo), sem chamar o Jev. O `report` soma: mudou algo = o bloqueio ajudou; só
+explicou = provável alarme falso.
 
 | Pergunta | Tipo |
 | --- | --- |

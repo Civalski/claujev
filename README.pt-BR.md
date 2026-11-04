@@ -19,11 +19,15 @@ Claude Code. Enquanto o Claude trabalha, o Jev responde perguntas curtas e objet
 comando é destrutivo?"* ou *"o pedido foi atendido por completo?"*, e o ClauJev transforma as
 respostas em ação:
 
-- 🧭 **Triagem**: diz ao Claude se o pedido é pergunta, mudança pequena, grande ou vago demais.
-- 🎚️ **Sugestão de esforço**: `low` numa pergunta rápida, `xhigh` num bug difícil. Pergunta antes de mudar.
-- 🛑 **Guarda de comandos**: pede sua confirmação antes de comandos destrutivos ou que mexem com credenciais.
+- ✅ **Conferência final**: segura o "pronto!" quando o trabalho parece incompleto ou os testes falham,
+  inclusive o que o Claude editou pelo shell. É o ponto central: um segundo modelo, independente do
+  Claude, conferindo o que ele diz que fez.
+- 🎚️ **Sugestão de esforço**: `low` numa pergunta rápida, `high` numa investigação, `xhigh` numa mudança
+  grande. Pergunta antes de mudar.
+- 🛑 **Guarda de comandos**: push, merge, `reset --hard` e publicação pedem confirmação por uma regra
+  local, sem custo. O Jev julga o que regra nenhuma pega: scripts, migrations, credenciais expostas.
 - 🔍 **Revisão por regras**: confere cada edição contra regras que você escreve em português comum.
-- ✅ **Conferência final**: segura o "pronto!" quando o trabalho parece incompleto ou os testes falham.
+- 🧭 **Triagem**: avisa o Claude quando o pedido está vago demais e passa a dica da área do projeto.
 - 🪄 **Roteamento** e 🕵️ **detector de relatório falso** para subagentes.
 
 <p align="center"><img src="docs/demo.gif" alt="O ClauJev segurando um git push --force para confirmação no Claude Code" width="100%"></p>
@@ -31,10 +35,13 @@ respostas em ação:
 Cerca de **400 ms** por checagem. Seis dias de uso diário custaram ao autor **US$ 0,07**.
 
 **Também pode economizar tokens do Claude.** O Jev custa frações de centavo e afasta o Claude dos
-hábitos caros: esforço `low` (menos raciocínio) em perguntas simples, "vá direto ao arquivo" em vez de
-explorar o repositório inteiro para mudar uma linha, nenhuma edição quando você só fez uma pergunta, e
-tarefas simples de subagente num modelo menor e mais barato. A conferência final ainda pega trabalho
-inacabado antes de você precisar pedir de novo.
+hábitos caros: esforço `low` (menos raciocínio) em perguntas simples e tarefas simples de subagente num
+modelo menor e mais barato. A conferência final ainda pega trabalho inacabado antes de você precisar
+pedir de novo. O que uma regra fixa resolve (confirmar um `git push`) fica com a regra, sem chamar o Jev.
+
+O `node plugins/claujev/hooks/claujev.mjs report` mostra se ele está valendo a pena para você: quantas
+vezes a conferência final bloqueou e o Claude de fato corrigiu algo, e quantas sugestões de esforço você
+aceitou.
 
 > [!NOTE]
 > Projeto da comunidade, sem vínculo oficial com a TypeSafe AI nem com a Anthropic. Você precisa de
@@ -82,7 +89,7 @@ flowchart TB
     CC -->|"evento (hook)"| CJ["⚙️ claujev.mjs<br/>um arquivo · zero dependências"]
     CJ <-->|"perguntas ⇄ probabilidades<br/>~400 ms · segredos removidos"| JEV[("🧠 Jev · TypeSafe AI")]
     CJ --> R{"o que devolver<br/>ao Claude Code?"}
-    R -->|"prompt"| A1["💬 dica + esforço"]
+    R -->|"prompt"| A1["🎚️ esforço + aviso se vago"]
     R -->|"bash"| A2["✋ pedir sua confirmação"]
     R -->|"edit · stop · subagent"| A3["🔁 revisar antes de seguir"]
     R -->|"agent"| A4["🪄 modelo menor"]

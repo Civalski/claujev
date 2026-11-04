@@ -37,22 +37,28 @@ commands, messages under 15 characters and messages Claude Code injects itself (
 | --- | --- | --- |
 | `task_type`: what kind of work does the request need? | choice | question · bug · feature · refactor · config · other |
 | `scope`: how large is the change likely to be? | score | none · trivial · small · medium · large |
+| `depth`: regardless of code, how much investigation and reasoning does it need? | score | direct answer · check one thing · cross-check a few sources · investigate several places · deep analysis |
 | `ambiguous`: is the request still vague for someone who has the history? | noul | — |
 | `area`: which project area is it about? *(only with `areas`)* | choice | your areas + none |
 
-**Possible hints:** question (confidence ≥ 0.6) → don't edit; scope ≤ 0.5 → go straight to it, no
-subagents; scope ≥ 0.85 → plan first; high ambiguity → ask first; the area's `hint` (confidence ≥ 0.5).
+**Hints:** high ambiguity → ask first; the area's `hint` (confidence ≥ 0.5). With `sizeHints: true`
+(off by default) also: question (confidence ≥ 0.6) → don't edit; a code task with scope ≤ 0.5 → go
+straight to it, no subagents; scope ≥ 0.85 → plan first.
 
-**Effort suggestion** (stored in the session state and applied by `claujev-mod` when installed):
-question (confidence ≥ 0.6) → `low`; scope ≤ 0.3 → `low`; ≤ 0.6 → `medium`; ≤ 0.85 → `high`; above →
-`xhigh`. A bug with ambiguity ≥ 0.7 goes one level up, at most `xhigh`. A request with "ultrathink",
-"think hard" or similar is marked `explicitEffort`, and the mod leaves it alone.
+**Effort suggestion** (stored in the session state and applied by `claujev-mod` when installed): the
+larger of two levels. Scope: ≤ 0.3 → `low`, ≤ 0.6 → `medium`, ≤ 0.85 → `high`, above → `xhigh`.
+Depth: ≤ 0.45 → `low`, ≤ 0.8 → `medium`, ≤ 0.95 → `high`, above → `xhigh`. A question (confidence ≥ 0.6)
+uses depth only and stops at `high`. A request with "ultrathink", "think hard" or similar is marked
+`explicitEffort`, and the mod leaves it alone. The mod records each answer to its effort question in
+`logs/effort-<day>-<session>.jsonl`.
 
 ## `bash` · PreToolUse (Bash, PowerShell)
 
 **State:** the command (up to 4,000 characters). Plain read-only commands are not sent, including
 chains like `cd repo && git status | head` where every part is a read (no redirection, substitution or
-sensitive file).
+sensitive file). Commands a fixed rule settles ask for confirmation without calling Jev: `git push`,
+`gh pr merge`, `git branch -D`, `reset --hard`, `clean -f`, `filter-branch`, `npm publish`,
+`terraform apply/destroy`, `kubectl delete`, `DROP`/`TRUNCATE` (logged with `local: true`).
 
 | Question | Type |
 | --- | --- |
@@ -102,7 +108,14 @@ Only called when the subagent edited something or ran commands.
 the turn (up to 30,000 characters), the commands Claude ran in the turn (read from the transcript;
 commands with effects in more detail, the end of the turn kept when the list is long), the `verify`
 result and Claude's final reply (up to 3,000 characters). Called when the turn had an edit or a command with effects (`git commit`/`push`/
-`tag`, `gh … create`, `npm publish`, deploys, `curl -X POST`, etc.).
+`tag`, `gh … create`, `npm publish`, deploys, `curl -X POST`, etc.). A shell command that writes files
+(`sed -i`, `python … open('w')`, `cat > … <<EOF`, redirections) also counts: the diff and the new files
+of the turn are read from git, including a repo the command `cd`-ed into. Turns with nothing changed
+are logged as skipped.
+
+**After a block:** the next Stop records `followUp` (tool calls after the block, and how many changed
+something), without calling Jev. `report` sums it up: changed something = the block helped; only
+explained = likely false alarm.
 
 | Question | Type |
 | --- | --- |

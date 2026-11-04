@@ -1,8 +1,9 @@
 # ClauJev
 
 Jev (TypeSafe AI) as a second pair of eyes for Claude Code. Six hooks ask Jev short, typed questions
-while Claude works: request triage with an effort suggestion, command guard, subagent routing, rule
-review of edits, false-claim check of subagent reports, and a final check before Claude finishes.
+while Claude works: a final check before Claude finishes (shell edits included), request triage with an
+effort suggestion, command guard (push, merge and history rewrites by a local rule; Jev for the rest),
+subagent routing, rule review of edits and false-claim check of subagent reports.
 
 Install: `/plugin install claujev --marketplace Civalski/claujev`
 
