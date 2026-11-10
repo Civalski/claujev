@@ -46,16 +46,39 @@
         <button type="button" data-copy="upd"><span lang="pt">Copiar</span><span lang="en">Copy</span></button>
       </div>
       <ul class="jump" aria-label="Versões / Versions">
-        <li><a href="#v2.8.0">2.8.0</a></li><li><a href="#v2.7.0">2.7.0</a></li><li><a href="#v2.6.1">2.6.1</a></li><li><a href="#v2.6.0">2.6.0</a></li><li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
+        <li><a href="#v2.9.0">2.9.0</a></li><li><a href="#v2.8.0">2.8.0</a></li><li><a href="#v2.7.0">2.7.0</a></li><li><a href="#v2.6.1">2.6.1</a></li><li><a href="#v2.6.0">2.6.0</a></li><li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
       </ul>
     </div>
+
+    <!-- 2.9.0 -->
+    <article class="release" id="v2.9.0">
+      <div class="ver">
+        <h2><a href="#v2.9.0">2.9.0</a></h2>
+        <time datetime="2026-11-10"><span lang="pt">10 nov 2026</span><span lang="en">Nov 10, 2026</span></time><br>
+        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+      </div>
+      <div>
+        <p class="summary" lang="pt">Menos interrupções: o ClauJev só pede confirmação em mudança crítica em produção e a checagem final passa a avisar em vez de bloquear.</p>
+        <p class="summary" lang="en">Fewer interruptions: ClauJev only asks before critical changes in production, and the final check warns instead of blocking.</p>
+        <ul class="changes">
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt">A guarda de comandos pediu confirmação 111 vezes em uma semana, quase tudo rotina: push, merge, deploy, migration. Agora só pergunta em force push na <code>main</code>, <code>npm publish</code>, <code>terraform destroy</code>, <code>DROP</code>/<code>TRUNCATE</code>, apagar banco, bucket ou repositório, e no que o Jev julgar crítico em produção. Nos 52 comandos daquela semana que o Jev tinha sinalizado, só 1 ainda perguntaria. Credenciais só alertam quando o segredo sai da máquina.</p>
+            <p lang="en">The command guard asked 111 times in one week, nearly all routine: push, merge, deploy, migration. It now only asks for force push to <code>main</code>, <code>npm publish</code>, <code>terraform destroy</code>, <code>DROP</code>/<code>TRUNCATE</code>, deleting a database, bucket or repository, and what Jev judges critical in production. Of the 52 commands Jev had flagged that week, only 1 would still ask. Credentials only flag when a secret leaves the machine.</p></li>
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt">A checagem final mostra um aviso para você em vez de bloquear o Claude (dos 6 bloqueios da semana, só 1 levou a uma mudança). Ela só bloqueia quando o comando <code>verify</code> falha; <code>stopBlocks: true</code> volta ao jeito antigo.</p>
+            <p lang="en">The final check shows you a warning instead of blocking Claude (of 6 blocks that week, only 1 led to a change). It only blocks when the <code>verify</code> command fails; <code>stopBlocks: true</code> restores the old behaviour.</p></li>
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt">A revisão de regras vê o seu pedido: uma regra como "não implementar deploy nesta fase" não dispara mais quando você pede justamente o deploy.</p>
+            <p lang="en">Rule review sees your request: a rule like "no deploy in this phase" no longer fires when you ask for exactly that deploy.</p></li>
+        </ul>
+      </div>
+    </article>
 
     <!-- 2.8.0 -->
     <article class="release" id="v2.8.0">
       <div class="ver">
         <h2><a href="#v2.8.0">2.8.0</a></h2>
-        <time datetime="2026-11-04"><span lang="pt">4 nov 2026</span><span lang="en">Nov 4, 2026</span></time><br>
-        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+        <time datetime="2026-11-04"><span lang="pt">4 nov 2026</span><span lang="en">Nov 4, 2026</span></time>
       </div>
       <div>
         <p class="summary" lang="pt">Menos chamadas onde uma regra basta, menos dicas, e duas medições para saber se o ClauJev ajuda.</p>
