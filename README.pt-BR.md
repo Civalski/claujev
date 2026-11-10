@@ -40,7 +40,7 @@ O que é novo:
 **O que não é novo**, e não é motivo para instalar: bloquear `push`, `rm -rf` e afins já é coberto pelas
 permissões do Claude Code e por plugins como o
 [safety-net](https://github.com/kenryu42/claude-code-safety-net); regras por padrão de texto nas edições,
-pelo hookify. O ClauJev traz o básico também (guarda local para push, merge, `reset --hard` e publicação,
+pelo hookify. O ClauJev traz o básico também (guarda que só pergunta antes de mudança crítica em produção,
 e revisão por regras em português comum) para você não ficar descoberto, além de 🧭 aviso de pedido vago
 e 🪄 roteamento de subagentes com 🕵️ detector de relatório falso.
 

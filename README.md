@@ -40,7 +40,7 @@ What's new:
 **What isn't new**, and isn't the reason to install it: blocking `push`, `rm -rf` and the like is already
 covered by Claude Code's permissions and plugins such as
 [safety-net](https://github.com/kenryu42/claude-code-safety-net); pattern rules on edits, by hookify.
-ClauJev ships the basics too (a local guard for push, merge, `reset --hard` and publishing, and rule
+ClauJev ships the basics too (a guard that asks only before critical production changes, and rule
 review in plain language) so you're not left exposed, plus 🧭 a vague-request warning and 🪄 subagent
 routing with a 🕵️ false-claim detector.
 

@@ -56,14 +56,16 @@ uses depth only and stops at `high`. A request with "ultrathink", "think hard" o
 
 **State:** the command (up to 4,000 characters). Plain read-only commands are not sent, including
 chains like `cd repo && git status | head` where every part is a read (no redirection, substitution or
-sensitive file). Commands a fixed rule settles ask for confirmation without calling Jev: `git push`,
-`gh pr merge`, `git branch -D`, `reset --hard`, `clean -f`, `filter-branch`, `npm publish`,
-`terraform apply/destroy`, `kubectl delete`, `DROP`/`TRUNCATE` (logged with `local: true`).
+sensitive file). The guard only asks for critical changes that are hard to undo; routine push, merge,
+`branch -D`, `reset --hard` and deploys are left to Claude Code's own permissions. Commands a fixed rule
+settles ask for confirmation without calling Jev: force push to `main`/`master`, `npm publish`,
+`terraform destroy` (or `apply -destroy`), `kubectl delete`, `gh repo delete`, `aws s3 rb`,
+`aws rds delete-db-instance/cluster`, `supabase db reset --linked`, `DROP`/`TRUNCATE` (logged with `local: true`).
 
 | Question | Type |
 | --- | --- |
-| `side_effects`: is the command destructive or hard to undo? (local `git add`/`commit` are not) | noul |
-| `credentials`: does it expose credentials (print, copy, send them elsewhere)? Loading an `.env` for a local tool is not exposure | noul |
+| `side_effects`: is it a critical change in production that is hard to undo (deleting production data or resources, destroying infrastructure, rewriting the main branch)? Push, merge, a deploy workflow, a schema migration and staging are not | noul |
+| `credentials`: does it leak a credential off this machine (commit, issue, third-party service) or print a full secret? Copying an `.env` between local folders or loading it for a local tool is not a leak | noul |
 
 **Action:** `permissionDecision: "ask"`, so Claude Code asks for your confirmation.
 

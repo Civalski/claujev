@@ -39,7 +39,7 @@ const DEFAULTS = {
     incomplete: { low: 0.3, high: 0.5 }, // 1 - completeness score
     unfinished: { low: 0.5, high: 0.85 },
     sideEffects: { low: 0.5, high: 0.85 },
-    credentials: { low: 0.45, high: 0.65 },
+    credentials: { low: 0.5, high: 0.8 },
     simpleTask: { low: 0.5, high: 0.8 },
     falseClaims: { low: 0.5, high: 0.8 },
   },
@@ -144,18 +144,18 @@ const TEXT = {
     bash: {
       state: (tool) => `Command the agent wants to run (${tool}):`,
       sideEffects: {
-        instructions: 'Is this command destructive or hard to undo (deleting files, overwriting data, git push, merge, push --force or reset --hard, publishing or deploying, applying a migration or writing to a remote database, sending data to an external service)? Local git add/commit, creating branches, installing dependencies and writing to temporary folders are easy to undo. Judge by what the command itself shows: loading environment variables (source or . of an .env, set -a, export) and running a project script, build or test whose name and arguments do not say it deletes, deploys, migrates, seeds or writes to a remote system are NOT destructive by themselves.',
-        criteria: { true: 'May cause damage or a change that is hard to revert', false: 'Only reads information or makes a local change that is easy to undo' },
+        instructions: 'Is this command a critical change in production that is hard or impossible to undo? Critical means: permanently deleting or overwriting production data (DROP, TRUNCATE, or a DELETE/UPDATE without a narrow filter on a production database), deleting production resources (database instances, buckets, backups or snapshots, user accounts, secrets, DNS records), destroying production infrastructure, or rewriting the history of the main branch. NOT critical, even when it touches remote systems: git commit, push or merge of a branch or pull request, deleting a merged branch, running tests or builds, running a deploy or publish workflow, applying a migration that creates or alters tables, uploading a build, anything in a staging, homologation, test or local environment, and deleting local or temporary files. Judge by what the command itself shows: loading environment variables and running a project script whose name and arguments do not say it deletes production data is NOT critical.',
+        criteria: { true: 'Permanently deletes or destroys production data or resources, or rewrites the main branch', false: 'Routine work: local or reversible, a normal deploy or migration, or a non-production environment' },
       },
       credentials: {
-        instructions: 'Does this command expose credentials, keys, tokens or passwords: print them on screen, copy them to another file or place, or send them to a service other than the one they belong to? Loading an .env or a config file so that a local script or tool can use it is NOT exposure.',
-        criteria: { true: 'Shows, copies or sends a credential somewhere it does not belong', false: 'Does not involve credentials, or only lets a local tool use them without showing them' },
+        instructions: 'Does this command leak a credential (key, token, password) outside this machine or to someone who should not have it: commit it to git, post it in an issue, pull request or chat, send it to a third-party service, or print a full secret value on screen? NOT a leak: copying an .env between local folders, loading it so a local tool can use it, reading a token to call the project\'s own API in a test, and setting a password on a test account.',
+        criteria: { true: 'Sends, publishes or prints a full secret where it does not belong', false: 'Credentials stay on this machine, used by the tools they belong to' },
       },
-      destructive: (p) => `destructive effect (p=${p})`,
+      destructive: (p) => `critical change in production (p=${p})`,
       creds: (p) => `credential exposure (p=${p})`,
       ask: (reasons) => `[Jev] Command flagged: ${reasons}`,
-      fallback: '[Jev] Jev could not check this command in time, and it looks destructive (local check): confirm it yourself.',
-      local: '[ClauJev] This command publishes, merges or rewrites history (local check, Jev not called): confirm it yourself.',
+      fallback: '[Jev] Jev could not check this command in time, and it looks critical (local check): confirm it yourself.',
+      local: '[ClauJev] Critical change that is hard to undo (force push to main, publishing a package, destroying infrastructure or dropping data; local check, Jev not called): confirm it yourself.',
     },
     agent: {
       state: (type, desc) => `Task delegated to a subagent (${type}): ${desc}`,
@@ -282,18 +282,18 @@ const TEXT = {
     bash: {
       state: (tool) => `Comando que o agente quer executar (${tool}):`,
       sideEffects: {
-        instructions: 'Este comando tem efeito destrutivo ou difícil de desfazer (apagar arquivos, sobrescrever dados, git push, merge, push --force ou reset --hard, publicar ou fazer deploy, aplicar migration ou escrever em banco remoto, enviar dados para serviço externo)? git add/commit locais, criar branch, instalar dependências e escrever em pastas temporárias são fáceis de desfazer. Julgue pelo que o próprio comando mostra: carregar variáveis de ambiente (source ou . de um .env, set -a, export) e rodar um script, build ou teste do projeto cujo nome e argumentos não dizem que apaga, faz deploy, migra, popula ou escreve em sistema remoto NÃO é destrutivo por si só.',
-        criteria: { true: 'Pode causar dano ou mudança difícil de reverter', false: 'Só lê informação ou faz mudança local fácil de desfazer' },
+        instructions: 'Este comando é uma mudança crítica em produção, difícil ou impossível de desfazer? Crítico é: apagar ou sobrescrever de vez dados de produção (DROP, TRUNCATE, ou DELETE/UPDATE sem filtro estreito num banco de produção), apagar recursos de produção (instâncias de banco, buckets, backups ou snapshots, contas de usuário, segredos, registros de DNS), destruir infraestrutura de produção ou reescrever o histórico da branch principal. NÃO é crítico, mesmo mexendo em sistema remoto: git commit, push ou merge de branch ou pull request, apagar branch já mergeada, rodar testes ou build, disparar workflow de deploy ou publicação, aplicar migration que cria ou altera tabelas, subir um build, qualquer coisa em ambiente de homologação, staging, teste ou local, e apagar arquivos locais ou temporários. Julgue pelo que o próprio comando mostra: carregar variáveis de ambiente e rodar um script do projeto cujo nome e argumentos não dizem que apaga dados de produção NÃO é crítico.',
+        criteria: { true: 'Apaga ou destrói de vez dados ou recursos de produção, ou reescreve a branch principal', false: 'Trabalho de rotina: local ou reversível, deploy ou migration normal, ou ambiente que não é produção' },
       },
       credentials: {
-        instructions: 'Este comando expõe credenciais, chaves, tokens ou senhas: mostra na tela, copia para outro arquivo ou lugar, ou envia para um serviço que não é o dono dela? Carregar um .env ou arquivo de configuração para um script ou ferramenta local usar NÃO é exposição.',
-        criteria: { true: 'Mostra, copia ou envia uma credencial para onde ela não pertence', false: 'Não envolve credenciais, ou só deixa uma ferramenta local usá-las sem mostrar' },
+        instructions: 'Este comando vaza uma credencial (chave, token, senha) para fora desta máquina ou para quem não deveria tê-la: faz commit dela no git, posta numa issue, pull request ou chat, envia para um serviço de terceiros, ou imprime o valor inteiro de um segredo na tela? NÃO é vazamento: copiar um .env entre pastas locais, carregá-lo para uma ferramenta local usar, ler um token para chamar a API do próprio projeto num teste, e definir a senha de uma conta de teste.',
+        criteria: { true: 'Envia, publica ou imprime um segredo inteiro onde ele não pertence', false: 'As credenciais ficam nesta máquina, usadas pelas ferramentas a que pertencem' },
       },
-      destructive: (p) => `efeito destrutivo (p=${p})`,
+      destructive: (p) => `mudança crítica em produção (p=${p})`,
       creds: (p) => `exposição de credenciais (p=${p})`,
       ask: (reasons) => `[Jev] Comando sinalizado: ${reasons}`,
-      fallback: '[Jev] O Jev não conseguiu checar este comando a tempo, e ele parece destrutivo (checagem local): confirme você mesmo.',
-      local: '[ClauJev] Este comando publica, faz merge ou reescreve o histórico (checagem local, sem chamar o Jev): confirme você mesmo.',
+      fallback: '[Jev] O Jev não conseguiu checar este comando a tempo, e ele parece crítico (checagem local): confirme você mesmo.',
+      local: '[ClauJev] Mudança crítica e difícil de desfazer (force push na main, publicar pacote, destruir infraestrutura ou apagar dados; checagem local, sem chamar o Jev): confirme você mesmo.',
     },
     agent: {
       state: (type, desc) => `Tarefa delegada a um subagente (${type}): ${desc}`,
@@ -991,16 +991,24 @@ const SHELL_META = /[<>`\n]|\$\(|\$\{|\s-(delete|exec\w*|ok\w*|fprint\w*|fls)\b|
 const SENSITIVE = /\.env|\benv\b|environ|secret|credential|credenc|\.ssh|\.pem|\.key\b|token|passw|senha|\.npmrc|\.netrc|\.pgpass|\.gnupg|\.git-credentials|\.gitconfig\.local|hosts\.yml|\.kube\/config|\.docker\/config|\$(env:)?\w*(key|token|secret|pass|pwd|auth)/i;
 const isReadOnly = (cmd) => !SHELL_META.test(cmd) && !SENSITIVE.test(cmd) && !/(^|[^&|])&([^&]|$)/.test(cmd) &&
   cmd.split(/&&|\|\||;|\|/).map((s) => s.trim()).filter(Boolean).every((s) => READ_ONLY.test(s));
-// Safety net when Jev cannot answer (timeout, network, no key): plainly destructive commands still ask.
-const LOCAL_DANGER = /\bgit\s+push\b[^|;&]*(--force|-f\b|--force-with-lease|\+\w)|\bgit\s+(reset\s+--hard|clean\s+-\w*f|branch\s+-D|filter-branch)|\brm\s+-\w*[rf]|\b(drop|truncate)\s+(table|database|schema)\b|\bdelete\s+from\b|\bmkfs\b|\bdd\s+if=|\bchmod\s+-R\s+777|\bnpm\s+publish\b|\bterraform\s+destroy\b|\bkubectl\s+delete\b/i;
+// The guard only asks for critical changes that are hard to undo. Everyday push, merge, branch -D,
+// reset --hard and deploys are left to Claude Code's own permissions (in 2.8.0 they made 104 of the
+// 111 prompts in a week, nearly all routine work the user had already approved).
+
+// Force push that targets main/master, judged per shell segment so `git push -f feat` passes.
+const FORCE_PUSH_MAIN = (cmd) => cmd.split(/&&|\|\||;|\||\n/).some((s) =>
+  /\bgit\s+push\b/.test(s) && /\s(--force(-with-lease)?|-\w*f)\b|\s\+\S/.test(s) && /(\s|:|\+|\/)(main|master)\b/.test(s));
 
 // Commands that always ask, decided locally: a fixed rule catches them for free and never misses.
 // Jev is kept for what a rule cannot tell (a script whose name does not say what it does).
-// rm -rf is left to Jev on purpose: it is common in temporary folders, where it is harmless.
-// Shell commands are case-sensitive (branch -d is safe, -D is not); SQL keywords are not.
-const LOCAL_ASK_SHELL = /\bgit\s+push\b|\bgh\s+pr\s+merge\b|\bgit\s+(reset\s+--hard|branch\s+(-\w*D|--delete\s+--force)|filter-branch|clean\s+-\w*f)\b|\bnpm\s+publish\b|\bterraform\s+(apply|destroy)\b|\bkubectl\s+delete\b/;
+// Shell commands are case-sensitive; SQL keywords are not.
+const LOCAL_ASK_SHELL = /\bnpm\s+publish\b|\bterraform\s+(destroy\b|apply\b[^|;&]*\s-destroy\b)|\bkubectl\s+delete\b|\bgh\s+repo\s+delete\b|\baws\s+s3\s+rb\b|\baws\s+rds\s+delete-db-(instance|cluster)\b|\bsupabase\s+db\s+reset\b[^|;&]*--(linked|db-url)\b/;
 const LOCAL_ASK_SQL = /\b(drop|truncate)\s+(table|database|schema)\b/i;
-const LOCAL_ASK = { test: (cmd) => LOCAL_ASK_SHELL.test(cmd) || LOCAL_ASK_SQL.test(cmd) };
+const LOCAL_ASK = { test: (cmd) => FORCE_PUSH_MAIN(cmd) || LOCAL_ASK_SHELL.test(cmd) || LOCAL_ASK_SQL.test(cmd) };
+
+// Safety net when Jev cannot answer (timeout, network, no key): only plainly critical commands still ask.
+const LOCAL_DANGER_RE = /\bgit\s+push\b[^|;&]*(--force|\s-f\b)|\bdelete\s+from\b|\bmkfs\b|\bdd\s+if=|\brm\s+-\w*r\w*\s+(-\S+\s+)*(\/|~|\$HOME)(\s|$)/i;
+const LOCAL_DANGER = { test: (cmd) => LOCAL_ASK.test(cmd) || LOCAL_DANGER_RE.test(cmd) };
 
 async function onBash(input, cfg, mode) {
   if (mode === 'off') return;

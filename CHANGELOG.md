@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.9.0 — 2026-11-10
+
+### Changed
+- **The command guard only asks before critical changes in production.** In the week after 2.8.0 it
+  asked 111 times, and nearly all were routine work already approved: pushing a feature branch, merging
+  a PR, deleting a merged branch, running the deploy workflow, applying a schema migration, a commit or a
+  build. Claude Code's own permissions already cover those. The fixed rule now covers only force push to
+  `main`/`master`, `npm publish`, `terraform destroy`, `kubectl delete`, `gh repo delete`, `aws s3 rb`,
+  `aws rds delete-db-instance/cluster`, `supabase db reset --linked` and `DROP`/`TRUNCATE`. Jev is asked
+  whether the command is a critical, hard-to-undo change in production. Replayed on the 52 commands Jev
+  flagged that week, 1 would still ask; 8 of 8 critical test cases ask.
+- **The credentials question only flags leaks**: a secret committed, posted or sent to a third party, or
+  printed in full. Copying an `.env` between local folders or reading a token for a local test no longer
+  asks (threshold 0.65 → 0.80).
+- The safety net used when Jev cannot answer follows the same line (`rm -rf build`, `reset --hard` and
+  `branch -D` no longer ask; `DELETE FROM`, force push and `rm -rf ~` still do).
+
 ## 2.8.0 (mod 2.3.0) — 2026-11-04
 
 ### Changed

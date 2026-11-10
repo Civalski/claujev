@@ -30,7 +30,7 @@ marked as recommended. Skip a question whose answer you already know.
    (everything acts, subagent routing to a smaller model included).
 3. **Features to turn off** (multiSelect; selecting none keeps all). Explain each in a few plain words:
    - Request triage (`triage`): a hint per request and the effort suggestion
-   - Command guard (`command_guard`): asks before destructive or credential commands
+   - Command guard (`command_guard`): asks before critical production changes or credential leaks
    - Rule review (`rule_review`): checks each code edit against rules
    - Final check (`final_check`): checks the work before Claude says it is done
    - Subagent routing (`subagent_routing`): simple subagents on a smaller, cheaper model

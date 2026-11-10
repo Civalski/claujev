@@ -194,12 +194,16 @@ test('suggestEffort with depth: the larger of change size and investigation', ()
   assert.equal(m.suggestEffort({ taskType: 'bug', scope: 0.5, depth: 0.25, ambiguous: 0.9 }), 'medium', 'depth replaces the ambiguity bump');
 });
 
-test('LOCAL_ASK: publishing, merging and history rewrites ask without calling Jev', () => {
-  for (const c of ['git push -u origin HEAD', 'cd repo && git push -q origin --delete feat', 'gh pr merge 246 --squash', 'git branch -D old', 'git reset --hard HEAD~1', 'npm publish', 'psql -c "DROP TABLE users"'])
+test('LOCAL_ASK: only critical, hard-to-undo commands ask without calling Jev', () => {
+  for (const c of ['git push --force origin main', 'cd r && git push -f origin master 2>&1', 'git push origin +HEAD:main', 'git push --force-with-lease origin main', 'npm publish',
+    'psql -c "DROP TABLE users"', 'terraform destroy', 'terraform apply -auto-approve -destroy', 'aws s3 rb s3://x --force', 'aws rds delete-db-instance --db-instance-identifier x', 'kubectl delete ns prod', 'gh repo delete o/r --yes', 'supabase db reset --linked'])
     assert.ok(m.LOCAL_ASK.test(c), c);
-  for (const c of ['git commit -m x', 'git branch -d merged', 'rm -rf /tmp/scratch', 'npm install', 'gh pr view 246']) assert.ok(!m.LOCAL_ASK.test(c), c);
+  // Routine work: Claude Code's own permissions handle these.
+  for (const c of ['git push -u origin HEAD', 'cd repo && git push -q origin --delete feat', 'gh pr merge 246 --squash --delete-branch', 'git branch -D old', 'git reset --hard HEAD~1',
+    'git push --force origin feat/x', 'git push origin "+abc123:refs/tags/publicado/via-api-cliente"', 'terraform apply plan.tfplan', 'git commit -m x', 'rm -rf /tmp/scratch', 'npm install', 'git checkout main && git push origin feat'])
+    assert.ok(!m.LOCAL_ASK.test(c), c);
   const dir = mkdtempSync(join(tmpdir(), 'claujev-local-'));
-  const out = JSON.parse(runHook('bash', { session_id: 'l', cwd: home, tool_name: 'Bash', tool_input: { command: 'git push origin main' } }, { CLAUJEV_HOME: dir }));
+  const out = JSON.parse(runHook('bash', { session_id: 'l', cwd: home, tool_name: 'Bash', tool_input: { command: 'git push --force origin main' } }, { CLAUJEV_HOME: dir }));
   assert.equal(out.hookSpecificOutput.permissionDecision, 'ask', 'asks even with no key: Jev is not needed');
   const day = new Date().toISOString().slice(0, 10);
   assert.match(readFileSync(join(dir, 'logs', `${day}.jsonl`), 'utf8'), /"local":true/);
@@ -383,10 +387,10 @@ const runHook = (hook, input, env = {}) => execFileSync(process.execPath, [SCRIP
   env: { ...process.env, TYPESAFE_API_KEY: '', ...env },
 });
 
-test('LOCAL_DANGER: the safety net catches plainly destructive commands only', () => {
-  for (const c of ['git push --force origin main', 'git push --force-with-lease origin main', 'git push -f', 'git reset --hard HEAD~3', 'rm -rf build', 'psql -c "DROP TABLE users"', 'npm publish'])
+test('LOCAL_DANGER: the safety net catches plainly critical commands only', () => {
+  for (const c of ['git push --force origin main', 'git push -f', 'psql -c "DELETE FROM users"', 'rm -rf ~', 'rm -rf /', 'psql -c "DROP TABLE users"', 'npm publish'])
     assert.ok(m.LOCAL_DANGER.test(c), c);
-  for (const c of ['git push origin main', 'git status', 'npm test', 'rm notes.txt', 'git commit -m "fix"'])
+  for (const c of ['git push origin main', 'git status', 'npm test', 'rm notes.txt', 'rm -rf build', 'rm -rf /tmp/x', 'git reset --hard HEAD~3', 'git commit -m "fix"'])
     assert.ok(!m.LOCAL_DANGER.test(c), c);
 });
 
@@ -394,10 +398,11 @@ test('when Jev cannot answer, a destructive command still asks; a normal one pas
   const dir = mkdtempSync(join(tmpdir(), 'claujev-fallback-'));
   writeFileSync(join(dir, 'config.json'), JSON.stringify({ mode: 'enforce' }));
   const run = (command) => runHook('bash', { session_id: 'f', cwd: home, tool_name: 'Bash', tool_input: { command } }, { CLAUJEV_HOME: dir });
-  const out = JSON.parse(run('rm -rf build')); // not in LOCAL_ASK, so it goes to Jev and Jev fails
+  const out = JSON.parse(run('psql -c "DELETE FROM users"')); // not in LOCAL_ASK, so it goes to Jev and Jev fails
   assert.equal(out.hookSpecificOutput.permissionDecision, 'ask');
   assert.match(out.hookSpecificOutput.permissionDecisionReason, /could not check/);
   assert.equal(run('npm install'), '', 'without an answer from Jev, an ordinary command is not held');
+  assert.equal(run('rm -rf build'), '', 'deleting a build folder is routine');
 });
 
 test('triage skips system messages without calling Jev', () => {

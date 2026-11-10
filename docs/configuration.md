@@ -169,8 +169,8 @@ Default bands (`low` / `high`):
 | edit breaks a rule | 0.50 | 0.85 |
 | request incomplete (1 − completeness) | 0.30 | 0.50 |
 | unfinished work | 0.50 | 0.85 |
-| destructive command | 0.50 | 0.85 |
-| command exposes credentials | 0.45 | 0.65 |
+| critical command in production | 0.50 | 0.85 |
+| command leaks credentials | 0.50 | 0.80 |
 | simple subagent task | 0.50 | 0.80 |
 | subagent false claim | 0.50 | 0.80 |
 

@@ -54,14 +54,17 @@ pergunta de esforço em `logs/effort-<dia>-<sessão>.jsonl`.
 
 **Estado:** o comando (até 4.000 caracteres). Comandos de leitura pura não são enviados, inclusive
 encadeados como `cd repo && git status | head` quando todas as partes são leitura (sem
-redirecionamento, substituição ou arquivo sensível). O que uma regra fixa resolve pede confirmação sem
-chamar o Jev: `git push`, `gh pr merge`, `git branch -D`, `reset --hard`, `clean -f`, `filter-branch`,
-`npm publish`, `terraform apply/destroy`, `kubectl delete`, `DROP`/`TRUNCATE` (registrado com `local: true`).
+redirecionamento, substituição ou arquivo sensível). A guarda só pergunta em mudança crítica e difícil
+de desfazer; push, merge, `branch -D`, `reset --hard` e deploy de rotina ficam com as permissões do
+próprio Claude Code. O que uma regra fixa resolve pede confirmação sem chamar o Jev: force push na
+`main`/`master`, `npm publish`, `terraform destroy` (ou `apply -destroy`), `kubectl delete`,
+`gh repo delete`, `aws s3 rb`, `aws rds delete-db-instance/cluster`, `supabase db reset --linked`,
+`DROP`/`TRUNCATE` (registrado com `local: true`).
 
 | Pergunta | Tipo |
 | --- | --- |
-| `side_effects`: o comando é destrutivo ou difícil de desfazer? | noul |
-| `credentials`: o comando expõe credenciais (mostra, copia, envia para outro lugar)? Carregar um `.env` para uma ferramenta local não é exposição | noul |
+| `side_effects`: é uma mudança crítica em produção, difícil de desfazer (apagar dados ou recursos de produção, destruir infraestrutura, reescrever a branch principal)? Push, merge, deploy pelo workflow, migration de schema e homologação não são | noul |
+| `credentials`: o comando vaza uma credencial para fora da máquina (commit, issue, serviço de terceiros) ou imprime um segredo inteiro? Copiar um `.env` entre pastas locais ou carregá-lo para uma ferramenta local não é vazamento | noul |
 
 **Ação:** `permissionDecision: "ask"`, ou seja, o Claude Code pede a sua confirmação.
 
