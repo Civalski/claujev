@@ -257,7 +257,7 @@ test('report: shows the stop follow-ups and the effort answers', () => {
   writeFileSync(join(dir, 'logs', 'effort-2026-11-04-s1.jsonl'), [{ hook: 'effort', answer: 'use' }, { hook: 'effort', answer: 'keep' }, { hook: 'effort', answer: 'use' }].map((e) => JSON.stringify(e)).join('\n'));
   const out = execFileSync('node', [SCRIPT, 'report'], { env: { ...process.env, CLAUJEV_HOME: dir }, encoding: 'utf8' });
   assert.match(out, /blocked 2x: Claude then changed something in 1, only explained in 1/);
-  assert.match(out, /accepted 2 · kept current 1 · dismissed 0/);
+  assert.match(out, /accepted 2 · kept current 1 · picked another 0 · dismissed 0/);
   assert.match(out, /local rule \(Jev not called\): 1/);
 });
 

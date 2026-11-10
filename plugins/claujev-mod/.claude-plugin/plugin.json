@@ -1,7 +1,7 @@
 {
   "name": "claujev-mod",
   "displayName": "ClauJev mod",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Optional companion of ClauJev / Complemento opcional do ClauJev: effort suggestion (asks before changing), status line, toasts and /claujev.",
   "author": {
     "name": "Alisson Civalski",
@@ -10,6 +10,7 @@
   "homepage": "https://github.com/Civalski/claujev",
   "repository": "https://github.com/Civalski/claujev",
   "license": "MIT",
+  "types": "./types/index.d.ts",
   "keywords": [
     "jev",
     "effort",

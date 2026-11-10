@@ -187,7 +187,7 @@ const TEXT = {
     report: {
       empty: 'No logs yet.', distribution: '\nDistribution per question (0..1):', recent: '\nLatest flagged events/errors:', effort: '\nSuggested effort:',
       stopFollow: (n, helped, explained) => `Final check blocked ${n}x: Claude then changed something in ${helped}, only explained in ${explained} (likely false alarm)${n > helped + explained ? `, no record in ${n - helped - explained}` : ''}`,
-      effortAnswers: (a) => `Effort question: accepted ${a.use} · kept current ${a.keep} · dismissed ${a.dismissed}`,
+      effortAnswers: (a) => `Effort question: accepted ${a.use} · kept current ${a.keep} · picked another ${a.other} · dismissed ${a.dismissed}`,
       bashLocal: (n) => `Commands confirmed by the local rule (Jev not called): ${n}`,
       cols: { hook: 'hook', calls: 'calls', errors: 'errors', flagged: 'flagged', uncertain: 'uncertain', acted: 'acted', latency: 'avg latency (ms)', tokens: 'input tokens', cost: 'cost US$', question: 'question', median: 'median' },
     },
@@ -327,7 +327,7 @@ const TEXT = {
     report: {
       empty: 'Sem logs ainda.', distribution: '\nDistribuição por pergunta (0..1):', recent: '\nÚltimos eventos sinalizados/erros:', effort: '\nEsforço sugerido:',
       stopFollow: (n, helped, explained) => `Checagem final bloqueou ${n}x: depois o Claude mudou algo em ${helped}, só explicou em ${explained} (provável alarme falso)${n > helped + explained ? `, sem registro em ${n - helped - explained}` : ''}`,
-      effortAnswers: (a) => `Pergunta de esforço: aceitou ${a.use} · manteve o atual ${a.keep} · fechou ${a.dismissed}`,
+      effortAnswers: (a) => `Pergunta de esforço: aceitou ${a.use} · manteve o atual ${a.keep} · escolheu outro ${a.other} · fechou ${a.dismissed}`,
       bashLocal: (n) => `Comandos confirmados pela regra local (sem chamar o Jev): ${n}`,
       cols: { hook: 'hook', calls: 'chamadas', errors: 'erros', flagged: 'sinalizados', uncertain: 'incertos', acted: 'agiu', latency: 'latência média (ms)', tokens: 'tokens entrada', cost: 'custo US$', question: 'pergunta', median: 'mediana' },
     },
@@ -1164,10 +1164,10 @@ function report(cfg) {
     const helped = follow.filter((e) => e.followUp.changed > 0).length;
     console.log(t.stopFollow(blocks, helped, follow.length - helped));
   }
-  // Effort question answers, written by the mod: accepted, kept the current one, or dismissed.
-  const answers = { use: 0, keep: 0, dismissed: 0 };
+  // Effort question answers, written by the mod: accepted, kept the current one, picked another level, or dismissed.
+  const answers = { use: 0, keep: 0, other: 0, dismissed: 0 };
   for (const e of entries) if (e.hook === 'effort' && e.answer in answers) answers[e.answer]++;
-  if (answers.use + answers.keep + answers.dismissed) console.log(t.effortAnswers(answers));
+  if (answers.use + answers.keep + answers.other + answers.dismissed) console.log(t.effortAnswers(answers));
   const local = entries.filter((e) => e.hook === 'bash' && e.local).length;
   if (local) console.log(t.bashLocal(local));
 
