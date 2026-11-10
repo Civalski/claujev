@@ -125,6 +125,8 @@ explicou = provável alarme falso.
 | `out_of_scope`: mexeu em algo que não foi pedido? *(só registra)* | noul |
 | `p_<id>`: suas perguntas de `questions.stop` | qualquer |
 
-**Ação:** `decision: "block"` com os problemas encontrados. Quando o Claude Code avisa que já
+**Ação:** um aviso para você (`systemMessage`) com os problemas encontrados. Só bloqueia
+(`decision: "block"`) quando o comando `verify` falha, ou sempre que houver problema com
+`stopBlocks: true`. Quando o Claude Code avisa que já
 está continuando por causa de um hook (`stop_hook_active`), o ClauJev não bloqueia de novo,
 então não há laço infinito.

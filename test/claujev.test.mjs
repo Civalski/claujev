@@ -213,6 +213,19 @@ test('sizeHints: off by default, can be turned back on', () => {
   assert.equal(m.DEFAULTS.sizeHints, false);
 });
 
+test('final check warns by default; only a failed verify command blocks', () => {
+  assert.equal(m.DEFAULTS.stopBlocks, false);
+  for (const lang of ['en', 'pt']) assert.match(m.TEXT[lang].stop.warn('x'), /^\[Jev\]/);
+});
+
+test('rule review: the user request can set a rule aside only when there is a request', () => {
+  for (const lang of ['en', 'pt']) {
+    const t = m.TEXT[lang].edit;
+    assert.ok(t.rule('R', true).length > t.rule('R', false).length, lang);
+    assert.ok(t.request, lang);
+  }
+});
+
 test('stop follow-up: after a block, records whether Claude changed something or only explained', () => {
   const dir = mkdtempSync(join(tmpdir(), 'claujev-follow-'));
   const state = join(dir, 'state');

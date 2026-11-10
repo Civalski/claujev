@@ -126,6 +126,8 @@ explained = likely false alarm.
 | `out_of_scope`: did it touch things nobody asked for? *(logged only)* | noul |
 | `p_<id>`: your `questions.stop` | any |
 
-**Action:** `decision: "block"` with the problems found. When Claude Code says it is already
+**Action:** a warning to you (`systemMessage`) with the problems found. It only blocks
+(`decision: "block"`) when the `verify` command fails, or on any problem with `stopBlocks: true`.
+When Claude Code says it is already
 continuing because of a hook (`stop_hook_active`), ClauJev does not block again, so there is no
 endless loop.

@@ -30,6 +30,7 @@ const DEFAULTS = {
   // Triage hints about the request's size ("question only", "small change", "large change"). Off by default:
   // the model tells those apart by itself, and they showed up on 20 of 22 requests. "Ambiguous" and area hints stay.
   sizeHints: false,
+  stopBlocks: false, // true: the final check blocks on Jev's judgement too, not only on a failed verify command
   // Model suggested for subagents with a simple task.
   routeModel: 'haiku',
   // Bands: value >= high => acts (in enforce); between low and high => "uncertain" (log only); below low => nothing.
@@ -108,8 +109,9 @@ const TEXT = {
     edit: {
       file: 'File:',
       before: '--- previous snippet', after: '+++ new snippet', full: '+++ full file content', cell: '+++ new cell',
-      rule: (rule) => `Does this code change violate the following rule? Rule: ${rule}`,
-      criteria: { true: 'The new code clearly violates the rule', false: 'The new code follows the rule, or the rule does not apply to this snippet' },
+      request: 'What the user asked for in this session (a rule the user explicitly asked to set aside here does not count as violated):',
+      rule: (rule, withRequest) => `Does this code change violate the following rule? Rule: ${rule}` + (withRequest ? '. If the user request shown above explicitly asks for exactly what the rule forbids, the user chose to set the rule aside: that is NOT a violation.' : ''),
+      criteria: { true: 'The new code clearly violates the rule, and the user did not ask for it', false: 'The new code follows the rule, the rule does not apply to this snippet, or the user explicitly asked for it' },
       localSecret: 'A secret (API key, token or password) is written directly in the new code; move it to an environment variable (detected on this machine, never sent to Jev)',
       block: (file, list) => `[Jev] Possible problems in ${file}:\n${list}\nReview the snippet. If it is a false positive, carry on without changing anything.`,
     },
@@ -138,6 +140,7 @@ const TEXT = {
       unfinishedP: (p) => `there are signs of unfinished work (p=${p})`,
       verifyFailed: (cmd, exit) => `the check \`${cmd}\` failed (exit ${exit})`,
       block: (problems) => `[Jev] Before finishing: ${problems}. Check the original request against what was done. If everything is right, finish with a short explanation.`,
+      warn: (problems) => `[Jev] Final check: ${problems}. Worth a look before relying on this answer.`,
       skipped: 'no readable changes in the turn',
       nothingChanged: 'no edits or commands with effects in the turn',
     },
@@ -246,8 +249,9 @@ const TEXT = {
     edit: {
       file: 'Arquivo:',
       before: '--- trecho anterior', after: '+++ trecho novo', full: '+++ conteúdo completo do arquivo', cell: '+++ célula nova',
-      rule: (rule) => `Esta alteração de código viola a regra a seguir? Regra: ${rule}`,
-      criteria: { true: 'O código novo claramente viola a regra', false: 'O código novo respeita a regra, ou a regra não se aplica a este trecho' },
+      request: 'O que o usuário pediu nesta sessão (uma regra que o usuário pediu explicitamente para deixar de lado aqui não conta como violada):',
+      rule: (rule, withRequest) => `Esta alteração de código viola a regra a seguir? Regra: ${rule}` + (withRequest ? '. Se o pedido do usuário mostrado acima pede explicitamente justamente o que a regra proíbe, o usuário decidiu deixar a regra de lado: NÃO é violação.' : ''),
+      criteria: { true: 'O código novo claramente viola a regra, sem o usuário ter pedido isso', false: 'O código novo respeita a regra, a regra não se aplica a este trecho, ou o usuário pediu explicitamente isso' },
       localSecret: 'Há um segredo (chave de API, token ou senha) escrito direto no código novo; mova para variável de ambiente (detectado nesta máquina, nunca enviado ao Jev)',
       block: (file, list) => `[Jev] Possíveis problemas em ${file}:\n${list}\nRevise o trecho. Se for falso positivo, siga em frente sem mudar nada.`,
     },
@@ -276,6 +280,7 @@ const TEXT = {
       unfinishedP: (p) => `há sinais de trabalho inacabado (p=${p})`,
       verifyFailed: (cmd, exit) => `a verificação \`${cmd}\` falhou (saída ${exit})`,
       block: (problems) => `[Jev] Antes de encerrar: ${problems}. Confira o pedido original contra o que foi feito. Se estiver tudo certo, encerre explicando brevemente.`,
+      warn: (problems) => `[Jev] Checagem final: ${problems}. Vale conferir antes de confiar nesta resposta.`,
       skipped: 'sem mudanças legíveis no turno',
       nothingChanged: 'nenhuma edição nem comando com efeito no turno',
     },
@@ -704,10 +709,12 @@ async function onEdit(input, cfg, mode) {
 
   const rules = cfg.rules.slice(0, 20);
   const questions = {
-    ...Object.fromEntries(rules.map((rule, i) => [`r${i}`, { type: 'noul', instructions: t.rule(rule), criteria: t.criteria }])),
+    ...Object.fromEntries(rules.map((rule, i) => [`r${i}`, { type: 'noul', instructions: t.rule(rule, !!st.prompt), criteria: t.criteria }])),
     ...custom,
   };
-  const state = `${projectContext(input.cwd, cfg)}${t.file} ${file}\n\n${redact(clip(change, 12000))}`;
+  // Without the request, a rule the user deliberately overrode ("no deploy in this phase") kept firing.
+  const request = st.prompt ? `${t.request}\n${redact(clip(st.prompt, 2000))}\n\n` : '';
+  const state = `${projectContext(input.cwd, cfg)}${request}${t.file} ${file}\n\n${redact(clip(change, 12000))}`;
   const r = await askJev(cfg, state, questions);
   const scores = rules.map((_, i) => r.answers?.[`r${i}`]?.noul ?? null);
   const ruleBands = rules.map((rule, i) => ({ rule, p: scores[i], band: band(scores[i], cfg.thresholds.rule) }));
@@ -961,17 +968,22 @@ async function onStop(input, cfg, mode) {
     ...extra.filter((x) => x.band === 'uncertain').map((x) => x.id),
   ].filter(Boolean);
 
-  const acted = mode === 'enforce' && problems.length > 0;
+  // Only a failed verify command blocks: it is objective. Jev's judgement (incomplete, unfinished,
+  // custom questions) becomes a warning shown to the user, since in 2.8.0 5 of its 6 blocks were false alarms.
+  const verifyFailed = !!(verify && verify.exit !== 0);
+  const block = mode === 'enforce' && (verifyFailed || (cfg.stopBlocks && problems.length > 0));
+  const warn = mode === 'enforce' && !block && problems.length > 0;
+  const acted = block || warn;
   log({
     ...baseLog('stop', mode, input, r), contentHash: hash(changes + commands.join('\n')), files: st.files?.length || 0, commands: commands.length, base: st.base?.slice(0, 7),
     verify: verify && { exit: verify.exit, ms: verify.ms }, reply: reply.length,
     answers: { completeness: round(completeness), unfinished: a.unfinished?.noul, out_of_scope: a.out_of_scope?.noul, ...Object.fromEntries(extra.map((x) => [x.id, x.value ?? x.choice])) },
-    problems, uncertain, acted,
+    problems, uncertain, acted, action: block ? 'block' : warn ? 'warn' : undefined,
   });
-  if (acted) {
+  if (block) {
     saveState(input.session_id, { ...loadState(input.session_id), blocked: { ts: new Date().toISOString(), problems: problems.length } });
     emit({ decision: 'block', reason: t.block(problems.join('; ')) });
-  }
+  } else if (warn) emit({ systemMessage: t.warn(problems.join('; ')) });
 }
 
 // ---------- hook: before a shell command (PreToolUse) ----------

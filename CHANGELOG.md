@@ -16,6 +16,12 @@
   asks (threshold 0.65 → 0.80).
 - The safety net used when Jev cannot answer follows the same line (`rm -rf build`, `reset --hard` and
   `branch -D` no longer ask; `DELETE FROM`, force push and `rm -rf ~` still do).
+- **The final check warns instead of blocking.** It blocked 6 times that week and Claude changed something
+  after only 1. Jev's judgement now shows as a message to you; only a failed `verify` command still blocks.
+  `stopBlocks: true` brings the old behaviour back.
+- **Rule review sees the user's request.** A project rule like "no deploy or authentication in this phase"
+  fired 4 times while the user was asking for exactly that. When the request explicitly asks for what a
+  rule forbids, it is no longer flagged (p 0.92 → 0.07 in the replay; an unrelated request still flags, 0.89).
 
 ## 2.8.0 (mod 2.3.0) — 2026-11-04
 
