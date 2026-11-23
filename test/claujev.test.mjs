@@ -177,7 +177,8 @@ test('suggestEffort: request size and type become an effort level', () => {
   assert.equal(m.suggestEffort({ taskType: 'question', taskConf: 0.9, scope: 1 }), 'low', 'questions are cheap');
   assert.equal(m.suggestEffort({ taskType: 'bug', scope: 0.25 }), 'low');
   assert.equal(m.suggestEffort({ taskType: 'feature', scope: 0.5 }), 'medium');
-  assert.equal(m.suggestEffort({ taskType: 'feature', scope: 0.75 }), 'high');
+  assert.equal(m.suggestEffort({ taskType: 'feature', scope: 0.75 }), 'medium', 'a few related files is medium work');
+  assert.equal(m.suggestEffort({ taskType: 'feature', scope: 0.9 }), 'high');
   assert.equal(m.suggestEffort({ taskType: 'refactor', scope: 1 }), 'xhigh');
   assert.equal(m.suggestEffort({ taskType: 'bug', scope: 0.5, ambiguous: 0.8 }), 'high', 'an ambiguous bug goes one level up');
   assert.equal(m.suggestEffort({ taskType: 'bug', scope: 1, ambiguous: 0.9 }), 'xhigh', 'never above xhigh');
@@ -192,6 +193,9 @@ test('suggestEffort with depth: the larger of change size and investigation', ()
   assert.equal(m.suggestEffort({ taskType: 'bug', scope: 0.25, depth: 0.85 }), 'high', 'a one-line fix that needs hard debugging');
   assert.equal(m.suggestEffort({ taskType: 'feature', scope: 1, depth: 0.25 }), 'xhigh', 'a large change, even if obvious');
   assert.equal(m.suggestEffort({ taskType: 'bug', scope: 0.5, depth: 0.25, ambiguous: 0.9 }), 'medium', 'depth replaces the ambiguity bump');
+  // 2.9.1 cut points, fitted on 133 real answers to the effort question.
+  assert.equal(m.suggestEffort({ taskType: 'feature', scope: 0.75, depth: 0.5 }), 'medium', 'a change across a few files is not high');
+  assert.equal(m.suggestEffort({ taskType: 'bug', scope: 0.5, depth: 0.75 }), 'high', 'a hard investigation still reaches high');
 });
 
 test('LOCAL_ASK: only critical, hard-to-undo commands ask without calling Jev', () => {
@@ -207,6 +211,26 @@ test('LOCAL_ASK: only critical, hard-to-undo commands ask without calling Jev', 
   assert.equal(out.hookSpecificOutput.permissionDecision, 'ask', 'asks even with no key: Jev is not needed');
   const day = new Date().toISOString().slice(0, 10);
   assert.match(readFileSync(join(dir, 'logs', `${day}.jsonl`), 'utf8'), /"local":true/);
+});
+
+test('promptHints: no "ambiguous" warning on questions; each area hint once per session', () => {
+  const cfg = m.loadConfig(project('hints', { areas: { web: { description: 'frontend', hint: 'Read web/AGENTS.md.' } } }));
+  const t = m.TEXT.en.prompt;
+  const ask = (choice, ambiguous, area) => ({ task_type: { choice, confidence: 0.9 }, ambiguous: { noul: ambiguous }, ...(area && { area: { choice: area, confidence: 0.9 } }) });
+  assert.deepEqual(m.promptHints(ask('question', 0.9), cfg, t).hints, [], 'question: no ambiguous warning');
+  assert.deepEqual(m.promptHints(ask('feature', 0.9), cfg, t).hints, [t.hints.ambiguous], 'change: warning stays');
+  const first = m.promptHints(ask('feature', 0.1, 'web'), cfg, t);
+  assert.deepEqual(first.hints, ['Read web/AGENTS.md.']);
+  assert.deepEqual(first.shown, ['web']);
+  assert.deepEqual(m.promptHints(ask('bug', 0.1, 'web'), cfg, t, first.shown).hints, [], 'already shown in this session');
+});
+
+test('session: compaction resets the area hints already shown', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'claujev-compact-'));
+  mkdirSync(join(dir, 'state'), { recursive: true });
+  writeFileSync(join(dir, 'state', 'k.json'), JSON.stringify({ prompt: 'x', hintsShown: ['web'] }));
+  runHook('session', { session_id: 'k', source: 'compact', cwd: home }, { CLAUJEV_HOME: dir });
+  assert.deepEqual(JSON.parse(readFileSync(join(dir, 'state', 'k.json'), 'utf8')).hintsShown, []);
 });
 
 test('sizeHints: off by default, can be turned back on', () => {
@@ -246,17 +270,51 @@ test('stop follow-up: after a block, records whether Claude changed something or
   assert.equal(JSON.parse(readFileSync(join(state, 'f.json'), 'utf8')).blocked, null, 'recorded once');
 });
 
+test('stop follow-up: after a warning, the next Stop records whether Claude changed something', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'claujev-warnfollow-'));
+  const state = join(dir, 'state');
+  mkdirSync(state, { recursive: true });
+  const warnedAt = new Date(Date.now() - 60000).toISOString();
+  const tr = join(dir, 't.jsonl');
+  writeFileSync(join(state, 'w.json'), JSON.stringify({ prompt: 'x', edits: 0, files: [], warned: { ts: warnedAt, problems: 2 } }));
+  writeFileSync(tr, JSON.stringify({ type: 'assistant', timestamp: new Date(Date.parse(warnedAt) + 1000).toISOString(), message: { content: [{ type: 'tool_use', name: 'Edit', input: {} }] } }));
+  runHook('stop', { session_id: 'w', cwd: home, transcript_path: tr }, { CLAUJEV_HOME: dir });
+  const day = new Date().toISOString().slice(0, 10);
+  const lines = readFileSync(join(dir, 'logs', `${day}.jsonl`), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+  assert.deepEqual(lines.find((e) => e.followUp).followUp, { tools: 1, changed: 1, problems: 2, after: 'warn' });
+  assert.equal(JSON.parse(readFileSync(join(state, 'w.json'), 'utf8')).warned, null, 'recorded once');
+});
+
+test('stop: a turn that only ran commands, with no file change, does not call Jev', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'claujev-cmdonly-'));
+  mkdirSync(join(dir, 'state'), { recursive: true });
+  writeFileSync(join(dir, 'state', 'c.json'), JSON.stringify({ prompt: 'publish it', edits: 0, files: [] }));
+  const tr = join(dir, 't.jsonl');
+  writeFileSync(tr, [
+    JSON.stringify({ type: 'user', timestamp: new Date().toISOString(), message: { content: 'publish it' } }),
+    JSON.stringify({ type: 'assistant', timestamp: new Date().toISOString(), message: { content: [{ type: 'tool_use', name: 'Bash', input: { command: 'git push origin feature' } }] } }),
+  ].join('\n'));
+  const out = runHook('stop', { session_id: 'c', cwd: home, transcript_path: tr }, { CLAUJEV_HOME: dir });
+  assert.equal(out.trim(), '');
+  const day = new Date().toISOString().slice(0, 10);
+  const last = JSON.parse(readFileSync(join(dir, 'logs', `${day}.jsonl`), 'utf8').trim().split('\n').pop());
+  assert.ok(last.skipped && !last.model, 'skipped without asking Jev');
+});
+
 test('report: shows the stop follow-ups and the effort answers', () => {
   const dir = mkdtempSync(join(tmpdir(), 'claujev-report-'));
   mkdirSync(join(dir, 'logs'), { recursive: true });
   writeFileSync(join(dir, 'logs', '2026-11-04.jsonl'), [
     { hook: 'stop', acted: true }, { hook: 'stop', followUp: { tools: 2, changed: 1 } },
     { hook: 'stop', acted: true }, { hook: 'stop', followUp: { tools: 0, changed: 0 } },
+    { hook: 'stop', acted: true, action: 'warn' }, { hook: 'stop', followUp: { tools: 1, changed: 1, after: 'warn' } },
+    { hook: 'stop', acted: true, action: 'warn' },
     { hook: 'bash', local: true, acted: true },
   ].map((e) => JSON.stringify(e)).join('\n'));
   writeFileSync(join(dir, 'logs', 'effort-2026-11-04-s1.jsonl'), [{ hook: 'effort', answer: 'use' }, { hook: 'effort', answer: 'keep' }, { hook: 'effort', answer: 'use' }].map((e) => JSON.stringify(e)).join('\n'));
   const out = execFileSync('node', [SCRIPT, 'report'], { env: { ...process.env, CLAUJEV_HOME: dir }, encoding: 'utf8' });
   assert.match(out, /blocked 2x: Claude then changed something in 1, only explained in 1/);
+  assert.match(out, /warned 2x: in the next turn Claude changed something in 1, nothing in 0, no record in 1/);
   assert.match(out, /accepted 2 · kept current 1 · picked another 0 · dismissed 0/);
   assert.match(out, /local rule \(Jev not called\): 1/);
 });
@@ -368,6 +426,11 @@ test('buildStopState: final reply, previous request and the commands that matter
 test('EFFECTFUL: commands that change the world wake the Stop check', () => {
   for (const c of ['git push origin main', 'gh release create v2', 'npm publish', 'git commit -m x', 'curl -X POST https://api']) assert.ok(m.EFFECTFUL.test(c), c);
   for (const c of ['git status', 'ls -la', 'npm test', 'gh release view v1']) assert.ok(!m.EFFECTFUL.test(c), c);
+});
+
+test('EFFECTFUL: deploy and vercel count only as the command itself, not as a word in a path', () => {
+  for (const c of ['vercel --prod', 'cd app && vercel deploy', 'npx vercel', 'npm run deploy', 'pnpm deploy', 'cdk deploy', 'aws cloudformation deploy --stack-name x', 'wrangler deploy', './deploy.sh', 'bash scripts/deploy.sh prod']) assert.ok(m.EFFECTFUL.test(c), c);
+  for (const c of ["grep -nE 'team' docs/operacao/deploy.md", 'cat apps/api/.vercel/project.json', 'ls -la .vercel', 'gh run list --workflow deploy.yml', 'vercel ls', 'vercel env ls']) assert.ok(!m.EFFECTFUL.test(c), c);
 });
 
 test('evalCustom: project questions become a 0..1 value and a band', () => {

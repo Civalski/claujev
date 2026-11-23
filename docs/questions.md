@@ -46,8 +46,9 @@ commands, messages under 15 characters and messages Claude Code injects itself (
 straight to it, no subagents; scope ≥ 0.85 → plan first.
 
 **Effort suggestion** (stored in the session state and applied by `claujev-mod` when installed): the
-larger of two levels. Scope: ≤ 0.3 → `low`, ≤ 0.6 → `medium`, ≤ 0.85 → `high`, above → `xhigh`.
-Depth: ≤ 0.45 → `low`, ≤ 0.8 → `medium`, ≤ 0.95 → `high`, above → `xhigh`. A question (confidence ≥ 0.6)
+larger of two levels. Scope: ≤ 0.3 → `low`, ≤ 0.85 → `medium`, ≤ 0.95 → `high`, above → `xhigh`.
+Depth: ≤ 0.45 → `low`, ≤ 0.7 → `medium`, ≤ 0.95 → `high`, above → `xhigh` (2.9.1 cut points, fitted
+on 133 real answers to the effort question: 80% match, up from 57%). A question (confidence ≥ 0.6)
 uses depth only and stops at `high`. A request with "ultrathink", "think hard" or similar is marked
 `explicitEffort`, and the mod leaves it alone. The mod records each answer to its effort question in
 `logs/effort-<day>-<session>.jsonl`.
@@ -109,11 +110,12 @@ Only called when the subagent edited something or ran commands.
 **State:** project context, the request, the edited files, the diff since the commit at the start of
 the turn (up to 30,000 characters), the commands Claude ran in the turn (read from the transcript;
 commands with effects in more detail, the end of the turn kept when the list is long), the `verify`
-result and Claude's final reply (up to 3,000 characters). Called when the turn had an edit or a command with effects (`git commit`/`push`/
-`tag`, `gh … create`, `npm publish`, deploys, `curl -X POST`, etc.). A shell command that writes files
-(`sed -i`, `python … open('w')`, `cat > … <<EOF`, redirections) also counts: the diff and the new files
-of the turn are read from git, including a repo the command `cd`-ed into. Turns with nothing changed
-are logged as skipped.
+result and Claude's final reply (up to 3,000 characters). Called when the turn changed files. A shell
+command that writes files (`sed -i`, `python … open('w')`, `cat > … <<EOF`, redirections) also counts:
+the diff and the new files of the turn are read from git, including a repo the command `cd`-ed into.
+Turns that only ran commands (investigation, `git push`, deploys) are logged as skipped: in 2.9.0 they
+produced 11 of the 15 warnings, and the ones checked were false alarms. After a warning, the next Stop
+records whether Claude changed something (`followUp.after: "warn"`).
 
 **After a block:** the next Stop records `followUp` (tool calls after the block, and how many changed
 something), without calling Jev. `report` sums it up: changed something = the block helped; only

@@ -142,7 +142,7 @@ const TEXT = {
       block: (problems) => `[Jev] Before finishing: ${problems}. Check the original request against what was done. If everything is right, finish with a short explanation.`,
       warn: (problems) => `[Jev] Final check: ${problems}. Worth a look before relying on this answer.`,
       skipped: 'no readable changes in the turn',
-      nothingChanged: 'no edits or commands with effects in the turn',
+      nothingChanged: 'no file changes in the turn',
     },
     bash: {
       state: (tool) => `Command the agent wants to run (${tool}):`,
@@ -187,6 +187,7 @@ const TEXT = {
     report: {
       empty: 'No logs yet.', distribution: '\nDistribution per question (0..1):', recent: '\nLatest flagged events/errors:', effort: '\nSuggested effort:',
       stopFollow: (n, helped, explained) => `Final check blocked ${n}x: Claude then changed something in ${helped}, only explained in ${explained} (likely false alarm)${n > helped + explained ? `, no record in ${n - helped - explained}` : ''}`,
+      warnFollow: (n, changed, nothing) => `Final check warned ${n}x: in the next turn Claude changed something in ${changed}, nothing in ${nothing}, no record in ${n - changed - nothing} (the next turn may be a new request)`,
       effortAnswers: (a) => `Effort question: accepted ${a.use} · kept current ${a.keep} · picked another ${a.other} · dismissed ${a.dismissed}`,
       bashLocal: (n) => `Commands confirmed by the local rule (Jev not called): ${n}`,
       cols: { hook: 'hook', calls: 'calls', errors: 'errors', flagged: 'flagged', uncertain: 'uncertain', acted: 'acted', latency: 'avg latency (ms)', tokens: 'input tokens', cost: 'cost US$', question: 'question', median: 'median' },
@@ -282,7 +283,7 @@ const TEXT = {
       block: (problems) => `[Jev] Antes de encerrar: ${problems}. Confira o pedido original contra o que foi feito. Se estiver tudo certo, encerre explicando brevemente.`,
       warn: (problems) => `[Jev] Checagem final: ${problems}. Vale conferir antes de confiar nesta resposta.`,
       skipped: 'sem mudanças legíveis no turno',
-      nothingChanged: 'nenhuma edição nem comando com efeito no turno',
+      nothingChanged: 'nenhum arquivo alterado no turno',
     },
     bash: {
       state: (tool) => `Comando que o agente quer executar (${tool}):`,
@@ -327,6 +328,7 @@ const TEXT = {
     report: {
       empty: 'Sem logs ainda.', distribution: '\nDistribuição por pergunta (0..1):', recent: '\nÚltimos eventos sinalizados/erros:', effort: '\nEsforço sugerido:',
       stopFollow: (n, helped, explained) => `Checagem final bloqueou ${n}x: depois o Claude mudou algo em ${helped}, só explicou em ${explained} (provável alarme falso)${n > helped + explained ? `, sem registro em ${n - helped - explained}` : ''}`,
+      warnFollow: (n, changed, nothing) => `Checagem final avisou ${n}x: no turno seguinte o Claude mudou algo em ${changed}, nada em ${nothing}, sem registro em ${n - changed - nothing} (o turno seguinte pode ser outro pedido)`,
       effortAnswers: (a) => `Pergunta de esforço: aceitou ${a.use} · manteve o atual ${a.keep} · escolheu outro ${a.other} · fechou ${a.dismissed}`,
       bashLocal: (n) => `Comandos confirmados pela regra local (sem chamar o Jev): ${n}`,
       cols: { hook: 'hook', calls: 'chamadas', errors: 'erros', flagged: 'sinalizados', uncertain: 'incertos', acted: 'agiu', latency: 'latência média (ms)', tokens: 'tokens entrada', cost: 'custo US$', question: 'pergunta', median: 'mediana' },
@@ -557,9 +559,14 @@ const EXPLICIT_EFFORT = /\b(ultrathink|think (harder|hard|deeply)|pense (bem|mui
 // Maps the triage answers to an effort level. Never "max": that stays a human choice.
 // The level is the larger of two sizes: the code change (scope) and the investigation and reasoning
 // needed (depth). A question uses depth only and stops at high. Jev's depth answers gather in the
-// middle of the scale, hence its own cut points (fitted on 40 real requests, 2026-11-04).
-const SCOPE_CUTS = [0.3, 0.6, 0.85];
-const DEPTH_CUTS = [0.45, 0.8, 0.95];
+// middle of the scale, hence its own cut points.
+// 2.9.1, fitted on 133 real answers to the effort question: the old scope cut (0.6) made a change across a
+// few related files "high", and the user picked medium in 50 of those cases. A change of that size is now
+// medium; high comes from a large change or a hard investigation (depth > 0.7). Matches 80% of the
+// answers (57% before) and still suggests high in 5 of the 7 requests where high was wanted. Sending
+// Claude's last reply as context was also tested and made it worse (48%), so the state is unchanged.
+const SCOPE_CUTS = [0.3, 0.85, 0.95];
+const DEPTH_CUTS = [0.45, 0.7, 0.95];
 const level = (v, cuts) => (v <= cuts[0] ? 0 : v <= cuts[1] ? 1 : v <= cuts[2] ? 2 : 3);
 function suggestEffort({ taskType, taskConf, scope, depth, ambiguous }) {
   const question = taskType === 'question' && (taskConf ?? 0) >= 0.6;
@@ -596,6 +603,11 @@ function onSession(input, cfg) {
       messages.push(t.noKey);
     }
   }
+  // After compaction Claude no longer has the area hints it was given: show them again.
+  if (input.source === 'compact' && input.session_id) {
+    const st = loadState(input.session_id);
+    if (st.hintsShown?.length) saveState(input.session_id, { ...st, hintsShown: [] });
+  }
   // Edits made through the shell skip the rule review: also repeated after /clear and compaction.
   if (hasKey && (cfg.hooks.edit !== 'off' || cfg.hooks.stop !== 'off')) messages.push(t.editTools);
   if (messages.length) emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: messages.join('\n\n') } });
@@ -628,6 +640,28 @@ function promptQuestions(t, cfg) {
   return questions;
 }
 
+// Hints for one request. The "ambiguous" warning asks Claude to check before editing, so it is left out
+// of questions. An area hint is shown once per session (`shown` holds the area keys already shown).
+function promptHints(a, cfg, t, shown = []) {
+  const hints = [];
+  const scope = a.scope ? normScore(a.scope) : null;
+  const question = a.task_type?.choice === 'question';
+  // Size hints only make sense for work that changes code; a chat reply gets none.
+  const codeTask = CODE_TASKS.includes(a.task_type?.choice);
+  if (!cfg.sizeHints) { /* size hints off */ }
+  else if (question && a.task_type.confidence >= 0.6) hints.push(t.hints.question);
+  else if (codeTask && scope != null && scope <= 0.5) hints.push(t.hints.small);
+  else if (codeTask && scope != null && scope >= 0.85) hints.push(t.hints.large);
+  if (!question && band(a.ambiguous?.noul, cfg.thresholds.ambiguous) === 'high') hints.push(t.hints.ambiguous);
+  const key = a.area?.choice;
+  const area = key && cfg.areas[key];
+  if (area?.hint && a.area.confidence >= 0.5 && !shown.includes(key)) {
+    hints.push(area.hint);
+    shown = [...shown, key];
+  }
+  return { hints, shown };
+}
+
 const promptState = (t, prompt, previous) => `${previous ? `${t.previous}\n${redact(previous)}\n\n` : ''}${t.state}\n${redact(clip(prompt, 6000))}`;
 const CODE_TASKS = ['bug', 'feature', 'refactor', 'config'];
 
@@ -645,7 +679,7 @@ async function onPrompt(input, cfg, mode) {
   // state is kept as it was, so Stop still compares against the real request.
   if (isSystemMessage(raw)) return;
   const previous = prompt === raw ? tail(prev.prompt || '', 1500) : '';
-  const st = { prompt: clip(prompt, 6000), previous, edits: 0, files: [], base, explicitEffort: EXPLICIT_EFFORT.test(raw), turnStart: new Date().toISOString() };
+  const st = { prompt: clip(prompt, 6000), previous, edits: 0, files: [], base, explicitEffort: EXPLICIT_EFFORT.test(raw), turnStart: new Date().toISOString(), hintsShown: prev.hintsShown || [], warned: prev.warned || null };
   saveState(sid, st);
   if (mode === 'off' || raw.startsWith('/') || raw.length < 15) return;
 
@@ -654,19 +688,10 @@ async function onPrompt(input, cfg, mode) {
   const scope = a.scope ? normScore(a.scope) : null;
   const depth = a.depth ? normScore(a.depth) : null;
   const ambiguousBand = band(a.ambiguous?.noul, cfg.thresholds.ambiguous);
-  const hints = [];
-  // Size hints only make sense for work that changes code; a chat reply gets none.
-  const codeTask = CODE_TASKS.includes(a.task_type?.choice);
-  if (!cfg.sizeHints) { /* size hints off */ }
-  else if (a.task_type?.choice === 'question' && a.task_type.confidence >= 0.6) hints.push(t.hints.question);
-  else if (codeTask && scope != null && scope <= 0.5) hints.push(t.hints.small);
-  else if (codeTask && scope != null && scope >= 0.85) hints.push(t.hints.large);
-  if (ambiguousBand === 'high') hints.push(t.hints.ambiguous);
-  const area = a.area?.choice && cfg.areas[a.area.choice];
-  if (area?.hint && a.area.confidence >= 0.5) hints.push(area.hint);
+  const { hints, shown } = promptHints(a, cfg, t, st.hintsShown);
 
   const effort = suggestEffort({ taskType: a.task_type?.choice, taskConf: a.task_type?.confidence, scope, depth, ambiguous: a.ambiguous?.noul });
-  saveState(sid, { ...st, effort });
+  saveState(sid, { ...st, effort, hintsShown: mode === 'enforce' ? shown : st.hintsShown });
 
   const acted = mode === 'enforce' && hints.length > 0;
   log({
@@ -806,8 +831,15 @@ function readTranscript(path, { sinceLastPrompt = false } = {}) {
   return { actions, lastText };
 }
 
-// Commands with effects worth checking at Stop even when no file was edited.
-const EFFECTFUL = /\b(git\s+(commit|push|tag|merge|rebase|reset|revert)|gh\s+\w+\s+(create|edit|merge|delete|close|upload)|npm\s+(publish|version)|docker\s+(push|build|run)|kubectl\s+(apply|delete)|terraform\s+apply|vercel|wrangler\s+deploy|deploy|curl\s[^|]*-X\s*(POST|PUT|PATCH|DELETE))\b/i;
+// Commands with effects outside the files: shown in full to Jev at Stop and counted in follow-ups.
+// "vercel" and "deploy" only count as the command itself: as a word in a path (deploy.md, .vercel/) they
+// woke the Stop check on plain reads (2.9.1).
+const EFFECTFUL = new RegExp([
+  /\b(git\s+(commit|push|tag|merge|rebase|reset|revert)|gh\s+\w+\s+(create|edit|merge|delete|close|upload)|npm\s+(publish|version)|docker\s+(push|build|run)|kubectl\s+(apply|delete)|terraform\s+apply|curl\s[^|]*-X\s*(POST|PUT|PATCH|DELETE))\b/.source,
+  /(^|[;&|(]\s*|\bnpx\s+)vercel(\s+(deploy|--prod|promote|rollback|redeploy)\b|\s*$|\s+-)/.source,
+  /\b(npm|pnpm|yarn|bun)\s+(run\s+)?deploy\b|\b(cdk|sam|sls|serverless|wrangler|firebase|fly|flyctl|netlify|railway|cloudformation)\s+deploy\b/.source,
+  /(^|[;&|(]\s*|\b(ba|z)?sh\s+)[\w./-]*deploy[\w-]*\.sh\b/.source,
+].join('|'), 'i');
 
 // Shell commands that write files (redirection, sed -i, python open(..., 'w'), heredoc into a file...).
 // Such edits never reach the edit hook, so Stop reads them from git. A false positive only costs a
@@ -924,19 +956,28 @@ async function onStop(input, cfg, mode) {
     }
     return; // avoids an endless loop
   }
+  const project = basename(input.cwd || '');
+  if (st.warned) {
+    // A warning does not stop Claude, so its effect shows in the next turn: record whether Claude changed
+    // something there. The next turn may be a new request, so this is an upper bound on how much it helped.
+    const after = input.transcript_path ? actionsSince(input.transcript_path, st.warned.ts) : { tools: 0, changed: 0 };
+    log({ hook: 'stop', mode, project, followUp: { ...after, problems: st.warned.problems, after: 'warn' } });
+    st.warned = null;
+    saveState(input.session_id, st);
+  }
   const turn = input.transcript_path ? turnInfo(input.transcript_path) : { commands: [], reply: '' };
   const commands = turn.commands;
-  const effectful = commands.some((c) => EFFECTFUL.test(c));
   const writers = commands.filter((c) => FILE_WRITE.test(c));
-  const project = basename(input.cwd || '');
-  if (!st.edits && !effectful && !writers.length) { log({ hook: 'stop', mode, project, skipped: t.nothingChanged }); return; }
+  // Only turns that changed files are checked. Turns that only ran commands (investigations, a publish
+  // stopped by an expired login) gave 11 of the 15 warnings of 2.9.0, and the ones read were false alarms.
+  if (!st.edits && !writers.length) { log({ hook: 'stop', mode, project, skipped: t.nothingChanged }); return; }
   saveState(input.session_id, { ...st, edits: 0 });
 
   const changes = [
     st.edits ? turnChanges(input.cwd, st, cfg.maxDiffChars, t) : '',
     writers.length ? shellChanges(input.cwd, writers, st, cfg.maxDiffChars, t) : '',
   ].filter((c) => c.trim()).join('\n\n').slice(0, cfg.maxDiffChars);
-  if (!changes.trim() && !effectful) { log({ hook: 'stop', mode, project, skipped: t.skipped }); return; }
+  if (!changes.trim()) { log({ hook: 'stop', mode, project, skipped: t.skipped }); return; }
   const verify = st.edits || changes.trim() ? runVerify(input.cwd, cfg) : null;
 
   const reply = String(input.last_assistant_message || turn.reply || '');
@@ -983,7 +1024,10 @@ async function onStop(input, cfg, mode) {
   if (block) {
     saveState(input.session_id, { ...loadState(input.session_id), blocked: { ts: new Date().toISOString(), problems: problems.length } });
     emit({ decision: 'block', reason: t.block(problems.join('; ')) });
-  } else if (warn) emit({ systemMessage: t.warn(problems.join('; ')) });
+  } else if (warn) {
+    saveState(input.session_id, { ...loadState(input.session_id), warned: { ts: new Date().toISOString(), problems: problems.length } });
+    emit({ systemMessage: t.warn(problems.join('; ')) });
+  }
 }
 
 // ---------- hook: before a shell command (PreToolUse) ----------
@@ -1158,11 +1202,19 @@ function report(cfg) {
   if (Object.keys(efforts).length) console.log(`${t.effort} ${EFFORTS.filter((k) => efforts[k]).map((k) => `${k} ${efforts[k]}`).join(' · ')}`);
 
   // Did the final check help? After a block, Claude either changed something or only explained.
-  const blocks = entries.filter((e) => e.hook === 'stop' && e.acted).length;
-  const follow = entries.filter((e) => e.hook === 'stop' && e.followUp);
+  // Entries before 2.9.0 have no action: those were blocks.
+  const blocks = entries.filter((e) => e.hook === 'stop' && e.acted && e.action !== 'warn').length;
+  const follow = entries.filter((e) => e.hook === 'stop' && e.followUp && e.followUp.after !== 'warn');
   if (blocks) {
     const helped = follow.filter((e) => e.followUp.changed > 0).length;
     console.log(t.stopFollow(blocks, helped, follow.length - helped));
+  }
+  // After a warning, whether the next turn changed something (it may be a new request: an upper bound).
+  const warns = entries.filter((e) => e.hook === 'stop' && e.action === 'warn').length;
+  const warnFollow = entries.filter((e) => e.hook === 'stop' && e.followUp?.after === 'warn');
+  if (warns) {
+    const changed = warnFollow.filter((e) => e.followUp.changed > 0).length;
+    console.log(t.warnFollow(warns, changed, warnFollow.length - changed));
   }
   // Effort question answers, written by the mod: accepted, kept the current one, picked another level, or dismissed.
   const answers = { use: 0, keep: 0, other: 0, dismissed: 0 };
@@ -1183,7 +1235,7 @@ function report(cfg) {
 const HANDLERS = { prompt: onPrompt, edit: onEdit, stop: onStop, bash: onBash, agent: onAgent, subagent: onSubagent, session: onSession };
 
 // Pure functions exported for the tests.
-export { DEFAULTS, TEXT, redact, hasLiteralSecret, LOCAL_DANGER, band, normScore, loadConfig, isReadOnly, isSystemMessage, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, turnInfo, formatCommands, buildStopState, EFFECTFUL, EXPLICIT_EFFORT, FILE_WRITE, LOCAL_ASK, writeDirs, shellChanges, promptQuestions, promptState, askJev, loadState };
+export { DEFAULTS, TEXT, promptHints, redact, hasLiteralSecret, LOCAL_DANGER, band, normScore, loadConfig, isReadOnly, isSystemMessage, evalCustom, describeChange, suggestEffort, transcriptActions, turnCommands, turnInfo, formatCommands, buildStopState, EFFECTFUL, EXPLICIT_EFFORT, FILE_WRITE, LOCAL_ASK, writeDirs, shellChanges, promptQuestions, promptState, askJev, loadState };
 
 // Runs only when called directly (node claujev.mjs ...), not when imported by the tests.
 const isMain = (() => {

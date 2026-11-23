@@ -1,5 +1,36 @@
 # Changelog
 
+## 2.9.1 — 2026-11-23
+
+From the logs of 2.9.0 (Nov 10–23, 31 sessions).
+
+### Fixed
+- **The final check no longer runs on turns that only read.** `deploy` and `vercel` counted as commands
+  with effects anywhere in a command, so `grep … docs/deploy.md` or `cat .vercel/project.json` woke the
+  check. They now count only as the command itself (`vercel --prod`, `npm run deploy`, `cdk deploy`,
+  `./deploy.sh`).
+- **The "ambiguous" warning is no longer added to questions.** It asks Claude to check before editing;
+  2 of its 5 appearances were on questions.
+
+### Changed
+- **The final check only runs when the turn changed files.** Of the 15 warnings of 2.9.0, 11 came from
+  turns that only ran commands: an investigation that ended in a report, a publish stopped by an expired
+  login, a merge whose deploy failed for an unrelated reason. Every one checked against the transcript was
+  a false alarm: Claude had reported the situation correctly.
+- **Area hints show once per session** (5 of 24 were repeats), and again after compaction.
+- **The effort suggestion matches what you pick far more often: 80% instead of 57%.** Replayed on 133
+  real answers to the effort question, it suggested a level above the one chosen 55 times, and 50 of
+  those came from the change size: a change across a few related files became `high`. That is now
+  `medium` (scope cuts 0.3/0.6/0.85 → 0.3/0.85/0.95). `high` comes from a larger change or a hard
+  investigation (depth cut 0.8 → 0.7), and it is still suggested in 5 of the 7 requests where `high`
+  was chosen. Sending Claude's last reply to Jev as context was tested too and did worse (48%), so the
+  triage still reads only the request.
+
+### Added
+- **Did the warning help?** After a warning, the next Stop records whether Claude changed something
+  (`followUp.after: "warn"`), and `report` shows it next to the blocks. The next turn may be a new
+  request, so the number is an upper bound.
+
 ## 2.9.0 — 2026-11-10
 
 ### Changed

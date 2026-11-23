@@ -106,7 +106,7 @@ flowchart TB
 - **Padrão sensato**: age nos comandos, nas edições, na conferência final e nos relatórios de subagentes, e só
   observa o roteamento de subagentes. Cada resposta cai numa faixa baixa / incerta / alta; só a *alta* age.
 - **Sinal, não sentença**: o ClauJev nunca apaga nem desfaz nada. Um alarme falso custa uma frase do Claude.
-- **Vê o trabalho real**: a conferência final lê o diff do turno *e* os comandos que o Claude rodou (commits, push, releases).
+- **Vê o trabalho real**: quando o turno alterou arquivos, a conferência final lê o diff (inclusive edições pelo shell) *e* os comandos que o Claude rodou.
 
 ## Sugestão de esforço
 
@@ -114,8 +114,8 @@ flowchart TB
 flowchart LR
     P["pedido"] --> J{"triagem do Jev"}
     J -->|"resposta direta / trivial"| L["low"]
-    J -->|"mudança pequena ou<br/>análise de alguns arquivos"| M["medium"]
-    J -->|"mudança média ou<br/>investigação difícil"| H["high"]
+    J -->|"mudança pequena ou média,<br/>ou análise de alguns arquivos"| M["medium"]
+    J -->|"mudança maior ou<br/>investigação difícil"| H["high"]
     J -->|"mudança grande"| X["xhigh"]
 ```
 

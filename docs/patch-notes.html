@@ -46,16 +46,42 @@
         <button type="button" data-copy="upd"><span lang="pt">Copiar</span><span lang="en">Copy</span></button>
       </div>
       <ul class="jump" aria-label="Versões / Versions">
-        <li><a href="#v2.9.0">2.9.0</a></li><li><a href="#v2.8.0">2.8.0</a></li><li><a href="#v2.7.0">2.7.0</a></li><li><a href="#v2.6.1">2.6.1</a></li><li><a href="#v2.6.0">2.6.0</a></li><li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
+        <li><a href="#v2.9.1">2.9.1</a></li><li><a href="#v2.9.0">2.9.0</a></li><li><a href="#v2.8.0">2.8.0</a></li><li><a href="#v2.7.0">2.7.0</a></li><li><a href="#v2.6.1">2.6.1</a></li><li><a href="#v2.6.0">2.6.0</a></li><li><a href="#v2.5.0">2.5.0</a></li><li><a href="#v2.4.3">2.4.3</a></li><li><a href="#v2.4.2">2.4.2</a></li><li><a href="#v2.4.1">2.4.1</a></li><li><a href="#v2.4.0">2.4.0</a></li><li><a href="#v2.3.1">2.3.1</a></li><li><a href="#v2.3.0">2.3.0</a></li><li><a href="#v2.2.0">2.2.0</a></li><li><a href="#v2.1.0">2.1.0</a></li><li><a href="#v2.0.0">2.0.0</a></li><li><a href="#v1.0.0">1.0.0</a></li>
       </ul>
     </div>
+
+    <!-- 2.9.1 -->
+    <article class="release" id="v2.9.1">
+      <div class="ver">
+        <h2><a href="#v2.9.1">2.9.1</a></h2>
+        <time datetime="2026-11-23"><span lang="pt">23 nov 2026</span><span lang="en">Nov 23, 2026</span></time><br>
+        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+      </div>
+      <div>
+        <p class="summary" lang="pt">A sugestão de esforço acerta bem mais, a checagem final dá menos alarme falso e agora dá para medir se os avisos ajudam.</p>
+        <p class="summary" lang="en">The effort suggestion is right far more often, the final check gives fewer false alarms, and now you can measure whether its warnings help.</p>
+        <ul class="changes">
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt">A sugestão de esforço coincide com o nível escolhido em 80% dos 133 casos reais, contra 57% antes. Uma mudança em alguns arquivos relacionados passa a sugerir <code>medium</code> em vez de <code>high</code>; <code>high</code> fica para mudança maior ou investigação difícil, e continua aparecendo em 5 dos 7 pedidos em que foi o escolhido. Mandar a última resposta do Claude como contexto também foi testado e acertou menos (48%).</p>
+            <p lang="en">The effort suggestion matches the chosen level in 80% of 133 real cases, up from 57%. A change across a few related files now suggests <code>medium</code> instead of <code>high</code>; <code>high</code> is for a larger change or a hard investigation, and still shows in 5 of the 7 requests where it was chosen. Sending Claude's last reply as context was tested too and did worse (48%).</p></li>
+          <li><span class="kind changed"><span lang="pt">Mudou</span><span lang="en">Changed</span></span>
+            <p lang="pt">A checagem final só roda quando o turno alterou arquivos. Na 2.9.0, 11 dos 15 avisos vieram de turnos que só rodaram comandos (uma investigação que terminou em relatório, uma publicação parada por login expirado), e todos os conferidos eram alarme falso.</p>
+            <p lang="en">The final check only runs when the turn changed files. In 2.9.0, 11 of the 15 warnings came from turns that only ran commands (an investigation that ended in a report, a publish stopped by an expired login), and every one checked was a false alarm.</p></li>
+          <li><span class="kind fixed"><span lang="pt">Corrigido</span><span lang="en">Fixed</span></span>
+            <p lang="pt"><code>deploy</code> e <code>vercel</code> só contam como comando com efeito quando são o próprio comando, não uma palavra num caminho como <code>docs/deploy.md</code>. O aviso de pedido ambíguo não aparece mais em perguntas, e a dica de cada área aparece uma vez por sessão.</p>
+            <p lang="en"><code>deploy</code> and <code>vercel</code> only count as commands with effects when they are the command itself, not a word in a path such as <code>docs/deploy.md</code>. The ambiguous-request warning no longer shows on questions, and each area hint shows once per session.</p></li>
+          <li><span class="kind new"><span lang="pt">Novo</span><span lang="en">Added</span></span>
+            <p lang="pt">Depois de um aviso, o ClauJev registra se o Claude mudou algo no turno seguinte, e o <code>report</code> mostra esse número ao lado dos bloqueios.</p>
+            <p lang="en">After a warning, ClauJev records whether Claude changed something in the next turn, and <code>report</code> shows it next to the blocks.</p></li>
+        </ul>
+      </div>
+    </article>
 
     <!-- 2.9.0 -->
     <article class="release" id="v2.9.0">
       <div class="ver">
         <h2><a href="#v2.9.0">2.9.0</a></h2>
-        <time datetime="2026-11-10"><span lang="pt">10 nov 2026</span><span lang="en">Nov 10, 2026</span></time><br>
-        <span class="latest"><span lang="pt">Mais recente</span><span lang="en">Latest</span></span>
+        <time datetime="2026-11-10"><span lang="pt">10 nov 2026</span><span lang="en">Nov 10, 2026</span></time>
       </div>
       <div>
         <p class="summary" lang="pt">Menos interrupções: o ClauJev só pede confirmação em mudança crítica em produção e a checagem final passa a avisar em vez de bloquear.</p>

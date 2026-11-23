@@ -44,8 +44,9 @@ injeta (`<task-notification>`, `<local-command-…>` etc.) não são enviados.
 escopo ≤ 0,5 → ir direto, sem subagentes; escopo ≥ 0,85 → planejar antes.
 
 **Sugestão de esforço** (gravada no estado da sessão e aplicada pelo `claujev-mod`, se instalado): vale
-o maior de dois níveis. Tamanho: ≤ 0,3 → `low`, ≤ 0,6 → `medium`, ≤ 0,85 → `high`, maior → `xhigh`.
-Profundidade: ≤ 0,45 → `low`, ≤ 0,8 → `medium`, ≤ 0,95 → `high`, maior → `xhigh`. Uma pergunta
+o maior de dois níveis. Tamanho: ≤ 0,3 → `low`, ≤ 0,85 → `medium`, ≤ 0,95 → `high`, maior → `xhigh`.
+Profundidade: ≤ 0,45 → `low`, ≤ 0,7 → `medium`, ≤ 0,95 → `high`, maior → `xhigh` (cortes da 2.9.1,
+ajustados em 133 respostas reais à pergunta de esforço: 80% de acerto, contra 57% antes). Uma pergunta
 (confiança ≥ 0,6) usa só a profundidade e para em `high`. Um pedido com "ultrathink", "pense bem" ou
 parecido fica marcado como `explicitEffort`, e o mod não mexe nele. O mod grava cada resposta à
 pergunta de esforço em `logs/effort-<dia>-<sessão>.jsonl`.
@@ -108,11 +109,12 @@ relatório final dele. Só é chamado se o subagente editou algo ou rodou comand
 **Estado:** contexto do projeto, o pedido, a lista de arquivos editados, o diff desde o commit
 do início do turno (até 30.000 caracteres), os comandos que o Claude rodou no turno (lidos do
 transcript; os com efeito mais detalhados, e o fim do turno quando a lista é longa), o resultado do
-`verify` e a resposta final do Claude (até 3.000 caracteres). É chamado quando o turno teve edição ou um comando com efeito
-(`git commit`/`push`/`tag`, `gh … create`, `npm publish`, deploy, `curl -X POST` etc.). Um comando do
-shell que escreve arquivo (`sed -i`, `python … open('w')`, `cat > … <<EOF`, redirecionamento) também
-conta: o diff e os arquivos novos do turno são lidos do git, inclusive num repositório em que o comando
-entrou com `cd`. Turnos sem mudança ficam registrados como pulados.
+`verify` e a resposta final do Claude (até 3.000 caracteres). É chamado quando o turno alterou
+arquivos. Um comando do shell que escreve arquivo (`sed -i`, `python … open('w')`, `cat > … <<EOF`,
+redirecionamento) também conta: o diff e os arquivos novos do turno são lidos do git, inclusive num
+repositório em que o comando entrou com `cd`. Turnos que só rodaram comandos (investigação, `git push`,
+deploy) ficam registrados como pulados: na 2.9.0 eles geraram 11 dos 15 avisos, e os conferidos eram
+alarme falso. Depois de um aviso, o Stop seguinte registra se o Claude mudou algo (`followUp.after: "warn"`).
 
 **Depois de um bloqueio:** o Stop seguinte registra `followUp` (chamadas de ferramenta depois do
 bloqueio e quantas mudaram algo), sem chamar o Jev. O `report` soma: mudou algo = o bloqueio ajudou; só

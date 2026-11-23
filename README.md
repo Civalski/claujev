@@ -105,7 +105,7 @@ flowchart TB
 - **Sensible defaults**: it acts on commands, edits, the final check and subagent reports, and only watches
   subagent routing. Each answer falls into a low / uncertain / high band; only *high* acts.
 - **A signal, not a verdict**: ClauJev never deletes or reverts anything. A false alarm costs one sentence from Claude.
-- **Sees the real work**: the final check reads the turn's diff *and* the commands Claude ran (commits, pushes, releases).
+- **Sees the real work**: when the turn changed files, the final check reads the diff (shell edits included) *and* the commands Claude ran.
 
 ## Effort suggestion
 
@@ -113,8 +113,8 @@ flowchart TB
 flowchart LR
     P["request"] --> J{"Jev triage"}
     J -->|"direct answer / trivial"| L["low"]
-    J -->|"small change or<br/>reading a few files"| M["medium"]
-    J -->|"medium change or<br/>hard investigation"| H["high"]
+    J -->|"small or medium change,<br/>or reading a few files"| M["medium"]
+    J -->|"larger change or<br/>hard investigation"| H["high"]
     J -->|"large change"| X["xhigh"]
 ```
 
